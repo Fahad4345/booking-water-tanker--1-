@@ -6,31 +6,64 @@ import {
   TouchableOpacity, 
   Animated, 
   Dimensions,
-  StatusBar
+  StatusBar,
+  Alert
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useUser } from '../context/UserContext';
+
+
 
 const { width } = Dimensions.get('window');
 
 export default function DrawerMenu({ isOpen, onClose, currentScreen }) {
   const router = useRouter();
-
+  const { isAuthenticated } = useUser();
+  
   const menuItems = [
-    { id: 'index', title: 'Home', icon: 'home', emoji: '🏠' },
-    { id: 'bookings', title: 'Bookings', icon: 'list', emoji: '📋' },
-    { id: 'profile', title: 'Profile', icon: 'person', emoji: '👤' },
+    { id: 'index', title: 'Home', icon: 'home', emoji: '🏠', requiresAuth: false },
+    { id: 'bookings', title: 'Bookings', icon: 'list', emoji: '📋', requiresAuth: true },
+    { id: 'profile', title: 'Profile', icon: 'person', emoji: '👤', requiresAuth: true },
+   
   ];
 
-  const handleNavigation = (screenId) => {
+
+ 
+
+  const showLoginAlert = () => {
+    Alert.alert(
+      "Login Required",
+      "Please login to access this feature.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Login", 
+          style: "default",
+          onPress: () => {
+            onClose();
+            router.push('/login');
+          }
+        }
+      ]
+    );
+  };
+
+  const handleNavigation = (screenId, requiresAuth) => {
     onClose(); // Close drawer first
+    
+    // Check if authentication is required and user is not logged in
+    if (requiresAuth && !isAuthenticated) {
+      showLoginAlert();
+      return;
+    }
+    
     setTimeout(() => {
       if (screenId === 'index') {
         router.replace('/(tabs)/');
       } else {
         router.replace(`/(tabs)/${screenId}`);
       }
-    }, 300); // Wait for drawer animation to complete
+    }, 100); // Wait for drawer animation to complete
   };
 
   if (!isOpen) return null;
@@ -48,9 +81,7 @@ export default function DrawerMenu({ isOpen, onClose, currentScreen }) {
       <Animated.View style={styles.drawer}>
         <View style={styles.drawerHeader}>
           <Text style={styles.drawerTitle}>Menu</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#333" />
-          </TouchableOpacity>
+         
         </View>
         
         <View style={styles.menuItems}>
@@ -59,26 +90,28 @@ export default function DrawerMenu({ isOpen, onClose, currentScreen }) {
               key={item.id}
               style={[
                 styles.menuItem,
-                currentScreen === item.id && styles.activeMenuItem
+                currentScreen === item.id && styles.activeMenuItem,
+                item.requiresAuth && !isAuthenticated && styles.disabledMenuItem
               ]}
-              onPress={() => handleNavigation(item.id)}
+              onPress={() => handleNavigation(item.id, item.requiresAuth)}
               activeOpacity={0.7}
             >
               <View style={[
                 styles.menuIcon,
-                currentScreen === item.id && styles.activeMenuIcon
+                currentScreen === item.id && styles.activeMenuIcon,
+                item.requiresAuth && !isAuthenticated && styles.disabledMenuIcon
               ]}>
                 <Text style={styles.menuEmoji}>{item.emoji}</Text>
               </View>
               <Text style={[
                 styles.menuText,
-                currentScreen === item.id && styles.activeMenuText
+                currentScreen === item.id && styles.activeMenuText,
+                item.requiresAuth && !isAuthenticated && styles.disabledMenuText
               ]}>
                 {item.title}
               </Text>
-              {currentScreen === item.id && (
-                <Ionicons name="checkmark" size={20} color="#4FC3F7" />
-              )}
+             
+              
             </TouchableOpacity>
           ))}
         </View>
@@ -106,7 +139,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: width * 0.7, // 70% of screen width
+    width: width * 0.7,
     height: '100%',
     backgroundColor: '#fff',
     zIndex: 999,
@@ -195,5 +228,15 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 12,
     color: '#666',
+  },
+
+  disabledMenuItem: {
+    opacity: 0.6,
+  },
+  disabledMenuIcon: {
+    backgroundColor: '#f5f5f5',
+  },
+  disabledMenuText: {
+    color: '#999',
   },
 });

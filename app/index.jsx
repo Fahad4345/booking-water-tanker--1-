@@ -2,47 +2,51 @@ import React from 'react';
 import { View, Text, StyleSheet, ImageBackground, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
+import AuthWrapper from '../components/AuthWrapper';
+
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      <ImageBackground
-        source={{ uri: 'https://d64gsuwffb70l.cloudfront.net/68f0f60b9252847ebae1d642_1760622237534_fb64fefd.png' }}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay}>
-          <View style={styles.content}>
-            <Text style={styles.title}>Welcome to Drips water</Text>
-            <Text style={styles.subtitle}>Water Delivery app</Text>
+    <AuthWrapper>
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <ImageBackground
+          source={{ uri: 'https://d64gsuwffb70l.cloudfront.net/68f0f60b9252847ebae1d642_1760622237534_fb64fefd.png' }}
+          style={styles.background}
+          resizeMode="cover"
+        >
+          <View style={styles.overlay}>
+            <View style={styles.content}>
+              <Text style={styles.title}>Welcome to Drips water</Text>
+              <Text style={styles.subtitle}>Water Delivery app</Text>
+            </View>
+            
+            <View style={styles.buttonContainer}>
+              <Button 
+                title="CREATE AN ACCOUNT" 
+                onPress={() => router.push('/register')}
+                variant="primary"
+                style={styles.button}
+              />
+              <Button 
+                title="LOGIN" 
+                onPress={() => router.push('/login')}
+                variant="secondary"
+                style={styles.button}
+              />
+              <Button 
+                title="Continue as Guest" 
+                onPress={() => router.push('/(tabs)')}
+                variant="outline"
+                style={styles.button}
+              />
+            </View>
           </View>
-          
-          <View style={styles.buttonContainer}>
-            <Button 
-              title="CREATE AN ACCOUNT" 
-              onPress={() => router.push('/register')}
-              variant="primary"
-              style={styles.button}
-            />
-            <Button 
-              title="LOGIN" 
-              onPress={() => router.push('/login')}
-              variant="secondary"
-              style={styles.button}
-            />
-            <Button 
-              title="Continue as Guest" 
-              onPress={() => router.push('/(tabs)')}
-              variant="outline"
-              style={styles.button}
-            />
-          </View>
-        </View>
-      </ImageBackground>
-    </View>
+        </ImageBackground>
+      </View>
+    </AuthWrapper>
   );
 }
 

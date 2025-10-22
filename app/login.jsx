@@ -1,17 +1,66 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import Input from '../components/Input';
 import Button from '../components/Button';
-
+import { Auth } from '../api/Auth';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from '../context/UserContext';
+import viewStorage from"../components/viewStorage"
 export default function LoginScreen() {
   const router = useRouter();
+  const { updateUser } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const{login}=Auth();
 
-  const handleLogin = () => {
-    if (email && password) {
-      router.push('/(tabs)');
+  const handleLogin =  async () => {
+    if ( !email || !password ) {
+      Alert.alert("Error", "All fields are required");
+      return;
+    }
+  
+  
+    const result = await login( email, password);
+
+     if (result.success) {
+  
+       const { user, accessToken, refreshToken } = result.data;
+      
+      // Store tokens in AsyncStorage
+      await AsyncStorage.setItem("accessToken", accessToken);
+      await AsyncStorage.setItem("refreshToken", refreshToken);
+      
+      // Update user in context (this will also update AsyncStorage)
+      await updateUser(user);
+      
+      console.log(await AsyncStorage.getItem("refreshToken"));
+      console.log(await AsyncStorage.getItem("accessToken"));
+      console.log(await AsyncStorage.getItem("user"));
+      router.push("/(tabs)");
+
+    } else {
+      Alert.alert("Login Failed", result.error || "Something went wrong");
+    }
+  };
+  const handleSendOtp = async (email) => {
+    try {
+      console.log("forget Password running");
+      const res = await fetch("http://192.168.100.187:5000/auth/forgotPassword", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+    console.log("res of forget",data)
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+
+      Alert.alert("Success", "OTP sent to your email");
+      router.push({ pathname: "/verifyOtp", params: { email } });
+    } catch (err) {
+      Alert.alert("Error", err.message);
     }
   };
 
@@ -44,7 +93,7 @@ export default function LoginScreen() {
             secureTextEntry
           />
           
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>{handleSendOtp(email)}}>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
 

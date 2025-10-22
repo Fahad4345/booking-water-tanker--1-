@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar ,Alert} from 'react-native';
 import { useRouter } from 'expo-router';
 import Input from '../components/Input';
 import Button from '../components/Button';
+ import { Auth } from '../api/Auth';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -10,10 +11,27 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const{signup}= Auth();
 
-  const handleRegister = () => {
-    if (name && email && password && confirmPassword && password === confirmPassword) {
-      router.push('/(tabs)');
+  const handleRegister =  async () => {
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "All fields are required");
+      return;
+    }
+  
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+  
+    const result = await signup(name, email, password);
+     console.log(result);
+     if (result.success) {
+    
+      Alert.alert("Success", "Account created successfully!");
+      router.push("/login");
+    } else {
+      Alert.alert("Signup Failed", result.message || "Something went wrong");
     }
   };
 

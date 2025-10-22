@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TextInput, Text, StyleSheet } from 'react-native';
 
 export default function Input({ 
+  editable= true,
   label, 
   value, 
   onChangeText, 
@@ -13,6 +14,7 @@ export default function Input({
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
+       editable={editable} 
         style={styles.input}
         value={value}
         onChangeText={onChangeText}

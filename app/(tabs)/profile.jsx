@@ -1,28 +1,40 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DrawerMenu from '../../components/DrawerMenu';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Auth } from '../../api/Auth';
+import { useUser } from '../../context/UserContext';
 export default function ProfileScreen() {
   const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { user, clearUser } = useUser();
+
+  const{logout}=Auth();
 
   const handleLogout = () => {
+    console.log(user?.name); 
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: () => router.replace('/') }
+    { text: 'Logout', style: 'destructive',onPress: async () => { 
+      await logout(); 
+      await clearUser(); // Clear user from context
+      router.replace("/"); 
+    } }
     ]);
   };
+  // User data is now managed by context, no need for manual loading
+  
 
   const menuItems = [
-    { icon: '👤', title: 'Edit Profile' },
-    { icon: '📍', title: 'Saved Addresses' },
-    { icon: '💳', title: 'Payment Methods' },
-    { icon: '🔔', title: 'Notifications' },
-    { icon: '❓', title: 'Help & Support' },
-    { icon: '⚙️', title: 'Settings' },
+    { icon: '👤', title: 'Edit Profile', onPress: () => router.push('/editProfile') },
+    { icon: '📍', title: 'Saved Addresses', onPress: () => {} },
+    { icon: '💳', title: 'Payment Methods', onPress: () => {} },
+    { icon: '🔔', title: 'Notifications', onPress: () => {} },
+    { icon: '❓', title: 'Help & Support', onPress: () => {} },
+    { icon: '⚙️', title: 'Settings', onPress: () => {} },
   ];
 
   return (
@@ -46,8 +58,8 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}><Text style={styles.avatar}>👤</Text></View>
-          <Text style={styles.name}>John Doe</Text>
-          <Text style={styles.email}>john.doe@example.com</Text>
+          <Text style={styles.name}>{user?.name}</Text>
+          <Text style={styles.email}>{user?.email}</Text>
         </View>
         <View style={styles.statsContainer}>
           <View style={styles.statBox}><Text style={styles.statNumber}>12</Text><Text style={styles.statLabel}>Orders</Text></View>
@@ -56,7 +68,7 @@ export default function ProfileScreen() {
         </View>
         <View style={styles.menuContainer}>
           {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
+            <TouchableOpacity key={index} style={styles.menuItem} onPress={item.onPress}>
               <View style={styles.menuLeft}>
                 <Text style={styles.menuIcon}>{item.icon}</Text>
                 <Text style={styles.menuTitle}>{item.title}</Text>

@@ -13,13 +13,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DrawerMenu from '../../components/DrawerMenu'; // Import your DrawerMenu component
+import DrawerMenu from '../../components/DrawerMenu'; 
+import { useUser } from '../../context/UserContext';
+import { BookTank } from '../../api/BookTank';
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const [selectedTanker, setSelectedTanker] = useState(0);
-  const [bookingType, setBookingType] = useState('immediate');
+  const [bookingType, setBookingType] = useState('Immediate');
   const [pickupLocation, setPickupLocation] = useState('Street 2 (I-8, I 8/1)');
   const [destination, setDestination] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -27,6 +29,7 @@ export default function HomeScreen() {
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Drawer state
+  const { user } = useUser();
 
   const tankerOptions = [
     { id: 0, name: '6,000L', capacity: '6,000L', price: 'PKR 1,800', icon: '🚚', color: '#4FC3F7' },
@@ -49,7 +52,7 @@ export default function HomeScreen() {
     { id: 2, address: 'Plaza, Main Murree Road', tanker: '6,000L', date: '1 week ago' },
   ];
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!destination) {
       Alert.alert('Required', 'Please enter your delivery address');
       return;
@@ -59,20 +62,36 @@ export default function HomeScreen() {
       Alert.alert('Required', 'Please select date and time for scheduled delivery');
       return;
     }
-
-    const selected = tankerOptions[selectedTanker];
-    const bookingDetails = `${selected.name} Tanker (${selected.price})
-Delivery: ${destination}
-Type: ${bookingType === 'immediate' ? 'Immediate Booking' : `Scheduled: ${selectedDate} at ${selectedTime}`}
-${specialInstructions ? `Notes: ${specialInstructions}` : ''}`;
+     const selectedTankerData=tankerOptions[selectedTanker];
+     const BookingDetail=({
+      userId:user._id,
+      tankSize:selectedTankerData.capacity,
+      bookingType,
+      dropLocation:destination,
+      instruction:specialInstructions,
+      price:selectedTankerData.price,
+      deliveryTime: bookingType === "Immediate" 
+        ? null 
+        :`${selectedDate} ${selectedTime}`,
+     });
+  
+      const result = await BookTank(BookingDetail);
+      console.log("BookTank result:", result);
+ 
+       if (result.success===true) {
+        Alert.alert("Booking Confirmed! 🎉");
+      } else {
+        Alert.alert("Error", result.error || "Failed to book tanker");
+      }
+   
     
-    Alert.alert('Booking Confirmed! 🎉', bookingDetails);
+    Alert.alert('Booking Confirmed! 🎉');
   };
 
   const handleRebook = (order) => {
     setDestination(order.address);
     setSelectedTanker(tankerOptions.findIndex(t => t.capacity === order.tanker));
-    setBookingType('immediate');
+    setBookingType('Immediate');
   };
 
   return (
@@ -117,18 +136,18 @@ ${specialInstructions ? `Notes: ${specialInstructions}` : ''}`;
             <TouchableOpacity
               style={[
                 styles.bookingTypeButton,
-                bookingType === 'immediate' && styles.bookingTypeActive
+                bookingType === 'Immediate' && styles.bookingTypeActive
               ]}
-              onPress={() => setBookingType('immediate')}
+              onPress={() => setBookingType('Immediate')}
             >
               <Ionicons 
                 name="flash" 
                 size={18} 
-                color={bookingType === 'immediate' ? '#fff' : '#666'} 
+                color={bookingType === 'mmediate' ? '#fff' : '#666'} 
               />
               <Text style={[
                 styles.bookingTypeText,
-                bookingType === 'immediate' && styles.bookingTypeTextActive
+                bookingType === 'Immediate' && styles.bookingTypeTextActive
               ]}>
                 Immediate
               </Text>
@@ -174,7 +193,7 @@ ${specialInstructions ? `Notes: ${specialInstructions}` : ''}`;
               </Text>
             </TouchableOpacity>
           </View>
-          {bookingType === 'immediate' && (
+          {bookingType === 'Immediate' && (
             <Text style={styles.availabilityNote}>⚡ Subject to availability</Text>
           )}
         </View>
