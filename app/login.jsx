@@ -6,8 +6,8 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import { Auth } from '../api/Auth';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useUser } from '../context/UserContext';
-import viewStorage from"../components/viewStorage"
+import { useUser } from '../context/context';
+
 export default function LoginScreen() {
   const router = useRouter();
   const { updateUser } = useUser();
@@ -28,17 +28,22 @@ export default function LoginScreen() {
   
        const { user, accessToken, refreshToken } = result.data;
       
-      // Store tokens in AsyncStorage
+  
       await AsyncStorage.setItem("accessToken", accessToken);
       await AsyncStorage.setItem("refreshToken", refreshToken);
       
-      // Update user in context (this will also update AsyncStorage)
+   
       await updateUser(user);
       
       console.log(await AsyncStorage.getItem("refreshToken"));
       console.log(await AsyncStorage.getItem("accessToken"));
       console.log(await AsyncStorage.getItem("user"));
-      router.push("/(tabs)");
+      if(user.role==="customer"){
+         router.replace("/");
+      }
+      else{
+        router.replace("/supplier/homeScreen")
+      }
 
     } else {
       Alert.alert("Login Failed", result.error || "Something went wrong");

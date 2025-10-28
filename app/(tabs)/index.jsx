@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -14,28 +14,46 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DrawerMenu from '../../components/DrawerMenu'; 
-import { useUser } from '../../context/UserContext';
-import { BookTank } from '../../api/BookTank';
+import { BookTank } from '../../api/bookings/BookTank';
+import { useUser } from '../../context/context';
+import { GetBookings } from '../../api/bookings/GetBooking';
+
 
 const { width, height } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const [selectedTanker, setSelectedTanker] = useState(0);
   const [bookingType, setBookingType] = useState('Immediate');
-  const [pickupLocation, setPickupLocation] = useState('Street 2 (I-8, I 8/1)');
   const [destination, setDestination] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false); // Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
+  const [bookings, setBookings] = useState([]);
   const { user } = useUser();
 
+
+
+useEffect(()=>{
+  const Getbookings = async ()=>{
+    const UserId= user._id;
+     console.log("User",UserId);
+    const result= await GetBookings(UserId);
+    if (result.success===true) {
+     console.log("User Bookings:", result.data);
+     setBookings(result.data);
+   } else {
+     console.log("Failed:", data.message);
+   }
+  } 
+  Getbookings();
+},[]);
   const tankerOptions = [
-    { id: 0, name: '6,000L', capacity: '6,000L', price: 'PKR 1,800', icon: '🚚', color: '#4FC3F7' },
-    { id: 1, name: '12,000L', capacity: '12,000L', price: 'PKR 3,200', icon: '🚛', color: '#4CAF50' },
-    { id: 2, name: '15,000L', capacity: '15,000L', price: 'PKR 3,800', icon: '🚛', color: '#2196F3' },
-    { id: 3, name: '22,000L', capacity: '22,000L', price: 'PKR 5,200', icon: '🚛', color: '#FF9800' },
+    { id: 0, name: '6,000', capacity: 6000, price: 'PKR 1,800', icon: '🚚', color: '#4FC3F7' },
+    { id: 1, name: '12,000L', capacity: 12000, price: 'PKR 3,200', icon: '🚛', color: '#4CAF50' },
+    { id: 2, name: '15,000L', capacity: 15000, price: 'PKR 3,800', icon: '🚛', color: '#2196F3' },
+    { id: 3, name: '22,000L', capacity: 22000, price: 'PKR 5,200', icon: '🚛', color: '#FF9800' },
   ];
 
   const timeSlots = [
@@ -47,10 +65,7 @@ export default function HomeScreen() {
     '06:00 - 08:00 PM'
   ];
 
-  const pastOrders = [
-    { id: 1, address: 'House 23, Street 5, I-8/3', tanker: '12,000L', date: '2 days ago' },
-    { id: 2, address: 'Plaza, Main Murree Road', tanker: '6,000L', date: '1 week ago' },
-  ];
+
 
   const handleBooking = async () => {
     if (!destination) {
@@ -84,36 +99,20 @@ export default function HomeScreen() {
         Alert.alert("Error", result.error || "Failed to book tanker");
       }
    
-    
-    Alert.alert('Booking Confirmed! 🎉');
+
   };
 
   const handleRebook = (order) => {
-    setDestination(order.address);
-    setSelectedTanker(tankerOptions.findIndex(t => t.capacity === order.tanker));
+    setDestination(order.dropLocation);
+    setSelectedTanker(tankerOptions.findIndex(t => t.capacity == order.tankSize));
     setBookingType('Immediate');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1976D2" />
-      
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={() => setIsDrawerOpen(true)} // Open drawer
-        >
-          <Ionicons name="menu" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Water Tanker Booking</Text>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="notifications-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Map Section */}
+    
         <View style={styles.mapContainer}>
           <View style={styles.mapContent}>
             <View style={styles.locationPin}>
@@ -121,7 +120,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.locationLabel}>
               <Ionicons name="navigate" size={12} color="#1976D2" />
-              <Text style={styles.locationLabelText}>{pickupLocation}</Text>
+              <Text style={styles.locationLabelText}> </Text>
             </View>
           </View>
           <TouchableOpacity style={styles.mapOverlayButton}>
@@ -130,7 +129,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Booking Type Selection */}
+      
         <View style={styles.bookingTypeSection}>
           <View style={styles.bookingTypeRow}>
             <TouchableOpacity
@@ -156,9 +155,9 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={[
                 styles.bookingTypeButton,
-                bookingType === 'scheduled' && styles.bookingTypeActive
+                bookingType === 'Scheduled' && styles.bookingTypeActive
               ]}
-              onPress={() => setBookingType('scheduled')}
+              onPress={() => setBookingType('Scheduled')}
             >
               <Ionicons 
                 name="calendar" 
@@ -167,7 +166,7 @@ export default function HomeScreen() {
               />
               <Text style={[
                 styles.bookingTypeText,
-                bookingType === 'scheduled' && styles.bookingTypeTextActive
+                bookingType === 'Scheduled' && styles.bookingTypeTextActive
               ]}>
                 Scheduled
               </Text>
@@ -198,13 +197,13 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Rebook Section */}
+      
         {bookingType === 'rebook' && (
           <View style={styles.rebookSection}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
-            {pastOrders.map(order => (
+            {bookings.map(order => (
               <TouchableOpacity 
-                key={order.id} 
+                key={order._id} 
                 style={styles.rebookCard}
                 onPress={() => handleRebook(order)}
               >
@@ -212,8 +211,8 @@ export default function HomeScreen() {
                   <Ionicons name="water" size={20} color="#1976D2" />
                 </View>
                 <View style={styles.rebookInfo}>
-                  <Text style={styles.rebookAddress}>{order.address}</Text>
-                  <Text style={styles.rebookDetails}>{order.tanker} • {order.date}</Text>
+                  <Text style={styles.rebookAddress}>{order.dropLocation}</Text>
+                  <Text style={styles.rebookDetails}>{order.tankSize} • {order.deliveryTime}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#999" />
               </TouchableOpacity>
@@ -221,7 +220,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Tanker Selection */}
+
         {bookingType !== 'rebook' && (
           <>
             <View style={styles.tankerSection}>
@@ -263,11 +262,11 @@ export default function HomeScreen() {
               </ScrollView>
             </View>
 
-            {/* Delivery Details */}
+      
             <View style={styles.detailsSection}>
               <Text style={styles.sectionTitle}>Delivery Details</Text>
               
-              {/* Address Input */}
+      
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Delivery Address *</Text>
                 <View style={styles.inputContainer}>
@@ -285,8 +284,8 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              {/* Date & Time (for scheduled) */}
-              {bookingType === 'scheduled' && (
+        
+              {bookingType === 'Scheduled' && (
                 <View style={styles.scheduleRow}>
                   <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
                     <Text style={styles.inputLabel}>Date *</Text>
@@ -320,7 +319,7 @@ export default function HomeScreen() {
                 </View>
               )}
 
-              {/* Special Instructions */}
+         
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Special Instructions (Optional)</Text>
                 <View style={[styles.inputContainer, styles.textAreaContainer]}>
@@ -337,7 +336,7 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              {/* Price Summary */}
+         
               <View style={styles.priceSummary}>
                 <Text style={styles.priceLabel}>Estimated Price:</Text>
                 <Text style={styles.priceValue}>{tankerOptions[selectedTanker].price}</Text>
@@ -347,20 +346,20 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* Book Button */}
+
       <View style={styles.bookingFooter}>
         <TouchableOpacity 
           style={styles.bookButton}
           onPress={handleBooking}
         >
           <Text style={styles.bookButtonText}>
-            {bookingType === 'immediate' ? 'Book Now' : 'Schedule Booking'}
+            {bookingType === 'Immediate' ? 'Book Now' : 'Schedule Booking'}
           </Text>
           <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {/* Time Slot Picker Modal */}
+
       <Modal
         visible={showTimePicker}
         transparent
@@ -409,7 +408,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {/* Drawer Menu */}
+  
       <DrawerMenu 
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -428,7 +427,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
-  // Header
+ 
   header: {
     backgroundColor: '#1976D2',
     flexDirection: 'row',
@@ -451,7 +450,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Map Section
+
   mapContainer: {
     height: 220,
     backgroundColor: '#E3F2FD',
@@ -518,7 +517,6 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-  // Booking Type
   bookingTypeSection: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -559,7 +557,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  // Rebook Section
+ 
   rebookSection: {
     backgroundColor: '#fff',
     padding: 16,
@@ -598,7 +596,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 
-  // Tanker Section
+
   tankerSection: {
     backgroundColor: '#fff',
     paddingVertical: 16,
@@ -657,7 +655,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Details Section
+ 
   detailsSection: {
     backgroundColor: '#fff',
     padding: 16,
@@ -723,7 +721,7 @@ const styles = StyleSheet.create({
     color: '#1976D2',
   },
 
-  // Booking Footer
+
   bookingFooter: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -756,7 +754,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 
-  // Modal
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

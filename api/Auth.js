@@ -7,14 +7,14 @@
     return await AsyncStorage.getItem("accessToken");
   };
   
-    const signup = async (name, email, password) => {
+    const signup = async (name, email, password, role) => {
         try {
-          console.log("Signup running", name, email, password);
+          console.log("Signup running", name, email, password, role);
       
           const res = await fetch("http://192.168.100.187:5000/auth/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }),
+            body: JSON.stringify({ name, email, password, role }),
           });
       
           const data = await res.json();

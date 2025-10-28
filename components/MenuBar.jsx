@@ -13,8 +13,8 @@ export default function MenuBar({ currentScreen = 'index' }) {
   ];
 
   const handleNavigation = (screenId) => {
-    console.log('Navigating to:', screenId); // Debug log
-    Alert.alert('Menu Test', `Tapped on ${screenId}`); // Test alert
+    console.log('Navigating to:', screenId);
+    Alert.alert('Menu Test', `Tapped on ${screenId}`);
     try {
       if (screenId === 'index') {
         router.replace('/(tabs)/');

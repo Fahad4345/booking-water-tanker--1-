@@ -7,7 +7,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Auth } from '../api/Auth';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../context/context';
 
 export default function EditProfileScreen() {
   const{updateProfile}=Auth();
@@ -27,7 +27,7 @@ export default function EditProfileScreen() {
 
   const loadUserData = async () => {
     try {
-      // Use user data from context instead of AsyncStorage
+    
       if (contextUser) {
         console.log("Context User", contextUser);
         setUser({
@@ -54,7 +54,7 @@ export default function EditProfileScreen() {
             addresse: user.address,
           });
           if (result.success) {
-            // Update user in context with new data
+          
             const updatedUser = {
               ...contextUser,
               name: user.name,
@@ -92,23 +92,10 @@ export default function EditProfileScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={handleCancel}
-        >
-          <Ionicons name="arrow-back" size={24} color="#4FC3F7" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>Edit Profile</Text>
-          <Text style={styles.subtitle}>Update your personal information</Text>
-        </View>
-      </View>
+     
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Picture Section */}
-        <View style={styles.profileSection}>
+          <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatar}>👤</Text>
           </View>
@@ -117,7 +104,7 @@ export default function EditProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Form Section */}
+
         <View style={styles.formSection}>
           <Input
             label="Full Name"
@@ -153,7 +140,7 @@ export default function EditProfileScreen() {
           />
         </View>
 
-        {/* Action Buttons */}
+
         <View style={styles.buttonContainer}>
           <Button
             title={loading ? "Saving..." : "Save Changes"}
@@ -213,6 +200,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    marginTop: 50,
   },
   profileSection: {
     alignItems: 'center',

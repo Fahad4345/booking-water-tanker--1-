@@ -7,6 +7,7 @@ import AuthWrapper from '../components/AuthWrapper';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  
 
   return (
     <AuthWrapper>
@@ -26,19 +27,19 @@ export default function WelcomeScreen() {
             <View style={styles.buttonContainer}>
               <Button 
                 title="CREATE AN ACCOUNT" 
-                onPress={() => router.push('/register')}
+                onPress={() => router.replace('/register')}
                 variant="primary"
                 style={styles.button}
               />
               <Button 
                 title="LOGIN" 
-                onPress={() => router.push('/login')}
+                onPress={() => router.replace('/login')}
                 variant="secondary"
                 style={styles.button}
               />
               <Button 
                 title="Continue as Guest" 
-                onPress={() => router.push('/(tabs)')}
+                onPress={() => router.replace('/(tabs)')}
                 variant="outline"
                 style={styles.button}
               />

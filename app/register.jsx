@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar ,Alert} from 'react-native';
+import { 
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
+  StatusBar, Alert 
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import Input from '../components/Input';
 import Button from '../components/Button';
- import { Auth } from '../api/Auth';
+import { Auth } from '../api/Auth';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -11,23 +14,24 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const{signup}= Auth();
+  const [role, setRole] = useState('Customer'); 
+  const { signup } = Auth();
 
-  const handleRegister =  async () => {
+  const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "All fields are required");
       return;
     }
-  
+
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
       return;
     }
-  
-    const result = await signup(name, email, password);
-     console.log(result);
-     if (result.success) {
-    
+
+    const result = await signup(name, email, password, role);
+    console.log(result);
+
+    if (result.success) {
       Alert.alert("Success", "Account created successfully!");
       router.push("/login");
     } else {
@@ -46,7 +50,9 @@ export default function RegisterScreen() {
         </View>
 
         <Text style={styles.title}>Create your Account</Text>
-        <Text style={styles.subtitle}>Please fill in your details to create your account</Text>
+        <Text style={styles.subtitle}>
+          Please fill in your details to create your account
+        </Text>
 
         <View style={styles.form}>
           <Input
@@ -77,8 +83,40 @@ export default function RegisterScreen() {
             secureTextEntry
           />
 
-          <Button 
-            title="CREATE AN ACCOUNT" 
+          {/* 🟢 Radio Buttons for Role */}
+          <View style={styles.roleContainer}>
+            <Text style={styles.roleLabel}>Select Role</Text>
+            <View style={styles.radioGroup}>
+              <TouchableOpacity
+                style={styles.radioOption}
+                onPress={() => setRole('customer')}
+              >
+                <View
+                  style={[
+                    styles.radioCircle,
+                    role === 'customer' && styles.radioSelected,
+                  ]}
+                />
+                <Text style={styles.radioText}>Customer</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.radioOption}
+                onPress={() => setRole('Supplier')}
+              >
+                <View
+                  style={[
+                    styles.radioCircle,
+                    role === 'Supplier' && styles.radioSelected,
+                  ]}
+                />
+                <Text style={styles.radioText}>Supplier</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Button
+            title="CREATE AN ACCOUNT"
             onPress={handleRegister}
             variant="primary"
             style={styles.registerButton}
@@ -127,7 +165,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   registerButton: {
-    marginTop: 8,
+    marginTop: 16,
     marginBottom: 16,
   },
   loginContainer: {
@@ -142,5 +180,42 @@ const styles = StyleSheet.create({
     color: '#4FC3F7',
     fontSize: 14,
     fontWeight: '600',
+  },
+
+  // 🌈 Role selection styles
+  roleContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  roleLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4FC3F7',
+    marginBottom: 8,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radioCircle: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#4FC3F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  radioSelected: {
+    backgroundColor: '#4FC3F7',
+  },
+  radioText: {
+    fontSize: 15,
+    color: '#333',
   },
 });

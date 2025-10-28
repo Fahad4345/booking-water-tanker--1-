@@ -5,7 +5,7 @@ const viewStorage = async () => {
     const keys = await AsyncStorage.getAllKeys();
 
     if (!keys || keys.length === 0) {
-      console.log("📦 AsyncStorage is empty");
+      console.log("AsyncStorage is empty");
       return;
     }
 
@@ -15,6 +15,6 @@ const viewStorage = async () => {
       console.log(`👉 ${key}:`, value);
     });
   } catch (error) {
-    console.error("❌ Error reading AsyncStorage:", error);
+    console.error("Error reading AsyncStorage:", error);
   }
 };

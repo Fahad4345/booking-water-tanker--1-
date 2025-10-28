@@ -1,20 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
-import { useUser } from '../context/UserContext';
+import React, { useEffect, useRef } from "react";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { useRouter, usePathname } from "expo-router";
+import { useUser } from "../context/context";
+import { isLoading } from "expo-font";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AuthWrapper({ children }) {
   const { user, isLoading: userLoading, isAuthenticated } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (!userLoading) {
-      if (isAuthenticated) {
-        router.replace("/(tabs)");
+    console.log("Auth Wrapper",user, isAuthenticated);
+     
+    if (isAuthenticated && user?.role) {
+   
+      const targetRoute = user.role === "Supplier" ?  "/supplier/homeScreen":"/(tabs)" ;
+      
+      // Only redirect if we're on the login page
+      if (pathname === "/" || pathname === "/login") {
+        router.replace(targetRoute);
       }
+    } else if (!isAuthenticated && pathname !== "/") {
+      hasRedirected.current = true;
+      router.replace("/");
     }
-  }, [isAuthenticated, userLoading]);
+  }, [userLoading, isAuthenticated, user?.role, pathname]);
 
   if (userLoading) {
     return (
@@ -25,25 +37,19 @@ export default function AuthWrapper({ children }) {
     );
   }
 
-  // If authenticated, don't render children (user will be navigated to tabs)
-  if (isAuthenticated) {
-    return null;
-  }
-
-  // If not authenticated, show the welcome screen
-  return children;
+  // ✅ Always render children - let the routing handle the rest
+  return <>{children}</>;
 }
-
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   loadingText: {
-    marginTop: 16,
+    marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: "#555",
   },
 });

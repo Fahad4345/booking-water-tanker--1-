@@ -1,34 +1,39 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Animated, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
   Dimensions,
-  StatusBar,
   Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useUser } from '../context/UserContext';
 
-
+import { useUser } from '../context/context';  
 
 const { width } = Dimensions.get('window');
 
-export default function DrawerMenu({ isOpen, onClose, currentScreen }) {
+export default function DrawerMenu({ isOpen, onClose, currentScreen, user }) {
   const router = useRouter();
   const { isAuthenticated } = useUser();
-  
-  const menuItems = [
+ console.log("User", user)
+  const customerMenuItems = [
     { id: 'index', title: 'Home', icon: 'home', emoji: '🏠', requiresAuth: false },
     { id: 'bookings', title: 'Bookings', icon: 'list', emoji: '📋', requiresAuth: true },
     { id: 'profile', title: 'Profile', icon: 'person', emoji: '👤', requiresAuth: true },
    
+
+  ];
+  const supplierMenuItems = [
+    { id: 'homeScreen', title: 'Home', icon: 'home', emoji: '🏠', requiresAuth: false },
+    { id: 'registerTanker', title: 'Register Tanker', icon: 'list', emoji: '🚚', },
+    { id: 'profile', title: 'Profile', icon: 'person', emoji: '👤', requiresAuth: true },
+
   ];
 
 
- 
+
 
   const showLoginAlert = () => {
     Alert.alert(
@@ -36,8 +41,8 @@ export default function DrawerMenu({ isOpen, onClose, currentScreen }) {
       "Please login to access this feature.",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Login", 
+        {
+          text: "Login",
           style: "default",
           onPress: () => {
             onClose();
@@ -49,43 +54,58 @@ export default function DrawerMenu({ isOpen, onClose, currentScreen }) {
   };
 
   const handleNavigation = (screenId, requiresAuth) => {
-    onClose(); // Close drawer first
-    
-    // Check if authentication is required and user is not logged in
+    onClose(); 
+
+   
     if (requiresAuth && !isAuthenticated) {
       showLoginAlert();
       return;
     }
-    
+
     setTimeout(() => {
       if (screenId === 'index') {
         router.replace('/(tabs)/');
-      } else {
+      }
+      else if (screenId === 'bookings') {
+        router.replace('/(tabs)/bookings');
+      }
+      else if (screenId === 'profile') {
+        router.replace('/(tabs)/profile');
+      }
+      else if (screenId === 'homeScreen') {
+        router.replace('/supplier/homeScreen');
+      }
+      else if (screenId === 'registerTanker') {
+        router.replace('/supplier/tankerRegistration');
+      }
+      else {
         router.replace(`/(tabs)/${screenId}`);
       }
-    }, 100); // Wait for drawer animation to complete
+    }, 100); 
   };
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Overlay */}
-      <TouchableOpacity 
-        style={styles.overlay} 
-        activeOpacity={1} 
+     {isOpen && (
+        <TouchableOpacity
+        style={styles.overlay}
+        activeOpacity={1}
         onPress={onClose}
       />
-      
-      {/* Drawer */}
+      )}
+     
+
+  
       <Animated.View style={styles.drawer}>
         <View style={styles.drawerHeader}>
           <Text style={styles.drawerTitle}>Menu</Text>
-         
+
         </View>
-        
+
         <View style={styles.menuItems}>
-          {menuItems.map((item) => (
+          {user.role === "customer" ? customerMenuItems.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={[
@@ -110,12 +130,40 @@ export default function DrawerMenu({ isOpen, onClose, currentScreen }) {
               ]}>
                 {item.title}
               </Text>
-             
-              
+
+
+            </TouchableOpacity>
+          )) : supplierMenuItems.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.menuItem,
+                currentScreen === item.id && styles.activeMenuItem,
+                item.requiresAuth && !isAuthenticated && styles.disabledMenuItem
+              ]}
+              onPress={() => handleNavigation(item.id, item.requiresAuth)}
+              activeOpacity={0.7}
+            >
+              <View style={[
+                styles.menuIcon,
+                currentScreen === item.id && styles.activeMenuIcon,
+                item.requiresAuth && !isAuthenticated && styles.disabledMenuIcon
+              ]}>
+                <Text style={styles.menuEmoji}>{item.emoji}</Text>
+              </View>
+              <Text style={[
+                styles.menuText,
+                currentScreen === item.id && styles.activeMenuText,
+                item.requiresAuth && !isAuthenticated && styles.disabledMenuText
+              ]}>
+                {item.title}
+              </Text>
+
+
             </TouchableOpacity>
           ))}
         </View>
-        
+
         <View style={styles.drawerFooter}>
           <Text style={styles.footerText}>Water Tanker Booking</Text>
           <Text style={styles.versionText}>v1.0.0</Text>

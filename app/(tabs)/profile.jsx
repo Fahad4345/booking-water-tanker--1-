@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DrawerMenu from '../../components/DrawerMenu';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Auth } from '../../api/Auth';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../context/context';
 export default function ProfileScreen() {
   const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -15,17 +15,21 @@ export default function ProfileScreen() {
   const{logout}=Auth();
 
   const handleLogout = () => {
-    console.log(user?.name); 
+    
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
     { text: 'Logout', style: 'destructive',onPress: async () => { 
-      await logout(); 
-      await clearUser(); // Clear user from context
-      router.replace("/"); 
+      try {console.log("Logout result", result)
+         const result = await logout();
+         
+        await clearUser();
+        router.replace("/"); 
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
     } }
     ]);
   };
-  // User data is now managed by context, no need for manual loading
   
 
   const menuItems = [
@@ -41,20 +45,8 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Header with Menu Button */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.menuButton}
-          onPress={() => setIsDrawerOpen(true)}
-        >
-          <Ionicons name="menu" size={24} color="#333" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>Profile</Text>
-          <Text style={styles.subtitle}>Manage your account</Text>
-        </View>
-      </View>
-      
+  
+   
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}><Text style={styles.avatar}>👤</Text></View>
@@ -82,7 +74,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </ScrollView>
       
-      {/* Drawer Menu */}
+     
       <DrawerMenu 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)}

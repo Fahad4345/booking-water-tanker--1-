@@ -1,4 +1,4 @@
-import { Auth } from "./Auth";
+import { Auth } from "../Auth";
 export const BookTank= async (BookingDetail)=>{
   const {authFetch}= Auth(); 
     try{
