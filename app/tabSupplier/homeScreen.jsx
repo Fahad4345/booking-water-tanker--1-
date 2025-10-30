@@ -3,27 +3,63 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator
 import { Truck, Clock, CheckCircle, XCircle, AlertCircle, MapPin, Calendar } from 'lucide-react-native';
 import { getOrders } from "../../api/tankerProvider/getOrder"
 import { useRouter } from 'expo-router';
+import { acceptOrder } from '../../api/tankerProvider/acceptOrder';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
 
 
 export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02ae" }) {
   const [activeTab, setActiveTab] = useState('Immediate');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+
    const router= useRouter();
+   const getStoredTankerInfo = async () => {
+    try {
+      const stored = await AsyncStorage.getItem("tankerInfo");
+      if (stored) {
+        const tankerInfo = JSON.parse(stored);
+        console.log("🚛 Tanker Info:", tankerInfo);
+        return tankerInfo;
+      }
+    } catch (error) {
+      console.error("Error fetching tanker info:", error);
+    }
+  };
+   const handleUpdateStatus = async (order) => {
+
+    const stored = await getStoredTankerInfo();
+      
+    const data = await acceptOrder(order._id,"Accepted", stored.id);
+    
+    if (data) {
+     
+      router.push({
+        pathname: '/acceptedOrderScreen',
+        params: { order:JSON.stringify(order) },
+      })
+    }
+  };
 
   const tabs = [
     { id: 'Immediate', label: 'Immediate', icon: AlertCircle },
     { id: 'Scheduled', label: 'Scheduled', icon: Calendar },
     { id: 'Pending', label: 'Pending', icon: Clock },
-    // { id: 'Confirmed', label: 'Confirmed', icon: CheckCircle },
-    { id: 'Cancelled', label: 'Cancelled', icon: XCircle },
+   
+    { id: 'Completed', label: 'Completed', icon: CheckCircle },
   ];
 
   // ✅ Fetch assigned orders from backend
   const fetchOrders = async () => {
     setLoading(true);
-    const data = await getOrders(tankerId);
+    const stored = await getStoredTankerInfo();
+    const data = await getOrders(stored.id);
+    
+     
     setOrders(data);
+    console.log("Stored", stored);
     setLoading(false);
   };
 
@@ -34,9 +70,13 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
   const getFilteredOrders = () => {
     if (activeTab === 'Pending') {
       // Show all orders (Immediate + Scheduled + anything else)
-      return orders;
+      return orders.filter(order =>  order.bookingStatus === "Assigned");
     }
-    return orders.filter(order => order.bookingType === activeTab);
+    if (activeTab === 'Completed') {
+      // Show all orders (Immediate + Scheduled + anything else)
+      return orders.filter(order =>  order.bookingStatus === "Completed");
+    }
+    return orders.filter(order => order.bookingType === activeTab && order.bookingStatus === "Assigned");
   };
 
   const formatDate = (dateString) => {
@@ -112,7 +152,10 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
           </View>
         ) : (
           getFilteredOrders().map((order) => (
-            <View key={order._id} style={styles.orderCard}>
+            <TouchableOpacity key={order._id} onPress={()=>{router.push({
+              pathname: '/orderDetail',
+              params: { order:JSON.stringify(order) },
+            })}} style={styles.orderCard}>
               {/* Order Header */}
               <View style={styles.orderHeader}>
                 <View style={styles.orderHeaderLeft}>
@@ -153,30 +196,30 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
               {/* Action Buttons */}
               <View style={styles.actionButtons}>
                
-                {order.bookingStatus === 'Confirmed' && (
+                {order.bookingStatus === 'Completed' && (
                   <TouchableOpacity style={[styles.actionButton, styles.startButton]}>
-                    <Text style={styles.actionButtonText}>Start Delivery</Text>
+                    <Text style={styles.actionButtonText}>Completed</Text>
                   </TouchableOpacity>
                 )}
-                {order.bookingType === 'Immediate' && (
+                {order.bookingType === 'Immediate' && order.bookingStatus === 'Assigned' &&  (
                 <TouchableOpacity 
-                onPress={()=>router.push({
-                  pathname: '/supplier/acceptedOrderScreen',
-                  params: { order:JSON.stringify(order) },
-                })
+                onPress={()=>{
+                   handleUpdateStatus(order);
+                  }
                 } 
                 style={[styles.actionButton, styles.acceptButton]}
               >
                 <Text style={styles.actionButtonText}>Accept Order</Text>
               </TouchableOpacity>
                 )}
-                {order.bookingType === 'Scheduled' && (
+                {order.bookingType === 'Scheduled' && order.bookingStatus === 'Assigned'   && (
                   <TouchableOpacity style={[styles.actionButton, styles.viewButton]}>
                     <Text style={[styles.actionButtonText, styles.viewButtonText]}>View Details</Text>
                   </TouchableOpacity>
                 )}
               </View>
-            </View>
+            </TouchableOpacity
+            >
           ))
         )}
       </ScrollView>
@@ -190,8 +233,8 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#FFF',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
@@ -250,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -311,7 +354,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
-    marginBottom: 12,
+    marginBottom: 2,
   },
   instructionLabel: {
     fontSize: 12,

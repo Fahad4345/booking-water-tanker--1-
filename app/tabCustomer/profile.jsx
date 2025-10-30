@@ -21,6 +21,7 @@ export default function ProfileScreen() {
     { text: 'Logout', style: 'destructive',onPress: async () => { 
       try {console.log("Logout result", result)
          const result = await logout();
+         await AsyncStorage.clear();
          
         await clearUser();
         router.replace("/"); 
@@ -37,7 +38,6 @@ export default function ProfileScreen() {
     { icon: '📍', title: 'Saved Addresses', onPress: () => {} },
     { icon: '💳', title: 'Payment Methods', onPress: () => {} },
     { icon: '🔔', title: 'Notifications', onPress: () => {} },
-    { icon: '❓', title: 'Help & Support', onPress: () => {} },
     { icon: '⚙️', title: 'Settings', onPress: () => {} },
   ];
 
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flex: 1,
   },
-  scrollContent: { padding: 20 },
+  scrollContent: { marginTop:30, padding: 20 },
   title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
   subtitle: { fontSize: 14, color: '#666' },
   profileHeader: { alignItems: 'center', marginBottom: 24 },

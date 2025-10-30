@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import DrawerMenu from '../../components/DrawerMenu';
+
 import { GetBookings } from '../../api/bookings/GetBooking';
 import { useUser } from '../../context/context';
 export default function BookingsScreen() {
@@ -122,11 +122,6 @@ export default function BookingsScreen() {
 
       
    
-      <DrawerMenu 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)}
-        currentScreen="bookings"
-      />
     </SafeAreaView>
   );
 }

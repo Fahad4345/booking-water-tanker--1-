@@ -39,7 +39,8 @@ export const UserProvider = ({ children }) => {
 
   const clearUser = async () => {
     try {
-      await AsyncStorage.multiRemove(['user', 'accessToken', 'refreshToken']);
+      console.log("clear user running");
+      await AsyncStorage.clear();
       setUser(null);
     } catch (err) {
       console.error('Error clearing user:', err);

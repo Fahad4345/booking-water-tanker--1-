@@ -150,12 +150,7 @@ export default function EditProfileScreen() {
             disabled={loading}
           />
           
-          <Button
-            title="Cancel"
-            onPress={handleCancel}
-            variant="outline"
-            style={styles.cancelButton}
-          />
+        
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -167,44 +162,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#4FC3F7',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
+ 
   scrollContent: {
     padding: 20,
-    marginTop: 50,
+    marginTop: 30,
   },
   profileSection: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 10,
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 24,
@@ -238,7 +203,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 10,
     elevation: 3,
   },
   textArea: {

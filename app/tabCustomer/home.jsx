@@ -8,7 +8,6 @@ import {
   StatusBar, 
   Alert, 
   TouchableOpacity,
-  Dimensions,
   Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,9 +16,7 @@ import DrawerMenu from '../../components/DrawerMenu';
 import { BookTank } from '../../api/bookings/BookTank';
 import { useUser } from '../../context/context';
 import { GetBookings } from '../../api/bookings/GetBooking';
-
-
-const { width, height } = Dimensions.get('window');
+import OpenStreetMapView from './../../components/OpenStreetMap';
 
 export default function HomeScreen() {
   const [selectedTanker, setSelectedTanker] = useState(0);
@@ -32,23 +29,24 @@ export default function HomeScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   const [bookings, setBookings] = useState([]);
   const { user } = useUser();
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [searchAddress, setSearchAddress] = useState(''); 
 
+  useEffect(() => {
+    const Getbookings = async () => {
+      const UserId = user._id;
+      console.log("User", UserId);
+      const result = await GetBookings(UserId);
+      if (result.success === true) {
+        console.log("User Bookings:", result.data);
+        setBookings(result.data);
+      } else {
+        console.log("Failed:", result.message);
+      }
+    } 
+    Getbookings();
+  }, []);
 
-
-useEffect(()=>{
-  const Getbookings = async ()=>{
-    const UserId= user._id;
-     console.log("User",UserId);
-    const result= await GetBookings(UserId);
-    if (result.success===true) {
-     console.log("User Bookings:", result.data);
-     setBookings(result.data);
-   } else {
-     console.log("Failed:", data.message);
-   }
-  } 
-  Getbookings();
-},[]);
   const tankerOptions = [
     { id: 0, name: '6,000', capacity: 6000, price: 'PKR 1,800', icon: '🚚', color: '#4FC3F7' },
     { id: 1, name: '12,000L', capacity: 12000, price: 'PKR 3,200', icon: '🚛', color: '#4CAF50' },
@@ -65,8 +63,6 @@ useEffect(()=>{
     '06:00 - 08:00 PM'
   ];
 
-
-
   const handleBooking = async () => {
     if (!destination) {
       Alert.alert('Required', 'Please enter your delivery address');
@@ -77,29 +73,28 @@ useEffect(()=>{
       Alert.alert('Required', 'Please select date and time for scheduled delivery');
       return;
     }
-     const selectedTankerData=tankerOptions[selectedTanker];
-     const BookingDetail=({
-      userId:user._id,
-      tankSize:selectedTankerData.capacity,
+
+    const selectedTankerData = tankerOptions[selectedTanker];
+    const BookingDetail = {
+      userId: user._id,
+      tankSize: selectedTankerData.capacity,
       bookingType,
-      dropLocation:destination,
-      instruction:specialInstructions,
-      price:selectedTankerData.price,
+      dropLocation: destination,
+      instruction: specialInstructions,
+      price: selectedTankerData.price,
       deliveryTime: bookingType === "Immediate" 
         ? null 
-        :`${selectedDate} ${selectedTime}`,
-     });
+        : `${selectedDate} ${selectedTime}`,
+    };
   
-      const result = await BookTank(BookingDetail);
-      console.log("BookTank result:", result);
+    const result = await BookTank(BookingDetail);
+    console.log("BookTank result:", result);
  
-       if (result.success===true) {
-        Alert.alert("Booking Confirmed! 🎉");
-      } else {
-        Alert.alert("Error", result.error || "Failed to book tanker");
-      }
-   
-
+    if (result.success === true) {
+      Alert.alert("Booking Confirmed! 🎉");
+    } else {
+      Alert.alert("Error", result.error || "Failed to book tanker");
+    }
   };
 
   const handleRebook = (order) => {
@@ -111,25 +106,30 @@ useEffect(()=>{
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1976D2" />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-    
-        <View style={styles.mapContainer}>
-          <View style={styles.mapContent}>
-            <View style={styles.locationPin}>
-              <Ionicons name="location" size={32} color="#fff" />
-            </View>
-            <View style={styles.locationLabel}>
-              <Ionicons name="navigate" size={12} color="#1976D2" />
-              <Text style={styles.locationLabelText}> </Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.mapOverlayButton}>
-            <Ionicons name="navigate-circle" size={20} color="#1976D2" />
-            <Text style={styles.mapOverlayText}>Use Current Location</Text>
-          </TouchableOpacity>
-        </View>
-
       
+
+      <View style={styles.mapcontainer}>
+        <OpenStreetMapView 
+          onLocationSelect={(data) => {
+            setSelectedLocation(data);
+            setDestination(data.address);
+          }}
+          address={searchAddress}
+        />
+      </View>
+
+    
+      {selectedLocation && (
+        <View style={styles.locationDisplay}>
+          <Ionicons name="location" size={16} color="#1976D2" />
+          <Text style={styles.locationText} numberOfLines={1}>
+            {selectedLocation.address}
+          </Text>
+        </View>
+      )}
+   
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+     
         <View style={styles.bookingTypeSection}>
           <View style={styles.bookingTypeRow}>
             <TouchableOpacity
@@ -142,7 +142,7 @@ useEffect(()=>{
               <Ionicons 
                 name="flash" 
                 size={18} 
-                color={bookingType === 'mmediate' ? '#fff' : '#666'} 
+                color={bookingType === 'Immediate' ? '#fff' : '#666'} 
               />
               <Text style={[
                 styles.bookingTypeText,
@@ -162,7 +162,7 @@ useEffect(()=>{
               <Ionicons 
                 name="calendar" 
                 size={18} 
-                color={bookingType === 'scheduled' ? '#fff' : '#666'} 
+                color={bookingType === 'Scheduled' ? '#fff' : '#666'} 
               />
               <Text style={[
                 styles.bookingTypeText,
@@ -197,7 +197,7 @@ useEffect(()=>{
           )}
         </View>
 
-      
+  
         {bookingType === 'rebook' && (
           <View style={styles.rebookSection}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
@@ -220,9 +220,9 @@ useEffect(()=>{
           </View>
         )}
 
-
         {bookingType !== 'rebook' && (
           <>
+  
             <View style={styles.tankerSection}>
               <Text style={styles.sectionTitle}>Select Tanker Size</Text>
               <ScrollView 
@@ -262,24 +262,39 @@ useEffect(()=>{
               </ScrollView>
             </View>
 
-      
+     
             <View style={styles.detailsSection}>
               <Text style={styles.sectionTitle}>Delivery Details</Text>
               
-      
+          
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Delivery Address *</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="location-outline" size={20} color="#666" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter delivery address"
-                    value={destination}
-                    onChangeText={setDestination}
-                    placeholderTextColor="#999"
-                  />
-                  <TouchableOpacity>
-                    <Ionicons name="map" size={20} color="#1976D2" />
+                <View style={styles.addressInputRow}>
+                  <View style={styles.inputContainer}>
+                    <Ionicons name="location-outline" size={20} color="#666" />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Type address or select on map"
+                      value={destination}
+                      onChangeText={setDestination}
+                      placeholderTextColor="#999"
+                      onSubmitEditing={() => setSearchAddress(destination)}
+                      returnKeyType="search"
+                    />
+                    {destination.length > 0 && (
+                      <TouchableOpacity onPress={() => setDestination('')}>
+                        <Ionicons name="close-circle" size={20} color="#999" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <TouchableOpacity 
+                    onPress={() => {
+                      console.log("Search button pressed for:", destination);
+                      setSearchAddress(destination);
+                    }}
+                    style={styles.searchButton}
+                  >
+                    <Ionicons name="search" size={22} color="#fff" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -319,7 +334,7 @@ useEffect(()=>{
                 </View>
               )}
 
-         
+        
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Special Instructions (Optional)</Text>
                 <View style={[styles.inputContainer, styles.textAreaContainer]}>
@@ -336,7 +351,7 @@ useEffect(()=>{
                 </View>
               </View>
 
-         
+          
               <View style={styles.priceSummary}>
                 <Text style={styles.priceLabel}>Estimated Price:</Text>
                 <Text style={styles.priceValue}>{tankerOptions[selectedTanker].price}</Text>
@@ -346,7 +361,7 @@ useEffect(()=>{
         )}
       </ScrollView>
 
-
+  
       <View style={styles.bookingFooter}>
         <TouchableOpacity 
           style={styles.bookButton}
@@ -359,7 +374,7 @@ useEffect(()=>{
         </TouchableOpacity>
       </View>
 
-
+    
       <Modal
         visible={showTimePicker}
         transparent
@@ -408,7 +423,7 @@ useEffect(()=>{
         </View>
       </Modal>
 
-  
+    
       <DrawerMenu 
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -423,100 +438,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  mapcontainer: {
+    height: 250,
+  },
+  locationDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  locationText: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 13,
+    color: '#333',
+    fontWeight: '500',
+  },
   scrollView: {
     flex: 1,
   },
-  
- 
-  header: {
-    backgroundColor: '#1976D2',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  headerButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-
-
-  mapContainer: {
-    height: 220,
-    backgroundColor: '#E3F2FD',
-    position: 'relative',
-  },
-  mapContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  locationPin: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#1976D2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  locationLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginTop: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  locationLabelText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 4,
-  },
-  mapOverlayButton: {
-    position: 'absolute',
-    bottom: 16,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 24,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-  },
-  mapOverlayText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1976D2',
-    marginLeft: 6,
-  },
-
   bookingTypeSection: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -556,8 +499,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
-
- 
   rebookSection: {
     backgroundColor: '#fff',
     padding: 16,
@@ -595,8 +536,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-
-
   tankerSection: {
     backgroundColor: '#fff',
     paddingVertical: 16,
@@ -654,8 +593,6 @@ const styles = StyleSheet.create({
     color: '#1976D2',
     fontWeight: '600',
   },
-
- 
   detailsSection: {
     backgroundColor: '#fff',
     padding: 16,
@@ -720,8 +657,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1976D2',
   },
-
-
   bookingFooter: {
     backgroundColor: '#fff',
     paddingHorizontal: 16,
@@ -753,8 +688,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginRight: 8,
   },
-
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -764,7 +697,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: height * 0.6,
+    maxHeight: 600,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -805,5 +738,9 @@ const styles = StyleSheet.create({
   },
   timeSlotTextActive: {
     color: '#1976D2',
+  },
+  searchButton: {
+    marginLeft: 8,
+    padding: 4,
   },
 });

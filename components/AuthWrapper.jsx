@@ -16,7 +16,7 @@ export default function AuthWrapper({ children }) {
      
     if (isAuthenticated && user?.role) {
    
-      const targetRoute = user.role === "Supplier" ?  "/supplier/homeScreen":"/(tabs)" ;
+      const targetRoute = user.role === "Supplier" ?  "/tabSupplier/homeScreen":"/tabCustomer/home" ;
       
       // Only redirect if we're on the login page
       if (pathname === "/" || pathname === "/login") {

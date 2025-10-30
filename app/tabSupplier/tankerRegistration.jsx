@@ -11,6 +11,8 @@ import {
   Alert,
 } from 'react-native';
 import { registerTankerProvider } from "../../api/tankerProvider/register"; 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+ import { useRouter } from 'expo-router';
 
 const TankerProviderRegistration = () => {
   const [step, setStep] = useState(1);
@@ -44,17 +46,69 @@ const TankerProviderRegistration = () => {
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+   const router=useRouter();
 
   const nextStep = () => {
+    // Step 1 Validation
+    if (step === 1) {
+      const { fullName, phone, cnic, cnicExpiry } = formData;
+      if (!fullName || !phone || !cnic || !cnicExpiry) {
+        Alert.alert("Missing Fields", "Please fill all driver information fields before continuing.");
+        return;
+      }
+    }
+  
+    // Step 2 Validation
+    if (step === 2) {
+      const { vehicleNumber, registrationNumber, vehicleModel, manufacturingYear, capacity } = formData;
+      if (!vehicleNumber || !registrationNumber || !vehicleModel || !manufacturingYear || !capacity) {
+        Alert.alert("Missing Fields", "Please fill all vehicle details before continuing.");
+        return;
+      }
+    }
+  
+    // Step 3 Validation
+    if (step === 3) {
+      const { licenseNumber, licenseExpiry, licenseType } = formData;
+      if (!licenseNumber || !licenseExpiry || !licenseType) {
+        Alert.alert("Missing Fields", "Please complete all license details before continuing.");
+        return;
+      }
+    }
+  
+    // Move to next step if validation passes
     if (step < 4) setStep(step + 1);
   };
+  
 
   const prevStep = () => {
     if (step > 1) setStep(step - 1);
   };
-
+   const storeTankerInfo = async (data) => {
+     
+    try {
+      const tankerInfo = {
+        id:data?._id,
+        driverName:data?.fullName,
+        driverPhone:data?.data?.phone,
+        vehicleModel: data?.vehicleModel,
+        vehicleNumber:data?.vehicleNumber
+      };
+  
+       const savedInfo = await AsyncStorage.setItem("tankerInfo", JSON.stringify(tankerInfo));
+  
+      console.log("✅ Tanker info saved:", savedInfo);
+    } catch (error) {
+      console.error("❌ Error saving tanker info:", error);
+    }
+  };
 
   const handleSubmit = async () => {
+    const { waterSource, sourceAddress, sourceType } = formData;
+    if (!waterSource || !sourceAddress || !sourceType) {
+      Alert.alert("Missing Fields", "Please fill all water source details before submitting.");
+      return;
+    }
     try {
       console.log("Submitting form:", formData);
   
@@ -63,7 +117,7 @@ const TankerProviderRegistration = () => {
       if (response.success) {
         Alert.alert("Success", "Registration submitted successfully!");
         console.log("Form submitted:", response.data);
-  
+        storeTankerInfo(response.data);
      
         setFormData({
           fullName: '',
@@ -84,6 +138,7 @@ const TankerProviderRegistration = () => {
           sourceType: 'municipal',
           waterQualityCertificate: false,
         });
+         router.push("/tabSupplier/homeScreen");
         setStep(1);
       } else {
         Alert.alert(" Failed", response.message || "Registration failed");
@@ -146,7 +201,7 @@ const TankerProviderRegistration = () => {
           value={formData.cnic}
           onChangeText={(text) => handleInputChange('cnic', text)}
           placeholder="XXXXX-XXXXXXX-X"
-          keyboardType="numeric"
+          keyboardType="phone-pad"
           placeholderTextColor="#999"
         />
       </View>
@@ -161,6 +216,17 @@ const TankerProviderRegistration = () => {
           placeholderTextColor="#999"
         />
       </View>
+      <View style={styles.buttonContainer}>
+       
+          <TouchableOpacity 
+            style={[styles.nextButton, step === 1 && styles.nextButtonFull]} 
+            onPress={nextStep}
+          >
+            <Text style={styles.nextButtonText}>Next →</Text>
+          </TouchableOpacity>
+       
+      </View>
+      
     </View>
   );
 
@@ -226,6 +292,7 @@ const TankerProviderRegistration = () => {
           onChangeText={(text) => handleInputChange('registrationNumber', text)}
           placeholder="Enter registration number"
           placeholderTextColor="#999"
+
         />
       </View>
 
@@ -237,7 +304,7 @@ const TankerProviderRegistration = () => {
           onChangeText={(text) => handleInputChange('vehicleModel', text)}
           placeholder="e.g., Hino 500"
           placeholderTextColor="#999"
-        />
+          keyboardType='phone-pad'        />
       </View>
 
       <View style={styles.inputGroup}>
@@ -247,9 +314,25 @@ const TankerProviderRegistration = () => {
           value={formData.manufacturingYear}
           onChangeText={(text) => handleInputChange('manufacturingYear', text)}
           placeholder="YYYY"
-          keyboardType="numeric"
+          k keyboardType='phone-pad'  
           placeholderTextColor="#999"
         />
+      </View>
+      <View style={styles.buttonContainer}>
+       
+          <TouchableOpacity style={styles.backButton} onPress={prevStep}>
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+   
+        
+     
+          <TouchableOpacity 
+            style={[styles.nextButton, step === 1 && styles.nextButtonFull]} 
+            onPress={nextStep}
+          >
+            <Text style={styles.nextButtonText}>Next →</Text>
+          </TouchableOpacity>
+ 
       </View>
     </View>
   );
@@ -313,6 +396,22 @@ const TankerProviderRegistration = () => {
         <Text style={styles.infoText}>
           Please ensure your license is valid and matches the vehicle category you're registering.
         </Text>
+      </View>
+      <View style={styles.buttonContainer}>
+       
+          <TouchableOpacity style={styles.backButton} onPress={prevStep}>
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+   
+        
+     
+          <TouchableOpacity 
+            style={[styles.nextButton, step === 1 && styles.nextButtonFull]} 
+            onPress={nextStep}
+          >
+            <Text style={styles.nextButtonText}>Next →</Text>
+          </TouchableOpacity>
+ 
       </View>
     </View>
   );
@@ -400,6 +499,22 @@ const TankerProviderRegistration = () => {
           Water quality certificate will be verified during approval process.
         </Text>
       </View>
+      <View style={styles.buttonContainer}>
+      
+          <TouchableOpacity style={styles.backButton} onPress={prevStep}>
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+  
+        
+       
+          <TouchableOpacity 
+            style={[styles.submitButton, step === 1 && styles.nextButtonFull]} 
+            onPress={handleSubmit}
+          >
+            <Text style={styles.submitButtonText}>Submit→</Text>
+          </TouchableOpacity>
+    
+      </View>
     </View>
   );
 
@@ -415,40 +530,16 @@ const TankerProviderRegistration = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1976D2" />
+     
       
-      {/* Header */}
-      
+    
 
       {/* Content */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {renderStepContent()}
       </ScrollView>
 
-      {/* Navigation Buttons */}
-      <View style={styles.buttonContainer}>
-        {step > 1 && (
-          <TouchableOpacity style={styles.backButton} onPress={prevStep}>
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
-        )}
-        
-        {step < 4 ? (
-          <TouchableOpacity 
-            style={[styles.nextButton, step === 1 && styles.nextButtonFull]} 
-            onPress={nextStep}
-          >
-            <Text style={styles.nextButtonText}>Next →</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity 
-            style={[styles.submitButton, step === 1 && styles.nextButtonFull]} 
-            onPress={handleSubmit}
-          >
-            <Text style={styles.submitButtonText}>Submit Registration →</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+    
     </SafeAreaView>
   );
 };
@@ -523,7 +614,8 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    marginTop: 50,
+    paddingTop:10
+    
   },
   stepContainer: {
     padding: 20,
@@ -688,18 +780,19 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    padding: 20,
-    backgroundColor: '#FFFFFF',
+    paddingTop: 20,
+  
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
     gap: 12,
   },
   backButton: {
+    
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
     borderColor: '#1976D2',
-    paddingVertical: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -711,7 +804,7 @@ const styles = StyleSheet.create({
   nextButton: {
     flex: 1,
     backgroundColor: '#1976D2',
-    paddingVertical: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -726,7 +819,7 @@ const styles = StyleSheet.create({
   submitButton: {
     flex: 1,
     backgroundColor: '#4CAF50',
-    paddingVertical: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
   },

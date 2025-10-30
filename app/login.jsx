@@ -42,7 +42,7 @@ export default function LoginScreen() {
          router.replace("/");
       }
       else{
-        router.replace("/supplier/homeScreen")
+        router.replace("/tabSupplier/homeScreen")
       }
 
     } else {
