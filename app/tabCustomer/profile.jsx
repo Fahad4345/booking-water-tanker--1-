@@ -12,41 +12,45 @@ export default function ProfileScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { user, clearUser } = useUser();
 
-  const{logout}=Auth();
+  const { logout } = Auth();
 
   const handleLogout = () => {
-    
+
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-    { text: 'Logout', style: 'destructive',onPress: async () => { 
-      try {console.log("Logout result", result)
-         const result = await logout();
-         await AsyncStorage.clear();
-         
-        await clearUser();
-        router.replace("/"); 
-      } catch (err) {
-        console.error("Logout error:", err);
+      {
+        text: 'Logout', style: 'destructive', onPress: async () => {
+          try {
+
+            const result = await logout();
+            console.log("Logout result", result)
+            await AsyncStorage.clear();
+
+            await clearUser();
+            router.replace("/");
+          } catch (err) {
+            console.error("Logout error:", err);
+          }
+        }
       }
-    } }
     ]);
   };
-  
+
 
   const menuItems = [
     { icon: '👤', title: 'Edit Profile', onPress: () => router.push('/editProfile') },
-    { icon: '📍', title: 'Saved Addresses', onPress: () => {} },
-    { icon: '💳', title: 'Payment Methods', onPress: () => {} },
-    { icon: '🔔', title: 'Notifications', onPress: () => {} },
-    { icon: '⚙️', title: 'Settings', onPress: () => {} },
+    { icon: '📍', title: 'Saved Addresses', onPress: () => { } },
+    { icon: '💳', title: 'Payment Methods', onPress: () => { } },
+
+    { icon: '⚙️', title: 'Settings', onPress: () => { } },
   ];
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
-  
-   
+
+
+
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}><Text style={styles.avatar}>👤</Text></View>
@@ -73,10 +77,10 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
-      
-     
-      <DrawerMenu 
-        isOpen={isDrawerOpen} 
+
+
+      <DrawerMenu
+        isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         currentScreen="profile"
       />
@@ -107,7 +111,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flex: 1,
   },
-  scrollContent: { marginTop:30, padding: 20 },
+  scrollContent: { marginTop: 30, padding: 20 },
   title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
   subtitle: { fontSize: 14, color: '#666' },
   profileHeader: { alignItems: 'center', marginBottom: 24 },

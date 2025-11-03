@@ -12,12 +12,18 @@ export default function AuthWrapper({ children }) {
   const hasRedirected = useRef(false);
 
   useEffect(() => {
-    console.log("Auth Wrapper",user, isAuthenticated);
-     
+    console.log("Auth Wrapper", user, isAuthenticated);
+
     if (isAuthenticated && user?.role) {
-   
-      const targetRoute = user.role === "Supplier" ?  "/tabSupplier/homeScreen":"/tabCustomer/home" ;
-      
+      console.log("User role:", user.role);
+      const targetRoute =
+        user.role === "Supplier"
+          ? "/tabSupplier/homeScreen"
+          : user.role === "Tanker"
+            ? "/tabTanker/homeScreen"
+            : "/tabCustomer/home";
+
+
       // Only redirect if we're on the login page
       if (pathname === "/" || pathname === "/login") {
         router.replace(targetRoute);

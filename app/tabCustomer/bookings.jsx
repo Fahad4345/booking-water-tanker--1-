@@ -29,35 +29,35 @@ export default function BookingsScreen() {
         return "Unknown";
     }
   };
-   useEffect(()=>{
-     const Getbookings = async ()=>{
-       const UserId= user._id;
-        console.log("User",UserId);
-        setLoading(true);
-       const result= await GetBookings(UserId);
-       console.log("result", result);
-       setLoading(false);
-       if (result.success == true) {
+  useEffect(() => {
+    const Getbookings = async () => {
+      const UserId = user._id;
+      console.log("User", UserId);
+      setLoading(true);
+      const result = await GetBookings(UserId);
+      console.log("result", result);
+      setLoading(false);
+      if (result.success == true) {
         console.log("✅ User Bookings:", result);
         setBookings(result?.data);
       } else {
         console.log("❌ Failed:", data.message);
-        
-      }
-     } 
-     Getbookings();
 
-   },[])
+      }
+    }
+    Getbookings();
+
+  }, [])
 
   const getStatusColor = (status) => status === 'In Transit' ? '#FF9800' : '#4CAF50';
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
 
-    
-      
+
+
+
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#007BFF" />
@@ -104,7 +104,7 @@ export default function BookingsScreen() {
                   </Text>
                   <Text style={styles.priceValue}>💰 Rs {booking.price}</Text>
                 </View>
-                <View
+                {/* <View
                   style={[
                     styles.statusBadge,
                     { backgroundColor: getStatusColor(booking.status || "") },
@@ -113,15 +113,15 @@ export default function BookingsScreen() {
                   <Text style={styles.statusText}>
                     {booking.bookingType || "Pending"}
                   </Text>
-                </View>
+                </View> */}
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
       )}
 
-      
-   
+
+
     </SafeAreaView>
   );
 }
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flex: 1,
   },
-  scrollContent: { padding: 20 , marginTop:60},
+  scrollContent: { padding: 20, marginTop: 60 },
   title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
   subtitle: { fontSize: 14, color: '#666' },
   bookingCard: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, elevation: 3 },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   },
   noBookingText: {
     fontSize: 18,
-    font:'Poppins',
+    font: 'Poppins',
     fontWeight: "600",
     color: "#555",
     marginTop: 8,

@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TextInput, 
-  StatusBar, 
-  Alert, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  StatusBar,
+  Alert,
   TouchableOpacity,
   Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DrawerMenu from '../../components/DrawerMenu'; 
+import DrawerMenu from '../../components/DrawerMenu';
 import { BookTank } from '../../api/bookings/BookTank';
 import { useUser } from '../../context/context';
 import { GetBookings } from '../../api/bookings/GetBooking';
 import OpenStreetMapView from './../../components/OpenStreetMap';
-
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { getSuppliers } from '../../api/suppliers/getAllSupplier';
 export default function HomeScreen() {
   const [selectedTanker, setSelectedTanker] = useState(0);
   const [bookingType, setBookingType] = useState('Immediate');
@@ -26,26 +27,40 @@ export default function HomeScreen() {
   const [selectedTime, setSelectedTime] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [bookings, setBookings] = useState([]);
   const { user } = useUser();
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [searchAddress, setSearchAddress] = useState(''); 
+  const [searchAddress, setSearchAddress] = useState('');
 
   useEffect(() => {
     const Getbookings = async () => {
       const UserId = user._id;
       console.log("User", UserId);
       const result = await GetBookings(UserId);
+      const supplierList = await getSuppliers(); // 🟢 Fetch suppliers
+      console.log("Suppliers", supplierList);
       if (result.success === true) {
         console.log("User Bookings:", result.data);
         setBookings(result.data);
+        setSuppliers(supplierList);
       } else {
         console.log("Failed:", result.message);
       }
-    } 
+    }
     Getbookings();
   }, []);
+
+  // const suppliers = [
+  //   { id: 1, name: 'Blue Water Supply', rating: 4.8, deliveries: 2500, icon: '💧', color: '#2196F3' },
+  //   { id: 2, name: 'Crystal Clear Tankers', rating: 4.9, deliveries: 3200, icon: '💎', color: '#00BCD4' },
+  //   { id: 3, name: 'Pure Flow Services', rating: 4.7, deliveries: 1800, icon: '🌊', color: '#03A9F4' },
+  //   { id: 4, name: 'Aqua Express', rating: 4.6, deliveries: 2100, icon: '🚰', color: '#0288D1' },
+  //   { id: 5, name: 'Fresh Water Co.', rating: 4.9, deliveries: 2800, icon: '💦', color: '#0097A7' },
+  // ];
 
   const tankerOptions = [
     { id: 0, name: '6,000', capacity: 6000, price: 'PKR 1,800', icon: '🚚', color: '#4FC3F7' },
@@ -64,11 +79,16 @@ export default function HomeScreen() {
   ];
 
   const handleBooking = async () => {
+    if (!selectedSupplier) {
+      Alert.alert('Required', 'Please select a water supplier');
+      return;
+    }
+
     if (!destination) {
       Alert.alert('Required', 'Please enter your delivery address');
       return;
     }
-    
+
     if (bookingType === 'scheduled' && (!selectedDate || !selectedTime)) {
       Alert.alert('Required', 'Please select date and time for scheduled delivery');
       return;
@@ -77,19 +97,21 @@ export default function HomeScreen() {
     const selectedTankerData = tankerOptions[selectedTanker];
     const BookingDetail = {
       userId: user._id,
+      supplierId: selectedSupplier._id,
+      supplierName: selectedSupplier.name,
       tankSize: selectedTankerData.capacity,
       bookingType,
       dropLocation: destination,
       instruction: specialInstructions,
       price: selectedTankerData.price,
-      deliveryTime: bookingType === "Immediate" 
-        ? null 
+      deliveryTime: bookingType === "Immediate"
+        ? null
         : `${selectedDate} ${selectedTime}`,
     };
-  
+
     const result = await BookTank(BookingDetail);
     console.log("BookTank result:", result);
- 
+
     if (result.success === true) {
       Alert.alert("Booking Confirmed! 🎉");
     } else {
@@ -106,10 +128,9 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1976D2" />
-      
 
       <View style={styles.mapcontainer}>
-        <OpenStreetMapView 
+        <OpenStreetMapView
           onLocationSelect={(data) => {
             setSelectedLocation(data);
             setDestination(data.address);
@@ -118,18 +139,13 @@ export default function HomeScreen() {
         />
       </View>
 
-    
-      {selectedLocation && (
-        <View style={styles.locationDisplay}>
-          <Ionicons name="location" size={16} color="#1976D2" />
-          <Text style={styles.locationText} numberOfLines={1}>
-            {selectedLocation.address}
-          </Text>
-        </View>
-      )}
-   
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-     
+      <KeyboardAwareScrollView
+        style={styles.scrollView}
+        extraScrollHeight={100}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+      >
+
         <View style={styles.bookingTypeSection}>
           <View style={styles.bookingTypeRow}>
             <TouchableOpacity
@@ -139,10 +155,10 @@ export default function HomeScreen() {
               ]}
               onPress={() => setBookingType('Immediate')}
             >
-              <Ionicons 
-                name="flash" 
-                size={18} 
-                color={bookingType === 'Immediate' ? '#fff' : '#666'} 
+              <Ionicons
+                name="flash"
+                size={18}
+                color={bookingType === 'Immediate' ? '#fff' : '#666'}
               />
               <Text style={[
                 styles.bookingTypeText,
@@ -159,10 +175,10 @@ export default function HomeScreen() {
               ]}
               onPress={() => setBookingType('Scheduled')}
             >
-              <Ionicons 
-                name="calendar" 
-                size={18} 
-                color={bookingType === 'Scheduled' ? '#fff' : '#666'} 
+              <Ionicons
+                name="calendar"
+                size={18}
+                color={bookingType === 'Scheduled' ? '#fff' : '#666'}
               />
               <Text style={[
                 styles.bookingTypeText,
@@ -179,10 +195,10 @@ export default function HomeScreen() {
               ]}
               onPress={() => setBookingType('rebook')}
             >
-              <Ionicons 
-                name="refresh" 
-                size={18} 
-                color={bookingType === 'rebook' ? '#fff' : '#666'} 
+              <Ionicons
+                name="refresh"
+                size={18}
+                color={bookingType === 'rebook' ? '#fff' : '#666'}
               />
               <Text style={[
                 styles.bookingTypeText,
@@ -197,13 +213,12 @@ export default function HomeScreen() {
           )}
         </View>
 
-  
         {bookingType === 'rebook' && (
           <View style={styles.rebookSection}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
             {bookings.map(order => (
-              <TouchableOpacity 
-                key={order._id} 
+              <TouchableOpacity
+                key={order._id}
                 style={styles.rebookCard}
                 onPress={() => handleRebook(order)}
               >
@@ -222,11 +237,44 @@ export default function HomeScreen() {
 
         {bookingType !== 'rebook' && (
           <>
-  
+            {/* SUPPLIER SELECTOR SECTION */}
+            <View style={styles.supplierSection}>
+              <Text style={styles.sectionTitle}>Select Water Supplier</Text>
+
+              <TouchableOpacity
+                style={styles.supplierSelectorButton}
+                onPress={() => setShowSupplierModal(true)}
+              >
+                {selectedSupplier ? (
+                  <View style={styles.selectedSupplierContainer}>
+                    <View style={[styles.supplierIconSmall, { backgroundColor: "#2196F3" }]}>
+                      <Text style={styles.supplierEmojiSmall}>💧</Text>
+                    </View>
+                    <View style={styles.selectedSupplierInfo}>
+                      <Text style={styles.selectedSupplierName}>{selectedSupplier.name}</Text>
+                      <View style={styles.supplierMetaRow}>
+                        <Ionicons name="star" size={12} color="#FFC107" />
+                        <Text style={styles.supplierRatingSmall}>4.8</Text>
+                        <Text style={styles.supplierDot}>•</Text>
+                        <Text style={styles.supplierDeliveriesSmall}>2500+ deliveries</Text>
+                      </View>
+                    </View>
+                    <Ionicons name="chevron-down" size={20} color="#666" />
+                  </View>
+                ) : (
+                  <View style={styles.placeholderContainer}>
+                    <Ionicons name="business-outline" size={20} color="#999" />
+                    <Text style={styles.placeholderText}>Tap to select supplier</Text>
+                    <Ionicons name="chevron-down" size={20} color="#999" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.tankerSection}>
               <Text style={styles.sectionTitle}>Select Tanker Size</Text>
-              <ScrollView 
-                horizontal 
+              <ScrollView
+                horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.tankerScroll}
               >
@@ -262,11 +310,9 @@ export default function HomeScreen() {
               </ScrollView>
             </View>
 
-     
             <View style={styles.detailsSection}>
               <Text style={styles.sectionTitle}>Delivery Details</Text>
-              
-          
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Delivery Address *</Text>
                 <View style={styles.addressInputRow}>
@@ -287,19 +333,18 @@ export default function HomeScreen() {
                       </TouchableOpacity>
                     )}
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => {
                       console.log("Search button pressed for:", destination);
                       setSearchAddress(destination);
                     }}
                     style={styles.searchButton}
                   >
-                    <Ionicons name="search" size={22} color="#fff" />
+                    <Ionicons name="search" size={22} color="#1976D2" />
                   </TouchableOpacity>
                 </View>
               </View>
 
-        
               {bookingType === 'Scheduled' && (
                 <View style={styles.scheduleRow}>
                   <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
@@ -318,7 +363,7 @@ export default function HomeScreen() {
 
                   <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                     <Text style={styles.inputLabel}>Time Slot *</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.inputContainer}
                       onPress={() => setShowTimePicker(true)}
                     >
@@ -334,7 +379,6 @@ export default function HomeScreen() {
                 </View>
               )}
 
-        
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Special Instructions (Optional)</Text>
                 <View style={[styles.inputContainer, styles.textAreaContainer]}>
@@ -351,7 +395,6 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-          
               <View style={styles.priceSummary}>
                 <Text style={styles.priceLabel}>Estimated Price:</Text>
                 <Text style={styles.priceValue}>{tankerOptions[selectedTanker].price}</Text>
@@ -359,22 +402,77 @@ export default function HomeScreen() {
             </View>
           </>
         )}
-      </ScrollView>
 
-  
-      <View style={styles.bookingFooter}>
-        <TouchableOpacity 
-          style={styles.bookButton}
-          onPress={handleBooking}
-        >
-          <Text style={styles.bookButtonText}>
-            {bookingType === 'Immediate' ? 'Book Now' : 'Schedule Booking'}
-          </Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
+        {bookingType !== 'rebook' &&
+          <View style={styles.bookingFooter}>
+            <TouchableOpacity
+              style={styles.bookButton}
+              onPress={handleBooking}
+            >
+              <Text style={styles.bookButtonText}>
+                {bookingType === 'Immediate' ? 'Book Now' : 'Schedule Booking'}
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        }
 
-    
+      </KeyboardAwareScrollView>
+
+      {/* SUPPLIER SELECTION MODAL */}
+      <Modal
+        visible={showSupplierModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSupplierModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Water Supplier</Text>
+              <TouchableOpacity onPress={() => setShowSupplierModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.supplierList}>
+              {suppliers.map((supplier, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.supplierItem,
+                    selectedSupplier?.id === supplier.id && styles.supplierItemActive
+                  ]}
+                  onPress={() => {
+                    console.log("Selected Supplier:", supplier);
+                    setSelectedSupplier(supplier);
+                    setShowSupplierModal(false);
+                  }}
+                >
+                  <View style={[styles.supplierIconLarge, { backgroundColor: supplier.color }]}>
+                    <Text style={styles.supplierEmojiLarge}>💧</Text>
+                  </View>
+                  <View style={styles.supplierDetails}>
+                    <Text style={styles.supplierName}>{supplier.name}</Text>
+                    <View style={styles.supplierMeta}>
+                      <View style={styles.ratingContainer}>
+                        <Ionicons name="star" size={14} color="#FFC107" />
+                        <Text style={styles.supplierRating}>4.8</Text>
+                      </View>
+                      <Text style={styles.supplierDot}>•</Text>
+                      <Text style={styles.supplierDeliveries}>2600+ deliveries</Text>
+                    </View>
+                  </View>
+                  {selectedSupplier?.id === supplier.id && (
+                    <Ionicons name="checkmark-circle" size={24} color="#1976D2" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* TIME PICKER MODAL */}
       <Modal
         visible={showTimePicker}
         transparent
@@ -402,10 +500,10 @@ export default function HomeScreen() {
                     setShowTimePicker(false);
                   }}
                 >
-                  <Ionicons 
-                    name="time" 
-                    size={20} 
-                    color={selectedTime === slot ? '#1976D2' : '#666'} 
+                  <Ionicons
+                    name="time"
+                    size={20}
+                    color={selectedTime === slot ? '#1976D2' : '#666'}
                   />
                   <Text style={[
                     styles.timeSlotText,
@@ -423,12 +521,6 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-    
-      <DrawerMenu 
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        currentScreen="index"
-      />
     </SafeAreaView>
   );
 }
@@ -439,7 +531,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   mapcontainer: {
-    height: 250,
+    height: 300,
   },
   locationDisplay: {
     flexDirection: 'row',
@@ -459,6 +551,8 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+    minHeight: 400,
   },
   bookingTypeSection: {
     backgroundColor: '#fff',
@@ -503,6 +597,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
     marginTop: 8,
+    minHeight: 300,
   },
   rebookCard: {
     flexDirection: 'row',
@@ -535,6 +630,128 @@ const styles = StyleSheet.create({
   rebookDetails: {
     fontSize: 12,
     color: '#666',
+  },
+  // SUPPLIER SELECTOR STYLES
+  supplierSection: {
+    backgroundColor: '#fff',
+    padding: 16,
+    marginTop: 8,
+  },
+  supplierSelectorButton: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  selectedSupplierContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  supplierIconSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  supplierEmojiSmall: {
+    fontSize: 22,
+  },
+  selectedSupplierInfo: {
+    flex: 1,
+  },
+  selectedSupplierName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  supplierMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  supplierRatingSmall: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    marginLeft: 4,
+  },
+  supplierDeliveriesSmall: {
+    fontSize: 12,
+    color: '#999',
+  },
+  placeholderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+  },
+  placeholderText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#999',
+    marginLeft: 12,
+  },
+  supplierList: {
+    padding: 16,
+  },
+  supplierItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  supplierItemActive: {
+    backgroundColor: '#E3F2FD',
+    borderColor: '#1976D2',
+  },
+  supplierIconLarge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  supplierEmojiLarge: {
+    fontSize: 28,
+  },
+  supplierDetails: {
+    flex: 1,
+  },
+  supplierName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 6,
+  },
+  supplierMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  supplierRating: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+    marginLeft: 4,
+  },
+  supplierDot: {
+    fontSize: 13,
+    color: '#ccc',
+    marginHorizontal: 8,
+  },
+  supplierDeliveries: {
+    fontSize: 13,
+    color: '#999',
   },
   tankerSection: {
     backgroundColor: '#fff',
@@ -623,6 +840,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginLeft: 8,
+  },
+  addressInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchButton: {
+    marginLeft: 8,
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 8,
   },
   scheduleRow: {
     flexDirection: 'row',
@@ -739,8 +966,6 @@ const styles = StyleSheet.create({
   timeSlotTextActive: {
     color: '#1976D2',
   },
-  searchButton: {
-    marginLeft: 8,
-    padding: 4,
-  },
 });
+
+

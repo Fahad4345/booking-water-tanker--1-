@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  StatusBar, Alert 
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  StatusBar, Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { Auth } from '../api/Auth';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from '../context/context';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -14,8 +16,9 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('Customer'); 
-  const { signup } = Auth();
+  const [role, setRole] = useState('customer');
+  const { signup, login } = Auth();
+  const { updateUser } = useUser();
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
@@ -29,11 +32,34 @@ export default function RegisterScreen() {
     }
 
     const result = await signup(name, email, password, role);
-    console.log(result);
+    console.log("Signup result:", result);
+
 
     if (result.success) {
-      Alert.alert("Success", "Account created successfully!");
-      router.push("/login");
+      await new Promise((r) => setTimeout(r, 500));
+      const result = await login(email, password);
+      console.log("Login after signup result:", result);
+
+      if (result.success) {
+
+        const { user, accessToken, refreshToken } = result.data;
+
+
+        await AsyncStorage.setItem("accessToken", accessToken);
+        await AsyncStorage.setItem("refreshToken", refreshToken);
+        console.log("Registered User:", user);
+
+        console.log("Registered User:", user);
+        await updateUser(user);
+
+        if (user.role === "customer") {
+          router.replace("/tabCustomer/home");
+        }
+        else {
+          router.replace("/tabSupplier/homeScreen")
+        }
+      }
+
     } else {
       Alert.alert("Signup Failed", result.message || "Something went wrong");
     }
@@ -111,6 +137,18 @@ export default function RegisterScreen() {
                   ]}
                 />
                 <Text style={styles.radioText}>Supplier</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.radioOption}
+                onPress={() => setRole('Tanker')}
+              >
+                <View
+                  style={[
+                    styles.radioCircle,
+                    role === 'Tanker' && styles.radioSelected,
+                  ]}
+                />
+                <Text style={styles.radioText}>Tanker</Text>
               </TouchableOpacity>
             </View>
           </View>

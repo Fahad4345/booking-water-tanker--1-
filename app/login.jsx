@@ -7,46 +7,54 @@ import Button from '../components/Button';
 import { Auth } from '../api/Auth';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from '../context/context';
+import GoogleLoginButton from '../components/GoogleButton';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { updateUser } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const{login}=Auth();
+  const { login } = Auth();
+  const handleGoogleLogin = (user) => {
+    console.log('User info:', user);
 
-  const handleLogin =  async () => {
-    if ( !email || !password ) {
+  };
+  const handleLogin = async () => {
+    if (!email || !password) {
       Alert.alert("Error", "All fields are required");
       return;
     }
-  
-  
-    const result = await login( email, password);
 
-     if (result.success) {
-  
-       const { user, accessToken, refreshToken } = result.data;
-      
-  
+
+    const result = await login(email, password);
+
+    if (result.success) {
+
+      const { user, accessToken, refreshToken } = result.data;
+
+
       await AsyncStorage.setItem("accessToken", accessToken);
       await AsyncStorage.setItem("refreshToken", refreshToken);
-      
-   
+
+
       await updateUser(user);
-      
+
       console.log(await AsyncStorage.getItem("refreshToken"));
       console.log(await AsyncStorage.getItem("accessToken"));
       console.log(await AsyncStorage.getItem("user"));
-      if(user.role==="customer"){
-         router.replace("/");
+      if (user.role === "customer") {
+        router.replace("/");
       }
-      else{
-        router.replace("/tabSupplier/homeScreen")
+      else if (user.role === "Supplier") {
+        router.replace("/tabSupplier/homeScreen");
+      }
+      else if (user.role === "Tanker") {
+        router.replace("/tabTanker/homeScreen");
       }
 
     } else {
       Alert.alert("Login Failed", result.error || "Something went wrong");
+      3
     }
   };
   const handleSendOtp = async (email) => {
@@ -59,7 +67,7 @@ export default function LoginScreen() {
       });
 
       const data = await res.json();
-    console.log("res of forget",data)
+      console.log("res of forget", data)
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
 
       Alert.alert("Success", "OTP sent to your email");
@@ -97,13 +105,13 @@ export default function LoginScreen() {
             placeholder="••••••••••••"
             secureTextEntry
           />
-          
-          <TouchableOpacity onPress={()=>{handleSendOtp(email)}}>
+
+          <TouchableOpacity onPress={() => { handleSendOtp(email) }}>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          <Button 
-            title="LOGIN" 
+          <Button
+            title="LOGIN"
             onPress={handleLogin}
             variant="primary"
             style={styles.loginButton}
@@ -115,8 +123,10 @@ export default function LoginScreen() {
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
+          {/* <GoogleLoginButton onLoginSuccess={handleGoogleLogin} /> */}
         </View>
       </ScrollView>
+
     </View>
   );
 }

@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "booking-water-tanker",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+
     "ios": {
       "supportsTablet": true
     },

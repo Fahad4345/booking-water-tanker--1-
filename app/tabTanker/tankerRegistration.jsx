@@ -13,14 +13,11 @@ import {
 import { registerTankerProvider } from "../../api/tankerProvider/register";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from 'expo-router';
-import { useUser } from '../../context/context';
 
 const TankerProviderRegistration = () => {
   const [step, setStep] = useState(1);
-  const { user, clearUser } = useUser();
-  console.log("user in tanker registration", user);
   const [formData, setFormData] = useState({
-    id: user._id,
+
     fullName: '',
     phone: '',
     email: '',
@@ -107,8 +104,8 @@ const TankerProviderRegistration = () => {
   };
 
   const handleSubmit = async () => {
-    const { waterSource, sourceAddress, sourceType, id } = formData;
-    if (!waterSource || !sourceAddress || !sourceType || !id) {
+    const { waterSource, sourceAddress, sourceType } = formData;
+    if (!waterSource || !sourceAddress || !sourceType) {
       Alert.alert("Missing Fields", "Please fill all water source details before submitting.");
       return;
     }
@@ -123,7 +120,6 @@ const TankerProviderRegistration = () => {
         storeTankerInfo(response.data);
 
         setFormData({
-
           fullName: '',
           phone: '',
           email: '',

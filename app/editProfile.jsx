@@ -5,21 +5,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { Auth } from '../api/Auth';
 import { useUser } from '../context/context';
 
 export default function EditProfileScreen() {
-  const{updateProfile}=Auth();
+  const { updateProfile } = Auth();
   const router = useRouter();
   const { user: contextUser, updateUser } = useUser();
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-  });
+  const [user, setUser] = useState({ name: '', email: '', phone: '', address: '' });
 
   useEffect(() => {
     loadUserData();
@@ -27,7 +22,7 @@ export default function EditProfileScreen() {
 
   const loadUserData = async () => {
     try {
-    
+
       if (contextUser) {
         console.log("Context User", contextUser);
         setUser({
@@ -45,30 +40,30 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     setLoading(true);
-    
+
     try {
-        const result = await updateProfile({
-            id:user.id,
-            name: user.name,
-            phone: user.phone,
-            addresse: user.address,
-          });
-          if (result.success) {
-          
-            const updatedUser = {
-              ...contextUser,
-              name: user.name,
-              phone: user.phone,
-              address: user.address,
-            };
-            await updateUser(updatedUser);
-            
-            Alert.alert("Success", "Profile updated!");
-             console.log("User",user);
-            router.back();
-          } else {
-            Alert.alert("Error", result.error);
-          }
+      const result = await updateProfile({
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        addresse: user.address,
+      });
+      if (result.success) {
+
+        const updatedUser = {
+          ...contextUser,
+          name: user.name,
+          phone: user.phone,
+          address: user.address,
+        };
+        await updateUser(updatedUser);
+
+        Alert.alert("Success", "Profile updated!");
+        console.log("User", user);
+        router.back();
+      } else {
+        Alert.alert("Error", result.error);
+      }
     } catch (error) {
       console.error('Error saving profile:', error);
       Alert.alert("Error", "Failed to update profile. Please try again.");
@@ -91,11 +86,11 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
-     
+
+
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.profileSection}>
+        <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatar}>👤</Text>
           </View>
@@ -109,31 +104,31 @@ export default function EditProfileScreen() {
           <Input
             label="Full Name"
             value={user.name}
-            onChangeText={(text) => setUser({...user, name: text})}
+            onChangeText={(text) => setUser({ ...user, name: text })}
             placeholder="Enter your full name"
           />
-          
+
           <Input
             label="Email Address"
-            editable={false} 
+            editable={false}
             value={user.email}
-            onChangeText={(text) => setUser({...user, email: text})}
+            onChangeText={(text) => setUser({ ...user, email: text })}
             placeholder="Enter your email"
             keyboardType="email-address"
           />
-          
+
           <Input
             label="Phone Number"
             value={user.phone}
-            onChangeText={(text) => setUser({...user, phone: text})}
+            onChangeText={(text) => setUser({ ...user, phone: text })}
             placeholder="Enter your phone number"
             keyboardType="phone-pad"
           />
-          
+
           <Input
             label="Address"
             value={user.address}
-            onChangeText={(text) => setUser({...user, address: text})}
+            onChangeText={(text) => setUser({ ...user, address: text })}
             placeholder="Enter your address"
             multiline={true}
             style={styles.textArea}
@@ -149,8 +144,8 @@ export default function EditProfileScreen() {
             style={styles.saveButton}
             disabled={loading}
           />
-          
-        
+
+
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -162,7 +157,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
- 
+
   scrollContent: {
     padding: 20,
     marginTop: 30,
