@@ -8,6 +8,7 @@ import { Auth } from '../api/Auth';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from '../context/context';
 import GoogleLoginButton from '../components/GoogleButton';
+import { socket } from '../utils/socket';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,38 +26,35 @@ export default function LoginScreen() {
       return;
     }
 
-
     const result = await login(email, password);
 
     if (result.success) {
-
       const { user, accessToken, refreshToken } = result.data;
-
 
       await AsyncStorage.setItem("accessToken", accessToken);
       await AsyncStorage.setItem("refreshToken", refreshToken);
-
-
       await updateUser(user);
 
-      console.log(await AsyncStorage.getItem("refreshToken"));
-      console.log(await AsyncStorage.getItem("accessToken"));
-      console.log(await AsyncStorage.getItem("user"));
-      if (user.role === "customer") {
-        router.replace("/");
-      }
-      else if (user.role === "Supplier") {
-        router.replace("/tabSupplier/homeScreen");
-      }
-      else if (user.role === "Tanker") {
-        router.replace("/tabTanker/homeScreen");
+      // ✅ Register supplier to Socket.IO immediately after login
+      if (user.role === "Supplier") {
+        console.log("📡 Registering supplier on socket:", user._id);
+        socket.emit("registerSupplier", user._id);
       }
 
+      console.log("Login complete for:", user.email);
+
+      if (user.role === "customer") {
+        router.replace("/");
+      } else if (user.role === "Supplier") {
+        router.replace("/tabSupplier/homeScreen");
+      } else if (user.role === "Tanker") {
+        router.replace("/tabTanker/homeScreen");
+      }
     } else {
       Alert.alert("Login Failed", result.error || "Something went wrong");
-      3
     }
   };
+
   const handleSendOtp = async (email) => {
     try {
       console.log("forget Password running");

@@ -50,7 +50,14 @@ export default function SupplierTabs() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="orderDetail"
+          options={{
+            href: null, // 🚫 hides it from the tab bar
+          }}
+        />
       </Tabs>
+
     </SafeAreaView>
   );
 }

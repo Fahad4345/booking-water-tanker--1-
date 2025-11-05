@@ -8,8 +8,10 @@ import {
   StatusBar,
   Alert,
   TouchableOpacity,
-  Modal
+  Modal,
+  Linking
 } from 'react-native';
+import { CardField } from '@stripe/stripe-react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DrawerMenu from '../../components/DrawerMenu';
@@ -19,7 +21,14 @@ import { GetBookings } from '../../api/bookings/GetBooking';
 import OpenStreetMapView from './../../components/OpenStreetMap';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { getSuppliers } from '../../api/suppliers/getAllSupplier';
+import { useStripe } from '@stripe/stripe-react-native';
+import { useRouter } from 'expo-router';
+
+
 export default function HomeScreen() {
+
+
+  const router = useRouter();
   const [selectedTanker, setSelectedTanker] = useState(0);
   const [bookingType, setBookingType] = useState('Immediate');
   const [destination, setDestination] = useState('');
@@ -35,13 +44,19 @@ export default function HomeScreen() {
   const { user } = useUser();
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [searchAddress, setSearchAddress] = useState('');
+  const { confirmPayment } = useStripe();
+
+  // New state for payment flow
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingBooking, setPendingBooking] = useState(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     const Getbookings = async () => {
-      const UserId = user._id;
-      console.log("User", UserId);
+      const UserId = user._id || "";
+
       const result = await GetBookings(UserId);
-      const supplierList = await getSuppliers(); // 🟢 Fetch suppliers
+      const supplierList = await getSuppliers();
       console.log("Suppliers", supplierList);
       if (result.success === true) {
         console.log("User Bookings:", result.data);
@@ -53,14 +68,6 @@ export default function HomeScreen() {
     }
     Getbookings();
   }, []);
-
-  // const suppliers = [
-  //   { id: 1, name: 'Blue Water Supply', rating: 4.8, deliveries: 2500, icon: '💧', color: '#2196F3' },
-  //   { id: 2, name: 'Crystal Clear Tankers', rating: 4.9, deliveries: 3200, icon: '💎', color: '#00BCD4' },
-  //   { id: 3, name: 'Pure Flow Services', rating: 4.7, deliveries: 1800, icon: '🌊', color: '#03A9F4' },
-  //   { id: 4, name: 'Aqua Express', rating: 4.6, deliveries: 2100, icon: '🚰', color: '#0288D1' },
-  //   { id: 5, name: 'Fresh Water Co.', rating: 4.9, deliveries: 2800, icon: '💦', color: '#0097A7' },
-  // ];
 
   const tankerOptions = [
     { id: 0, name: '6,000', capacity: 6000, price: 'PKR 1,800', icon: '🚚', color: '#4FC3F7' },
@@ -95,6 +102,12 @@ export default function HomeScreen() {
     }
 
     const selectedTankerData = tankerOptions[selectedTanker];
+    let finalPrice = parseInt(selectedTankerData.price.replace(/[^\d]/g, ''), 10);
+
+    if (bookingType === 'Immediate') {
+      finalPrice += 1000;
+    }
+
     const BookingDetail = {
       userId: user._id,
       supplierId: selectedSupplier._id,
@@ -103,17 +116,43 @@ export default function HomeScreen() {
       bookingType,
       dropLocation: destination,
       instruction: specialInstructions,
-      price: selectedTankerData.price,
+      price: `PKR ${finalPrice.toLocaleString()}`,
+      priceNumeric: finalPrice,
       deliveryTime: bookingType === "Immediate"
         ? null
         : `${selectedDate} ${selectedTime}`,
     };
 
-    const result = await BookTank(BookingDetail);
-    console.log("BookTank result:", result);
+    router.push({
+      pathname: '/tabCustomer/payment',
+      params: {
+        bookingDetail: JSON.stringify(BookingDetail),
+        userEmail: user.email
+      }
+    });
+  }
+
+  const handleStripePayment = async () => {
+    setIsProcessingPayment(true);
+
+
+  };
+  const handleCashPayment = async () => {
+    setShowPaymentModal(false);
+
+    // Proceed with booking - Cash on Delivery
+    const result = await BookTank({
+      ...pendingBooking,
+      paymentMethod: 'cash'
+    });
 
     if (result.success === true) {
-      Alert.alert("Booking Confirmed! 🎉");
+      Alert.alert("Booking Confirmed! 🎉", "Pay cash upon delivery");
+      // Refresh bookings
+      const updatedBookings = await GetBookings(user._id);
+      if (updatedBookings.success) {
+        setBookings(updatedBookings.data);
+      }
     } else {
       Alert.alert("Error", result.error || "Failed to book tanker");
     }
@@ -123,6 +162,8 @@ export default function HomeScreen() {
     setDestination(order.dropLocation);
     setSelectedTanker(tankerOptions.findIndex(t => t.capacity == order.tankSize));
     setBookingType('Immediate');
+    setSelectedSupplier(suppliers.find(s => s._id === order.supplier));
+    setSearchAddress(order.dropLocation);
   };
 
   return (
@@ -237,7 +278,6 @@ export default function HomeScreen() {
 
         {bookingType !== 'rebook' && (
           <>
-            {/* SUPPLIER SELECTOR SECTION */}
             <View style={styles.supplierSection}>
               <Text style={styles.sectionTitle}>Select Water Supplier</Text>
 
@@ -397,7 +437,11 @@ export default function HomeScreen() {
 
               <View style={styles.priceSummary}>
                 <Text style={styles.priceLabel}>Estimated Price:</Text>
-                <Text style={styles.priceValue}>{tankerOptions[selectedTanker].price}</Text>
+                <Text style={styles.priceValue}>
+                  {bookingType === 'Immediate'
+                    ? `PKR ${(parseInt(tankerOptions[selectedTanker].price.replace(/[^\d]/g, ''), 10) + 1000).toLocaleString()}`
+                    : tankerOptions[selectedTanker].price}
+                </Text>
               </View>
             </View>
           </>
@@ -410,7 +454,7 @@ export default function HomeScreen() {
               onPress={handleBooking}
             >
               <Text style={styles.bookButtonText}>
-                {bookingType === 'Immediate' ? 'Book Now' : 'Schedule Booking'}
+                {bookingType === 'Immediate' ? 'Proceed to Payment' : 'Schedule & Pay'}
               </Text>
               <Ionicons name="arrow-forward" size={20} color="#fff" />
             </TouchableOpacity>
@@ -418,6 +462,143 @@ export default function HomeScreen() {
         }
 
       </KeyboardAwareScrollView>
+
+
+      <Modal
+        visible={showPaymentModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPaymentModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Payment Method</Text>
+              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.paymentContainer}>
+              <View style={styles.orderSummary}>
+                <Text style={styles.summaryTitle}>Order Summary</Text>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Tanker Size:</Text>
+                  <Text style={styles.summaryValue}>{pendingBooking?.tankSize}L</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Supplier:</Text>
+                  <Text style={styles.summaryValue}>{pendingBooking?.supplierName}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Type:</Text>
+                  <Text style={styles.summaryValue}>{pendingBooking?.bookingType}</Text>
+                </View>
+                <View style={[styles.summaryRow, styles.totalRow]}>
+                  <Text style={styles.totalLabel}>Total Amount:</Text>
+                  <Text style={styles.totalValue}>{pendingBooking?.price}</Text>
+                </View>
+              </View>
+              <View style={styles.paymentContainer}>
+                <View style={styles.orderSummary}>
+
+                </View>
+
+
+                <CardField
+                  postalCodeEnabled={false}
+                  placeholder={{
+                    number: '4242 4242 4242 4242',
+                  }}
+                  cardStyle={{
+                    backgroundColor: '#FFFFFF',
+                    textColor: '#000000',
+                    borderColor: '#1976D2',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                  }}
+                  style={{
+                    width: '100%',
+                    height: 50,
+                    marginVertical: 20,
+                  }}
+                  onCardChange={(cardDetails) => {
+                    console.log('cardDetails', cardDetails);
+                  }}
+                />
+
+
+                <TouchableOpacity
+                  style={styles.paymentButton}
+                  onPress={handleStripePayment}
+                  disabled={isProcessingPayment}
+                >
+                  <View style={styles.paymentIconContainer}>
+                    <Ionicons name="card" size={24} color="#fff" />
+                  </View>
+                  <View style={styles.paymentTextContainer}>
+                    <Text style={styles.paymentButtonTitle}>Pay with Stripe</Text>
+                    <Text style={styles.paymentButtonSubtitle}>Credit/Debit Card • Secure</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#fff" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.paymentButton, styles.cashButton]}
+                  onPress={handleCashPayment}
+                  disabled={isProcessingPayment}
+                >
+                  <View style={[styles.paymentIconContainer, styles.cashIconContainer]}>
+                    <Ionicons name="cash" size={24} color="#4CAF50" />
+                  </View>
+                  <View style={styles.paymentTextContainer}>
+                    <Text style={[styles.paymentButtonTitle, styles.cashButtonTitle]}>Cash on Delivery</Text>
+                    <Text style={[styles.paymentButtonSubtitle, styles.cashButtonSubtitle]}>
+                      Pay when tanker arrives
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#4CAF50" />
+                </TouchableOpacity>
+              </View>
+
+
+              <TouchableOpacity
+                style={styles.paymentButton}
+                onPress={handleStripePayment}
+                disabled={isProcessingPayment}
+              >
+                <View style={styles.paymentIconContainer}>
+                  <Ionicons name="card" size={24} color="#fff" />
+                </View>
+                <View style={styles.paymentTextContainer}>
+                  <Text style={styles.paymentButtonTitle}>Pay with Stripe</Text>
+                  <Text style={styles.paymentButtonSubtitle}>Credit/Debit Card • Secure</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#fff" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.paymentButton, styles.cashButton]}
+                onPress={handleCashPayment}
+                disabled={isProcessingPayment}
+              >
+                <View style={[styles.paymentIconContainer, styles.cashIconContainer]}>
+                  <Ionicons name="cash" size={24} color="#4CAF50" />
+                </View>
+                <View style={styles.paymentTextContainer}>
+                  <Text style={[styles.paymentButtonTitle, styles.cashButtonTitle]}>Cash on Delivery</Text>
+                  <Text style={[styles.paymentButtonSubtitle, styles.cashButtonSubtitle]}>Pay when tanker arrives</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#4CAF50" />
+              </TouchableOpacity>
+
+              {isProcessingPayment && (
+                <Text style={styles.processingText}>Processing payment...</Text>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* SUPPLIER SELECTION MODAL */}
       <Modal
@@ -533,22 +714,6 @@ const styles = StyleSheet.create({
   mapcontainer: {
     height: 300,
   },
-  locationDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  locationText: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 13,
-    color: '#333',
-    fontWeight: '500',
-  },
   scrollView: {
     flex: 1,
     backgroundColor: '#f5f5f5',
@@ -631,7 +796,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  // SUPPLIER SELECTOR STYLES
   supplierSection: {
     backgroundColor: '#fff',
     padding: 16,
@@ -966,6 +1130,107 @@ const styles = StyleSheet.create({
   timeSlotTextActive: {
     color: '#1976D2',
   },
-});
-
-
+  // Payment Modal Styles
+  paymentContainer: {
+    padding: 20,
+  },
+  orderSummary: {
+    backgroundColor: '#f9f9f9',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  totalRow: {
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  totalLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333',
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1976D2',
+  },
+  paymentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#635BFF',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  cashButton: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  paymentIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  cashIconContainer: {
+    backgroundColor: '#E8F5E9',
+  },
+  paymentTextContainer: {
+    flex: 1,
+  },
+  paymentButtonTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  cashButtonTitle: {
+    color: '#4CAF50',
+  },
+  paymentButtonSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  cashButtonSubtitle: {
+    color: '#81C784',
+  },
+  processingText: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#666',
+    marginTop: 12,
+    fontStyle: 'italic',
+  },
+})
+  ;

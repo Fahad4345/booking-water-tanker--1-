@@ -10,6 +10,7 @@ export const assignOrderToTanker = async (orderId, tankerId, supplierId) => {
     );
 
     const data = await res.json();
+
     return data;
   } catch (error) {
     console.error("Error assigning order to tanker:", error);

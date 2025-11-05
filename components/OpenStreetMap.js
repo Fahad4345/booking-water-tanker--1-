@@ -169,7 +169,12 @@ export default function OpenStreetMapView({ onLocationSelect, address }) {
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <style>
+      
         html, body, #map { height: 100%; margin: 0; padding: 0; }
+          .leaflet-control-attribution {
+      display: none !important;
+    }
+
         .center-pin {
           position: absolute;
           top: 50%;

@@ -2,19 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 import { GetBookings } from '../../api/bookings/GetBooking';
 import { useUser } from '../../context/context';
+import EventBus from '../../utils/EventBus';
+
 export default function BookingsScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const { user, clearUser } = useUser();
-  // const bookings = [
-  //   { id: 1, size: 'Medium Tanker', capacity: '2000 Liters', date: 'Oct 16, 2025', time: '2:30 PM', status: 'In Transit', address: '123 Main Street', price: '$90' },
-  //   { id: 2, size: 'Small Tanker', capacity: '1000 Liters', date: 'Oct 14, 2025', time: '10:00 AM', status: 'Delivered', address: '456 Oak Avenue', price: '$50' },
-  // ];
+
   const getTankLabel = (size) => {
     switch (Number(size)) {
       case 6000:
@@ -29,6 +29,7 @@ export default function BookingsScreen() {
         return "Unknown";
     }
   };
+
   useEffect(() => {
     const Getbookings = async () => {
       const UserId = user._id;
@@ -42,11 +43,15 @@ export default function BookingsScreen() {
         setBookings(result?.data);
       } else {
         console.log("❌ Failed:", data.message);
-
       }
     }
     Getbookings();
+    // const subscription = EventBus.addListener('orderUpdated', () => {
+    //   console.log('Received update event');
+    //   GetBookings();
+    // });
 
+    // return () => subscription.remove();
   }, [])
 
   const getStatusColor = (status) => status === 'In Transit' ? '#FF9800' : '#4CAF50';
@@ -55,12 +60,20 @@ export default function BookingsScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>My Bookings</Text>
 
-
+        </View>
+        <TouchableOpacity style={styles.iconButton}>
+          <Ionicons name="notifications-outline" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#007BFF" />
+          <ActivityIndicator size="large" color="#4FC3F7" />
         </View>
       ) : bookings.length === 0 ? (
         <View style={styles.centered}>
@@ -73,7 +86,14 @@ export default function BookingsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {bookings.map((booking) => (
-            <TouchableOpacity key={booking._id} style={styles.bookingCard}>
+            <TouchableOpacity
+              onPress={() => router.push({
+                pathname: '/tabCustomer/orderDetail',
+                params: { order: JSON.stringify(booking) },
+              })}
+              key={booking._id}
+              style={styles.bookingCard}
+            >
               <View style={styles.cardHeader}>
                 <View>
                   <Text style={styles.bookingSize}>
@@ -104,24 +124,11 @@ export default function BookingsScreen() {
                   </Text>
                   <Text style={styles.priceValue}>💰 Rs {booking.price}</Text>
                 </View>
-                {/* <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: getStatusColor(booking.status || "") },
-                  ]}
-                >
-                  <Text style={styles.statusText}>
-                    {booking.bookingType || "Pending"}
-                  </Text>
-                </View> */}
               </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
       )}
-
-
-
     </SafeAreaView>
   );
 }
@@ -131,36 +138,94 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
-  menuButton: {
+  headerContent: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666'
+  },
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
-  headerContent: {
-    flex: 1,
+  scrollContent: {
+    padding: 20,
+    paddingTop: 16
   },
-  scrollContent: { padding: 20, marginTop: 60 },
-  title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#666' },
-  bookingCard: { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, elevation: 3 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  bookingSize: { fontSize: 18, fontWeight: '700', color: '#333' },
-  bookingCapacity: { fontSize: 14, color: '#666' },
-  statusBadge: { paddingHorizontal: 12, paddingVertical: 12, borderRadius: 4 },
-  statusText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: 12 },
-  detailValue: { fontSize: 14, color: '#333', marginBottom: 8 },
-  priceValue: { fontSize: 16, fontWeight: '700', color: '#4FC3F7' },
+  bookingCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12
+  },
+  bookingSize: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333'
+  },
+  bookingCapacity: {
+    fontSize: 14,
+    color: '#666'
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    alignSelf: 'flex-start'
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 12
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8
+  },
+  priceValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#4FC3F7'
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
@@ -168,10 +233,12 @@ const styles = StyleSheet.create({
   },
   noBookingText: {
     fontSize: 18,
-    font: 'Poppins',
     fontWeight: "600",
     color: "#555",
     marginTop: 8,
   },
-  noBookingSubtext: { fontSize: 14, color: "#888" },
+  noBookingSubtext: {
+    fontSize: 14,
+    color: "#888"
+  },
 });

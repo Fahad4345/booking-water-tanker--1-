@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ImageBackground, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
@@ -7,7 +7,11 @@ import AuthWrapper from '../components/AuthWrapper';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  
+  useEffect(() => {
+    console.log("Navigated to Index");
+
+  }, []);
+
 
   return (
     <AuthWrapper>
@@ -23,22 +27,22 @@ export default function WelcomeScreen() {
               <Text style={styles.title}>Welcome to Drips water</Text>
               <Text style={styles.subtitle}>Water Delivery app</Text>
             </View>
-            
+
             <View style={styles.buttonContainer}>
-              <Button 
-                title="CREATE AN ACCOUNT" 
+              <Button
+                title="CREATE AN ACCOUNT"
                 onPress={() => router.replace('/register')}
                 variant="primary"
                 style={styles.button}
               />
-              <Button 
-                title="LOGIN" 
+              <Button
+                title="LOGIN"
                 onPress={() => router.replace('/login')}
                 variant="secondary"
                 style={styles.button}
               />
-              <Button 
-                title="Continue as Guest" 
+              <Button
+                title="Continue as Guest"
                 onPress={() => router.replace('/(tabs)')}
                 variant="outline"
                 style={styles.button}

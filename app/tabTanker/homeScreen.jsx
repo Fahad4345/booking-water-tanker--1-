@@ -9,6 +9,8 @@ import { acceptOrder } from '../../api/tankerProvider/acceptOrder';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from 'expo-router';
 
+
+
 export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02ae" }) {
   const [activeTab, setActiveTab] = useState('Immediate');
   const [orders, setOrders] = useState([]);
@@ -16,7 +18,7 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   const router = useRouter();
-  
+
   const getStoredTankerInfo = async () => {
     try {
       const stored = await AsyncStorage.getItem("tankerInfo");
@@ -54,13 +56,13 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
     try {
       setLoading(true);
       const stored = await getStoredTankerInfo();
-      
+
       if (!stored?.id) {
         console.error("No tanker ID found");
         setOrders([]);
         return;
       }
-      
+
       const data = await getOrders(stored.id);
       setOrders(data || []);
       console.log("Stored", stored);
@@ -112,7 +114,7 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
   return (
     <SafeAreaView style={styles.container} edges={['top']}> {/* ← Changed from View to SafeAreaView */}
       <StatusBar style="dark" />
-      
+
       {/* Header - Remove platform-specific padding */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Orders</Text>

@@ -14,13 +14,20 @@ import { registerTankerProvider } from "../../api/tankerProvider/register";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from 'expo-router';
 import { useUser } from '../../context/context';
+import { useEffect } from 'react';
 
 const TankerProviderRegistration = () => {
   const [step, setStep] = useState(1);
   const { user, clearUser } = useUser();
-  console.log("user in tanker registration", user);
+
+  useEffect(() => {
+    console.log("Navigated to Tanker Provider Registration");
+
+
+
+  }, []);
   const [formData, setFormData] = useState({
-    id: user._id,
+    id: user?._id || '',
     fullName: '',
     phone: '',
     email: '',

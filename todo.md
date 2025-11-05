@@ -31,13 +31,16 @@ Admin Loom
 Loom : (https://www.loom.com/share/7b0fa40edc3b41cc8f015be0197c4991)
 Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
-Update :
+### H2O Water Supply :
+
 User Module Integration :
 
-- Created front End For Supplier DashBoard
-- Mapped All Orders assigned to that Supplier
-- Integrated Assign Order Functionality to Resgistered Tanker of That Supplier
-- Categorized Supplier Order on basis of their Type i.e Immediate, Scheduled, pending, Assigned, Completed
-  - Now Supplier Can Assign Order to their Tankers
+- Created Screen for strip Payment
+- Integrated Stripe payement for order
+- On Sucessfull Payement Order get saved
+- Integrated Socket for Real time order Fetching
+- Now When Customer Book Order ,Supplier will get Order without Refreshing
 
-Loom : (https://www.loom.com/share/42f572865e664836a0388695d2970a6f)
+CustomerLoom : (https://www.loom.com/share/63706c7eacb34be2bfdf9e0f015c91f5)
+
+SupplierLoom : (https://www.loom.com/share/50beac97cb92440985220afb1752aaff)

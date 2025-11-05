@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { UserProvider } from "../context/provider";
 import { useUser } from "../context/context";
+import { StripeProvider } from '@stripe/stripe-react-native';
 import React from "react";
 import { View, ActivityIndicator, StatusBar } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -18,10 +19,7 @@ function LayoutContent() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#fff"
-      />
+
       {/* include bottom so screens and tab bars have white background under them */}
       <SafeAreaView edges={['right', 'left',]} style={{ flex: 1, backgroundColor: '#fff' }}>
         <Stack screenOptions={{ headerShown: false }}>
@@ -37,8 +35,14 @@ function LayoutContent() {
 
 export default function RootLayout() {
   return (
-    <UserProvider>
-      <LayoutContent />
-    </UserProvider>
+    <StripeProvider
+      publishableKey="pk_test_51S90zX3hLambblRsM0nx1NdKtRw9smh8ePN12VMHMQQvsyjBNYaDwVUJPRj3qRBjTlpcNJILBcjoH1c8ZNA8JS7G00dd99U1yI"
+      merchantIdentifier="merchant.com.yourapp" // for Apple Pay
+      urlScheme="yourapp" // for deep linking
+    >
+      <UserProvider>
+        <LayoutContent />
+      </UserProvider>
+    </StripeProvider>
   );
 }

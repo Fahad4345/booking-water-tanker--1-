@@ -1,286 +1,10 @@
-// import React, { useState, useCallback } from 'react';
-// import {
-//   View,
-//   Text,
-//   ScrollView,
-//   TouchableOpacity,
-//   StyleSheet,
-//   ActivityIndicator,
-//   Modal,
-// } from 'react-native';
-// import { SafeAreaView } from 'react-native-safe-area-context';
-// import { StatusBar } from 'expo-status-bar';
-// import { Truck, Clock, CheckCircle, AlertCircle, MapPin, Calendar } from 'lucide-react-native';
-// import { getOrders } from "../../api/suppliers/getOrder";
-// import { useRouter, useFocusEffect } from 'expo-router';
-// import { acceptOrder } from '../../api/tankerProvider/acceptOrder';
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }) {
-//   const [activeTab, setActiveTab] = useState('Immediate');
-//   const [orders, setOrders] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [showModal, setShowModal] = useState(false);
-//   const [selectedOrder, setSelectedOrder] = useState(null);
-//   const [filteredTankers, setFilteredTankers] = useState([]);
-
-//   const router = useRouter();
-
-//   // 🧍‍♂️ Static tanker data (for now)
-//   const staticTankers = [
-//     { id: "1", name: "Tanker A", capacity: "10000" },
-//     { id: "2", name: "Tanker B", capacity: "15000" },
-//     { id: "3", name: "Tanker C", capacity: "20000" },
-//     { id: "4", name: "Tanker D", capacity: "15000" },
-//   ];
-
-//   const getStoredTankerInfo = async () => {
-//     try {
-//       const stored = await AsyncStorage.getItem("tankerInfo");
-//       if (stored) {
-//         const tankerInfo = JSON.parse(stored);
-//         console.log("🚛 Tanker Info:", tankerInfo);
-//         return tankerInfo;
-//       }
-//     } catch (error) {
-//       console.error("Error fetching tanker info:", error);
-//     }
-//     return null;
-//   };
-
-//   const handleAssignPress = (order) => {
-//     setSelectedOrder(order);
-//     // Filter static tankers by order.tankSize
-//     const matchingTankers = staticTankers.filter(
-//       (tanker) => tanker.capacity === order.tankSize
-//     );
-//     setFilteredTankers(matchingTankers);
-//     setShowModal(true);
-//   };
-
-//   const handleAssignOrder = async (tanker) => {
-//     try {
-//       setShowModal(false);
-//       const stored = await getStoredTankerInfo();
-//       const data = await acceptOrder(selectedOrder._id, "Accepted", tanker.id);
-
-//       if (data) {
-//         router.push({
-//           pathname: '/acceptedOrderScreen',
-//           params: { order: JSON.stringify(selectedOrder) },
-//         });
-//       }
-//     } catch (error) {
-//       console.error("Error assigning order:", error);
-//     }
-//   };
-
-//   const tabs = [
-//     { id: 'Immediate', label: 'Immediate', icon: AlertCircle },
-//     { id: 'Scheduled', label: 'Scheduled', icon: Calendar },
-//     { id: 'Pending', label: 'Pending', icon: Clock },
-//     { id: 'Completed', label: 'Completed', icon: CheckCircle },
-//   ];
-
-//   const fetchOrders = async () => {
-//     try {
-//       setLoading(true);
-//       const data = await getOrders("6904d7a3d7d66b2f08df41e5");
-//       setOrders(data || []);
-//       console.log("📦 Orders fetched:", data || 0);
-//     } catch (error) {
-//       console.error("Error fetching orders:", error);
-//       setOrders([]);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useFocusEffect(
-//     useCallback(() => {
-//       fetchOrders();
-//     }, [])
-//   );
-
-//   const getFilteredOrders = () => {
-//     if (!Array.isArray(orders)) return [];
-//     if (activeTab === 'Immediate') return orders.filter(o => o.bookingType === "Immediate");
-//     if (activeTab === 'Pending') return orders.filter(o => o.bookingStatus === "Pending");
-//     if (activeTab === 'Scheduled') return orders.filter(o => o.bookingType === "Scheduled");
-//     if (activeTab === 'Completed') return orders.filter(o => o.bookingStatus === "Completed");
-//     return orders;
-//   };
-
-//   const formatDate = (dateString) => {
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-//   };
-
-//   const formatTime = (dateString) => {
-//     const date = new Date(dateString);
-//     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-//   };
-
-//   const getStatusColor = (status) => {
-//     switch (status) {
-//       case 'Immediate': return '#FF6B6B';
-//       case 'Scheduled': return '#4FC3F7';
-//       case 'Pending': return '#FFA726';
-//       case 'Cancelled': return '#999';
-//       case 'Active': return '#42a5f5';
-//       default: return '#4FC3F7';
-//     }
-//   };
-
-//   return (
-//     <SafeAreaView style={styles.container} edges={['top']}>
-//       <StatusBar style="dark" />
-
-//       <View style={styles.header}>
-//         <Text style={styles.headerTitle}>My Orders</Text>
-//       </View>
-
-//       {/* Tabs */}
-//       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer} contentContainerStyle={styles.tabsContent}>
-//         {tabs.map((tab) => {
-//           const Icon = tab.icon;
-//           const isActive = activeTab === tab.id;
-//           return (
-//             <TouchableOpacity
-//               key={tab.id}
-//               style={[styles.tab, isActive && { ...styles.activeTab, borderBottomColor: getStatusColor(tab.id) }]}
-//               onPress={() => setActiveTab(tab.id)}
-//             >
-//               <Icon size={20} color={isActive ? getStatusColor(tab.id) : '#999'} />
-//               <Text style={[styles.tabText, isActive && { ...styles.activeTabText, color: getStatusColor(tab.id) }]}>
-//                 {tab.label}
-//               </Text>
-//             </TouchableOpacity>
-//           );
-//         })}
-//       </ScrollView>
-
-//       {/* Orders List */}
-//       <ScrollView style={styles.ordersContainer}>
-//         {loading ? (
-//           <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 40 }} />
-//         ) : getFilteredOrders().length === 0 ? (
-//           <View style={styles.emptyContainer}>
-//             <Truck size={60} color="#DDD" />
-//             <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
-//           </View>
-//         ) : (
-//           getFilteredOrders().map((order) => (
-//             <TouchableOpacity
-//               key={order._id}
-//               onPress={() =>
-//                 router.push({
-//                   pathname: '/orderDetail',
-//                   params: { order: JSON.stringify(order) },
-//                 })
-//               }
-//               style={styles.orderCard}
-//             >
-//               <View style={styles.orderHeader}>
-//                 <View style={styles.orderHeaderLeft}>
-//                   <View style={[styles.tankIcon, { backgroundColor: getStatusColor(order.bookingStatus) + '20' }]}>
-//                     <Truck size={24} color={getStatusColor(order.bookingStatus)} />
-//                   </View>
-//                   <View>
-//                     <Text style={styles.tankSize}>{order.tankSize} L</Text>
-//                     <Text style={styles.orderType}>{order.bookingType}</Text>
-//                   </View>
-//                 </View>
-//                 <View style={styles.priceContainer}>
-//                   <Text style={styles.price}>{order.price}</Text>
-//                 </View>
-//               </View>
-
-//               <View style={styles.infoRow}>
-//                 <MapPin size={16} color="#666" />
-//                 <Text style={styles.infoText}>{order.dropLocation}</Text>
-//               </View>
-
-//               <View style={styles.infoRow}>
-//                 <Clock size={16} color="#666" />
-//                 <Text style={styles.infoText}>
-//                   {formatDate(order.deliveryTime)} at {formatTime(order.deliveryTime)}
-//                 </Text>
-//               </View>
-
-//               {order.instruction && (
-//                 <View style={styles.instructionContainer}>
-//                   <Text style={styles.instructionLabel}>Instructions:</Text>
-//                   <Text style={styles.instructionText}>{order.instruction}</Text>
-//                 </View>
-//               )}
-
-//               <View style={styles.actionButtons}>
-//                 {order.bookingStatus === 'Completed' && (
-//                   <TouchableOpacity style={[styles.actionButton, styles.startButton]}>
-//                     <Text style={styles.actionButtonText}>Completed</Text>
-//                   </TouchableOpacity>
-//                 )}
-//                 {order.bookingType === 'Immediate' && (
-//                   <TouchableOpacity
-//                     onPress={() => handleAssignPress(order)}
-//                     style={[styles.actionButton, styles.acceptButton]}
-//                   >
-//                     <Text style={styles.actionButtonText}>Assign Order</Text>
-//                   </TouchableOpacity>
-//                 )}
-//                 {order.bookingType === 'Scheduled' && (
-//                   <TouchableOpacity style={[styles.actionButton, styles.viewButton]}>
-//                     <Text style={[styles.actionButtonText, styles.viewButtonText]}>View Details</Text>
-//                   </TouchableOpacity>
-//                 )}
-//               </View>
-//             </TouchableOpacity>
-//           ))
-//         )}
-//       </ScrollView>
-
-//       {/* 🚛 Modal for Tanker Selection */}
-//       <Modal visible={showModal} animationType="slide" transparent onRequestClose={() => setShowModal(false)}>
-//         <View style={styles.modalOverlay}>
-//           <View style={styles.modalContainer}>
-//             <Text style={styles.modalTitle}>Select a Tanker</Text>
-
-//             {filteredTankers.length === 0 ? (
-//               <Text style={styles.noTankerText}>
-//                 No tanker found with capacity {selectedOrder?.tankSize} L
-//               </Text>
-//             ) : (
-//               <ScrollView style={{ maxHeight: 300 }}>
-//                 {filteredTankers.map((tanker) => (
-//                   <TouchableOpacity
-//                     key={tanker.id}
-//                     style={styles.tankerItem}
-//                     onPress={() => handleAssignOrder(tanker)}
-//                   >
-//                     <Text style={styles.tankerName}>{tanker.name}</Text>
-//                     <Text style={styles.tankerCapacity}>{tanker.capacity} L</Text>
-//                   </TouchableOpacity>
-//                 ))}
-//               </ScrollView>
-//             )}
-
-//             <TouchableOpacity style={styles.closeButton} onPress={() => setShowModal(false)}>
-//               <Text style={styles.closeButtonText}>Close</Text>
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-//       </Modal>
-//     </SafeAreaView>
-//   );
-// }
 
 
 
 
 
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -301,6 +25,10 @@ import { acceptOrder } from '../../api/tankerProvider/acceptOrder';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { assignOrderToTanker } from "../../api/suppliers/assignOrder"; // ✅ added
 import { useUser } from '../../context/context';
+import AssignTankerModal from '../../components/AssignModel';
+import EventBus from '../../utils/EventBus';
+import { socket } from '../../utils/socket';
+
 
 
 
@@ -335,7 +63,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
     setFetchingTankers(true);
 
     try {
-
+      console.log("Fetching tankers for capacity:", order.tankSize);
 
       // ✅ Fetch from your backend
       const tankers = await getTankerByCapacity(user._id, order.tankSize);
@@ -343,7 +71,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       if (tankers && tankers.length > 0) {
         setFilteredTankers(
           tankers.map((t) => ({
-            id: t._id,
+            _id: t._id,
             name: t.fullName || t.vehicleNumber,
             vehicleNumber: t.vehicleNumber || 'N/A',
             capacity: t.capacity.toString(),
@@ -391,9 +119,10 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      console.log("Fetching orders for user:", user._id);
       const data = await getOrders(user._id);
       setOrders(data || []);
-      console.log("📦 Orders fetched:", data || 0);
+
     } catch (error) {
       console.error("Error fetching orders:", error);
       setOrders([]);
@@ -402,11 +131,26 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchOrders();
-    }, [])
-  );
+  useEffect(() => {
+    fetchOrders();
+    socket.on("newOrder", (order) => {
+      console.log("📩 New Order received in real-time:", order);
+      fetchOrders(); // re-fetch supplier orders
+    });
+
+    return () => {
+      socket.off("newOrder");
+    };
+    //fetchOrders();
+
+    // const subscription = EventBus.addListener('orderUpdated', () => {
+    //   console.log('Received update event on supplier side');
+    //   fetchOrders();
+    // });
+
+    // return () => subscription.remove();
+
+  }, []);
 
   const getFilteredOrders = () => {
     if (!Array.isArray(orders)) return [];
@@ -495,7 +239,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
               key={order._id}
               onPress={() =>
                 router.push({
-                  pathname: '/orderDetail',
+                  pathname: '/tabSupplier/orderDetail',
                   params: { order: JSON.stringify(order) },
                 })
               }
@@ -557,45 +301,18 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       </ScrollView>
 
       {/* 🚛 Modal for Tanker Selection */}
-      <Modal visible={showModal} animationType="slide" transparent onRequestClose={() => setShowModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>
-              Select a Tanker for {selectedOrder?.tankSize}L Order
-            </Text>
+      <AssignTankerModal
+        visible={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setFilteredTankers([]);
+        }}
+        order={selectedOrder}
+        tankers={filteredTankers}
+        loading={fetchingTankers}
+        onAssign={handleAssignOrder}
+      />
 
-            {fetchingTankers ? (
-              <ActivityIndicator size="large" color="#007bff" style={{ marginVertical: 20 }} />
-            ) : filteredTankers.length === 0 ? (
-              <Text style={styles.noTankerText}>
-                No tanker found with capacity {selectedOrder?.tankSize} L
-              </Text>
-            ) : (
-              <ScrollView style={{ maxHeight: 400 }}>
-                {filteredTankers.map((tanker) => (
-                  <View key={tanker.id} style={styles.tankerCard}>
-                    <View style={styles.tankerInfo}>
-                      <Text style={styles.tankerName}>{tanker.name}</Text>
-                      <Text style={styles.tankerVehicle}>{tanker.vehicleNumber}</Text>
-                      <Text style={styles.tankerCapacity}>{tanker.capacity} L</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.assignButton}
-                      onPress={() => handleAssignOrder(tanker.id)}
-                    >
-                      <Text style={styles.assignButtonText}>Assign</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-            )}
-
-            <TouchableOpacity style={styles.closeButton} onPress={() => { setShowModal(false); setFilteredTankers([]); }}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }

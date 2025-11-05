@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DrawerMenu from '../../components/DrawerMenu';
@@ -8,25 +8,27 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Auth } from '../../api/Auth';
 import { useUser } from '../../context/context';
 export default function ProfileScreen() {
-  const router = useRouter();
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { user, clearUser } = useUser();
+  const { user, clearUser, setUser } = useUser();
 
   const { logout } = Auth();
 
-  const handleLogout = () => {
 
+
+
+  const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Logout', style: 'destructive', onPress: async () => {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
           try {
-            console.log("Logout result", result)
             const result = await logout();
-            await AsyncStorage.clear();
-
             await clearUser();
-            router.replace("/");
+            router.push("/");
+            console.log("Logged out successfully:", result);
           } catch (err) {
             console.error("Logout error:", err);
           }
@@ -78,11 +80,7 @@ export default function ProfileScreen() {
 
 
 
-      <DrawerMenu
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        currentScreen="profile"
-      />
+
     </View>
   );
 }

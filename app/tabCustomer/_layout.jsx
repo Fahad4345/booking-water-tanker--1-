@@ -15,14 +15,15 @@ export default function CustomerTabs() {
             paddingBottom: 8,
             backgroundColor: "#fff",
             borderTopWidth: 0,
+            borderTopColor: "transparent",
             elevation: 0,
             shadowOpacity: 0,
+            shadowColor: "transparent",
           },
-          tabBarLabelStyle: {
-
-          },
+          tabBarLabelStyle: {},
         }}
       >
+
         <Tabs.Screen
           name="home"
           options={{
@@ -48,6 +49,18 @@ export default function CustomerTabs() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="person-outline" size={size} color={color} />
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="orderDetail"
+          options={{
+            href: null, // 🚫 hides it from the tab bar
+          }}
+        />
+        <Tabs.Screen
+          name="payment"
+          options={{
+            href: null, // 🚫 hides it from the tab bar
           }}
         />
       </Tabs>
