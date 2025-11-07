@@ -12,9 +12,9 @@ export default function GoogleLoginButton({ onLoginSuccess }) {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com',
-    iosClientId: undefined,
+ 
     androidClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com',
-    webClientId: undefined,
+ 
     useProxy: true,
     scopes: ['profile', 'email'],
   });

@@ -188,12 +188,8 @@ export default function PaymentScreen() {
                                 </Text>
                             </View>
                         </View>
-
-
-                    </View>
-
-                    {/* Bottom Payment Button */}
-                    <View style={styles.footer}>
+  {/* Bottom Payment Button */}
+  <View style={styles.footer}>
                         <TouchableOpacity
                             style={[styles.payButton, (!cardComplete || isProcessing) && styles.payButtonDisabled]}
                             onPress={handlePayment}
@@ -209,14 +205,12 @@ export default function PaymentScreen() {
                             )}
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={() => router.back()}
-                            disabled={isProcessing}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </TouchableOpacity>
+                        
                     </View>
+
+                    </View>
+
+                  
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -228,8 +222,9 @@ export default function PaymentScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+         flex:1,
         backgroundColor: '#f5f5f5',
+        
     },
     header: {
         flexDirection: 'row',
@@ -256,9 +251,10 @@ const styles = StyleSheet.create({
         width: 32,
     },
     content: {
-        flex: 1,
+         flex:1,
         padding: 16,
-        height: '100%',
+        
+                 
     },
     summaryCard: {
         backgroundColor: '#fff',
@@ -395,6 +391,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
+          borderRadius:12
     },
     payButton: {
         backgroundColor: '#4CAF50',

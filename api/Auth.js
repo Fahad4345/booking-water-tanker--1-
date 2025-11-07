@@ -1,5 +1,6 @@
 "use client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+ import router from"expo-router"
 
 export function Auth() {
   const getAccessToken = async () => {
@@ -52,6 +53,7 @@ export function Auth() {
   };
   const refreshToken = async () => {
     try {
+       console.log("Refresh token running");
       const refreshTokenValue = await AsyncStorage.getItem("refreshToken");
 
       if (!refreshTokenValue) {
@@ -68,22 +70,25 @@ export function Auth() {
       });
 
       const data = await res.json();
+      console.log("Refresh token data", data);
+     
 
-      if (!res.ok) {
-        console.log("Refresh token failed:", data.error);
-        return { success: false, error: data.error || "Token refresh failed" };
-      }
 
-      await AsyncStorage.setItem("accessToken", data.accessToken);
-      if (data.refreshToken) {
-        await AsyncStorage.setItem("refreshToken", data.refreshToken);
-      }
+      if (data.success===false) {
+        console.log("Refresh token failed:",  res.message);
+       await logout(); router.push("/");     }
+      
+      const accessToken = data.data.accessToken;
+    const newRefreshToken = data.data.refreshToken || refreshTokenValue;
+
+    await AsyncStorage.setItem("accessToken", accessToken);
+    await AsyncStorage.setItem("refreshToken", newRefreshToken);
 
       return {
         success: true,
         data: {
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken || refreshTokenValue,
+          accessToken: accessToken,
+          refreshToken:  newRefreshToken
         },
         message: "Token refreshed successfully",
       };
@@ -110,14 +115,15 @@ export function Auth() {
     if (response.status === 401) {
       try {
         const newToken = await refreshToken();
-
+        console.log("New token", newToken.data.accessToken);
         response = await fetch(url, {
           ...options,
           headers: {
             ...options.headers,
-            Authorization: `Bearer ${newToken}`,
+            Authorization: `Bearer ${newToken.data.accessToken}`,
           },
         });
+        
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
         throw new Error("Authentication failed");

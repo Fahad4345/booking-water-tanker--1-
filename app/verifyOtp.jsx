@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Alert } from "react-native";
-import {useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 const VerifyOtp = () => {
   const { email } = useLocalSearchParams();
   const [pin, setPin] = useState("");
-  const router= useRouter();
+  const router = useRouter();
 
   const handleVerifyPin = async () => {
     try {
@@ -26,7 +26,7 @@ const VerifyOtp = () => {
   };
 
   return (
-    <View style={{ padding: 20 ,marginTop:300 }}>
+    <View style={{ padding: 20, marginTop: 300 }}>
       <TextInput
         placeholder="Enter OTP"
         value={pin}

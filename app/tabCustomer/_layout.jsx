@@ -5,8 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CustomerTabs() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["right", "left", "bottom"]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["right", "left", "bottom" ]}>
+     
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -59,6 +59,12 @@ export default function CustomerTabs() {
         />
         <Tabs.Screen
           name="payment"
+          options={{
+            href: null, // 🚫 hides it from the tab bar
+          }}
+        />
+          <Tabs.Screen
+          name="editProfile"
           options={{
             href: null, // 🚫 hides it from the tab bar
           }}

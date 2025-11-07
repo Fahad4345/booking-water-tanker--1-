@@ -1,5 +1,8 @@
-// api/suppliers/getSupplierTankers.js
+import { Auth } from "../Auth";
+
 export const getTankerByCapacity = async (supplierId, capacity) => {
+  const { authFetch } = Auth();
+
   try {
     const res = await fetch(
       "http://192.168.100.187:5000/supplier/getTankerByCapacity",

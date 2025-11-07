@@ -39,7 +39,7 @@ export default function ProfileScreen() {
 
 
   const menuItems = [
-    { icon: '👤', title: 'Edit Profile', onPress: () => router.push('/editProfile') },
+    { icon: '👤', title: 'Edit Profile', onPress: () => router.push('/tabCustomer/editProfile') },
     { icon: '📍', title: 'Saved Addresses', onPress: () => { } },
 
     { icon: '🔔', title: 'Notifications', onPress: () => { } },
@@ -47,6 +47,17 @@ export default function ProfileScreen() {
   ];
 
   return (
+    <>
+    <View style={styles.header}>
+       
+        <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+          <Ionicons name="arrow-back-outline" size={24} color="#333" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>My Profile</Text>
+
+        </View>
+      </View>
     <View style={styles.container}>
 
 
@@ -82,11 +93,12 @@ export default function ProfileScreen() {
 
 
     </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', marginTop: 60, padding: 20 },
+  container: {  backgroundColor: '#f5f5f5',  padding:20 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -107,6 +119,7 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
+      marginLeft:80
   },
   scrollContent: {},
   title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },

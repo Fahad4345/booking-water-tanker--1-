@@ -31,46 +31,48 @@ export default function BookingsScreen() {
   };
 
   useEffect(() => {
-    const Getbookings = async () => {
-      const UserId = user._id;
-      console.log("User", UserId);
-      setLoading(true);
-      const result = await GetBookings(UserId);
-      console.log("result", result);
-      setLoading(false);
-      if (result.success == true) {
-        console.log("✅ User Bookings:", result);
-        setBookings(result?.data);
-      } else {
-        console.log("❌ Failed:", data.message);
+    const fetchBookings = async () => {
+      try {
+        setLoading(true);
+        const UserId = user._id;
+        const result = await GetBookings(UserId);
+        setLoading(false);
+  
+        if (result?.success) {
+          setBookings(result.data || []);
+        } else {
+          console.log("❌ Failed:", result?.message);
+          setBookings([]); // ensure it's empty
+        }
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+        setLoading(false);
+        setBookings([]); // fallback
       }
-    }
-    Getbookings();
-    // const subscription = EventBus.addListener('orderUpdated', () => {
-    //   console.log('Received update event');
-    //   GetBookings();
-    // });
-
-    // return () => subscription.remove();
-  }, [])
+    };
+  
+    fetchBookings();
+  }, []); // re-run if user changes
+  
 
   const getStatusColor = (status) => status === 'In Transit' ? '#FF9800' : '#4CAF50';
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>My Bookings</Text>
+       
+       <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+         <Ionicons name="arrow-back-outline" size={24} color="#333" />
+       </TouchableOpacity>
+       <View style={styles.headerContent}>
+         <Text style={styles.title}>My Bookings</Text>
 
-        </View>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="notifications-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
-
+       </View>
+     </View>
+     
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#4FC3F7" />
@@ -106,11 +108,11 @@ export default function BookingsScreen() {
                 <View
                   style={[
                     styles.statusBadge,
-                    { backgroundColor: getStatusColor(booking.status || "Pending") },
+                    { backgroundColor: getStatusColor(booking.bookingStatus || "Pending") },
                   ]}
                 >
                   <Text style={styles.statusText}>
-                    {booking.status || "Pending"}
+                    {booking.bookingStatus || "Pending"}
                   </Text>
                 </View>
               </View>
@@ -134,14 +136,14 @@ export default function BookingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: {  flex:1, backgroundColor: '#f5f5f5' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     elevation: 2,
@@ -152,6 +154,7 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     flex: 1,
+     marginLeft:60
   },
   title: {
     fontSize: 24,
@@ -173,7 +176,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 16
+    paddingTop: 16,
+   
+    
   },
   bookingCard: {
     backgroundColor: '#fff',

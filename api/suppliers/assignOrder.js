@@ -1,6 +1,10 @@
+import { Auth } from "../Auth";
+
 export const assignOrderToTanker = async (orderId, tankerId, supplierId) => {
+  const { authFetch } = Auth();
+
   try {
-    const res = await fetch(
+    const res = await authFetch(
       "http://192.168.100.187:5000/supplier/assignOrderToTanker",
       {
         method: "POST",

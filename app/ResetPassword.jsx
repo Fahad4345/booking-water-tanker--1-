@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Alert } from "react-native";
-import {useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 const ResetPassword = ({ route, navigation }) => {
   const { email } = useLocalSearchParams();
   const [newPassword, setNewPassword] = useState("");
-  const router= useRouter();
+  const router = useRouter();
   const handleResetPassword = async () => {
     try {
       const res = await fetch("http://192.168.100.187:5000/auth/resetPassword", {
@@ -17,14 +17,14 @@ const ResetPassword = ({ route, navigation }) => {
       if (!res.ok) throw new Error(data.error || "Failed to reset password");
 
       Alert.alert("Success", "Password reset successfully");
-       router.push("/login")
+      router.push("/login")
     } catch (err) {
       Alert.alert("Error", err.message);
     }
   };
 
   return (
-    <View style={{ padding: 20, marginTop:400 }}>
+    <View style={{ padding: 20, marginTop: 400 }}>
       <TextInput
         placeholder="Enter new password"
         secureTextEntry

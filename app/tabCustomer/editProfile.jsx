@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
 
-import { Auth } from '../api/Auth';
-import { useUser } from '../context/context';
+import { Auth } from '../../api/Auth';
+import { useUser } from '../../context/context';
 
 export default function EditProfileScreen() {
   const { updateProfile } = Auth();
@@ -22,7 +23,6 @@ export default function EditProfileScreen() {
 
   const loadUserData = async () => {
     try {
-
       if (contextUser) {
         console.log("Context User", contextUser);
         setUser({
@@ -49,7 +49,6 @@ export default function EditProfileScreen() {
         addresse: user.address,
       });
       if (result.success) {
-
         const updatedUser = {
           ...contextUser,
           name: user.name,
@@ -86,19 +85,30 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
+      <View style={styles.header}>
+       
+       <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+         <Ionicons name="arrow-back-outline" size={24} color="#333" />
+       </TouchableOpacity>
+       <View style={styles.headerContent}>
+         <Text style={styles.title}>Edit Profile</Text>
 
+       </View>
+     </View>
 
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.profileSection}>
+      <KeyboardAwareScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        extraScrollHeight={100}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatar}>👤</Text>
           </View>
-          <TouchableOpacity style={styles.changePhotoButton}>
-            <Text style={styles.changePhotoText}>Change Photo</Text>
-          </TouchableOpacity>
-        </View>
-
+        </View> */}
 
         <View style={styles.formSection}>
           <Input
@@ -135,7 +145,6 @@ export default function EditProfileScreen() {
           />
         </View>
 
-
         <View style={styles.buttonContainer}>
           <Button
             title={loading ? "Saving..." : "Save Changes"}
@@ -144,10 +153,8 @@ export default function EditProfileScreen() {
             style={styles.saveButton}
             disabled={loading}
           />
-
-
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -157,10 +164,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
 
+  headerContent: {
+    flex: 1,
+      marginLeft:80
+  },
+  title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     padding: 20,
-    marginTop: 30,
+    paddingBottom: 40,
+     marginTop:50, // Extra padding at bottom
   },
   profileSection: {
     alignItems: 'center',
@@ -207,6 +232,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 12,
+    marginTop: 10,
   },
   saveButton: {
     marginBottom: 8,

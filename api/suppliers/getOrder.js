@@ -1,7 +1,11 @@
+import { Auth } from "../Auth";
+
 export const getOrders = async (supplierId) => {
+  const { authFetch } = Auth();
+
   try {
     console.log("Get Order Running");
-    const response = await fetch(
+    const response = await authFetch(
       `http://192.168.100.187:5000/supplier/getOrderBySupplier/${supplierId}`,
       {}
     );

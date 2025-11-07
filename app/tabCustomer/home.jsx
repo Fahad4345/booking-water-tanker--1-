@@ -23,6 +23,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { getSuppliers } from '../../api/suppliers/getAllSupplier';
 import { useStripe } from '@stripe/stripe-react-native';
 import { useRouter } from 'expo-router';
+import DatePickerModal from"./../../components/DatePicker"
 
 
 export default function HomeScreen() {
@@ -30,6 +31,7 @@ export default function HomeScreen() {
 
   const router = useRouter();
   const [selectedTanker, setSelectedTanker] = useState(0);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [bookingType, setBookingType] = useState('Immediate');
   const [destination, setDestination] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -57,9 +59,7 @@ export default function HomeScreen() {
 
       const result = await GetBookings(UserId);
       const supplierList = await getSuppliers();
-      console.log("Suppliers", supplierList);
       if (result.success === true) {
-        console.log("User Bookings:", result.data);
         setBookings(result.data);
         setSuppliers(supplierList);
       } else {
@@ -168,7 +168,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1976D2" />
+   
 
       <View style={styles.mapcontainer}>
         <OpenStreetMapView
@@ -387,19 +387,19 @@ export default function HomeScreen() {
 
               {bookingType === 'Scheduled' && (
                 <View style={styles.scheduleRow}>
-                  <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                    <Text style={styles.inputLabel}>Date *</Text>
-                    <TouchableOpacity style={styles.inputContainer}>
-                      <Ionicons name="calendar-outline" size={20} color="#666" />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Select date"
-                        value={selectedDate}
-                        onChangeText={setSelectedDate}
-                        placeholderTextColor="#999"
-                      />
-                    </TouchableOpacity>
-                  </View>
+               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+  <Text style={styles.inputLabel}>Date *</Text>
+  <DatePickerModal
+  visible={showDatePicker}
+  onClose={() => setShowDatePicker(false)}
+  onSelectDate={setSelectedDate}
+  selectedDate={selectedDate}
+/>
+ 
+</View>
+
+
+
 
                   <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                     <Text style={styles.inputLabel}>Time Slot *</Text>
@@ -443,11 +443,7 @@ export default function HomeScreen() {
                     : tankerOptions[selectedTanker].price}
                 </Text>
               </View>
-            </View>
-          </>
-        )}
-
-        {bookingType !== 'rebook' &&
+              {bookingType !== 'rebook' &&
           <View style={styles.bookingFooter}>
             <TouchableOpacity
               style={styles.bookButton}
@@ -461,6 +457,11 @@ export default function HomeScreen() {
           </View>
         }
 
+            </View>
+          </>
+        )}
+
+        
       </KeyboardAwareScrollView>
 
 
@@ -708,16 +709,16 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
+    marginTop:-34,
+ 
   },
   mapcontainer: {
-    height: 300,
+    height: 250,
   },
   scrollView: {
-    flex: 1,
+  
     backgroundColor: '#f5f5f5',
-    minHeight: 400,
+   marginBottom:200
   },
   bookingTypeSection: {
     backgroundColor: '#fff',
@@ -1049,16 +1050,10 @@ const styles = StyleSheet.create({
     color: '#1976D2',
   },
   bookingFooter: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
+   
+   marginTop:14,
     paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+   
   },
   bookButton: {
     backgroundColor: '#4CAF50',

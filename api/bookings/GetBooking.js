@@ -1,19 +1,22 @@
-export const GetBookings= async(userId)=>{
+import { Auth } from "../Auth";
 
-    try{
-    const res = await fetch(`http://192.168.100.187:5000/booking/userBooking/${userId}`, {
+export const GetBookings = async (userId) => {
+  const { authFetch } = Auth();
+  try {
+    const res = await authFetch(
+      `http://192.168.100.187:5000/booking/userBooking/${userId}`,
+      {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-       
-      });
-
-      const data = await res.json();
-       console.log("Res of Get Booking", data);
-    return data;
-    }
-      catch(err){
-        console.error("Error fetching bookings:", err);
       }
-}
+    );
+
+    const data = await res.json();
+
+    return data;
+  } catch (err) {
+    console.error("Error fetching bookings:", err);
+  }
+};

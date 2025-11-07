@@ -121,7 +121,7 @@ export default function LoginScreen() {
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
-          {/* <GoogleLoginButton onLoginSuccess={handleGoogleLogin} /> */}
+          <GoogleLoginButton onLoginSuccess={handleGoogleLogin} />
         </View>
       </ScrollView>
 
