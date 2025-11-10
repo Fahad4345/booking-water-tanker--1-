@@ -7,8 +7,10 @@ import {
   StatusBar,
   Dimensions,
   Linking,
-  Alert
+  Alert,
+
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AssignTankerModal from "../../components/AssignModel";
@@ -112,8 +114,7 @@ const OrderDetailScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={styles.container} edges={['top']}>
 
       <View pointerEvents="none" style={styles.mapContainer}>
         <OpenStreetMapView
@@ -222,7 +223,7 @@ const OrderDetailScreen = () => {
         loading={loading}
         onAssign={handleAssignOrder}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   mapContainer: {
-    height: height * 0.50,
+    height:  height * 0.45,
     position: "relative",
     backgroundColor: "#E5E7EB",
     elevation: 4,

@@ -41,12 +41,7 @@ export default function WelcomeScreen() {
                 variant="secondary"
                 style={styles.button}
               />
-              <Button
-                title="Continue as Guest"
-                onPress={() => router.replace('/(tabs)')}
-                variant="outline"
-                style={styles.button}
-              />
+             
             </View>
           </View>
         </ImageBackground>

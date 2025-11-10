@@ -26,6 +26,17 @@ export default function RegisterScreen() {
       return;
     }
 
+
+    if (!email.toLowerCase().endsWith("@gmail.com")) {
+      Alert.alert("Error", "Email must end with @gmail.com");
+      return;
+    }
+    if (password.length < 8) {
+      Alert.alert("Error", "Password must be at least 8 characters long");
+      return;
+    }
+    
+
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
       return;
@@ -70,7 +81,7 @@ export default function RegisterScreen() {
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.push("/")}>
             <Text style={styles.backButton}>←</Text>
           </TouchableOpacity>
         </View>

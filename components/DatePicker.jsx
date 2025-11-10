@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const DatePickerModal = ({ visible, onClose, onSelectDate, selectedDate }) => {
+  const  DatePickerModal = ({ visible, onClose, onSelectedDate, selectedDate }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const monthNames = [
@@ -29,12 +29,12 @@ const DatePickerModal = ({ visible, onClose, onSelectDate, selectedDate }) => {
     
     const days = [];
     
-    // Add empty cells for days before the month starts
+  
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
     
-    // Add days of the month
+
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
@@ -79,7 +79,8 @@ const DatePickerModal = ({ visible, onClose, onSelectDate, selectedDate }) => {
   
   const handleDateSelect = (date) => {
     if (!isPastDate(date)) {
-      onSelectDate(formatDate(date));
+      console.log("date1: ", formatDate(date));
+      onSelectedDate(formatDate(date));
       onClose();
     }
   };
@@ -172,7 +173,7 @@ const DatePickerModal = ({ visible, onClose, onSelectDate, selectedDate }) => {
             </ScrollView>
             
          
-            {/* <View style={styles.legendContainer}>
+            <View style={styles.legendContainer}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: '#1976D2' }]} />
                 <Text style={styles.legendText}>Selected</Text>
@@ -185,7 +186,7 @@ const DatePickerModal = ({ visible, onClose, onSelectDate, selectedDate }) => {
                 <View style={[styles.legendDot, { backgroundColor: '#f5f5f5' }]} />
                 <Text style={styles.legendText}>Unavailable</Text>
               </View>
-            </View> */}
+            </View>
           </View>
         </View>
       </View>
@@ -331,37 +332,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Demo component to show usage
-export default function Demo() {
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
 
-  return (
-    <View style={{  justifyContent: 'center', alignItems: 'center', }}>
-      <TouchableOpacity
-        style={{
-          backgroundColor: '#1976D2',
-          paddingVertical: 12,
-        width:160,
-          flex:1,
-           justifyContent:"center",
-           alignItems:"center",
-          borderRadius: 8,
-          elevation: 2,
-        }}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
-          {selectedDate || 'Select Date'}
-        </Text>
-      </TouchableOpacity>
 
-      <DatePickerModal
-        visible={showDatePicker}
-        onClose={() => setShowDatePicker(false)}
-        onSelectDate={setSelectedDate}
-        selectedDate={selectedDate}
-      />
-    </View>
-  );
-}
+export default DatePickerModal;

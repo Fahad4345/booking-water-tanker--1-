@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerTankerProvider } from "../../api/tankerProvider/register";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from 'expo-router';
@@ -22,10 +26,8 @@ const TankerProviderRegistration = () => {
 
   useEffect(() => {
     console.log("Navigated to Tanker Provider Registration");
-
-
-
   }, []);
+
   const [formData, setFormData] = useState({
     id: user?._id || '',
     fullName: '',
@@ -33,20 +35,14 @@ const TankerProviderRegistration = () => {
     email: '',
     cnic: '',
     cnicExpiry: '',
-
-
     vehicleNumber: '',
     registrationNumber: '',
     capacity: '6000',
     vehicleModel: '',
     manufacturingYear: '',
-
-
     licenseNumber: '',
     licenseExpiry: '',
     licenseType: 'LTV',
-
-
     waterSource: '',
     sourceAddress: '',
     sourceType: 'municipal',
@@ -56,10 +52,10 @@ const TankerProviderRegistration = () => {
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+  
   const router = useRouter();
 
   const nextStep = () => {
-    // Step 1 Validation
     if (step === 1) {
       const { fullName, phone, cnic, cnicExpiry } = formData;
       if (!fullName || !phone || !cnic || !cnicExpiry) {
@@ -68,7 +64,6 @@ const TankerProviderRegistration = () => {
       }
     }
 
-    // Step 2 Validation
     if (step === 2) {
       const { vehicleNumber, registrationNumber, vehicleModel, manufacturingYear, capacity } = formData;
       if (!vehicleNumber || !registrationNumber || !vehicleModel || !manufacturingYear || !capacity) {
@@ -77,7 +72,6 @@ const TankerProviderRegistration = () => {
       }
     }
 
-    // Step 3 Validation
     if (step === 3) {
       const { licenseNumber, licenseExpiry, licenseType } = formData;
       if (!licenseNumber || !licenseExpiry || !licenseType) {
@@ -86,16 +80,14 @@ const TankerProviderRegistration = () => {
       }
     }
 
-    // Move to next step if validation passes
     if (step < 4) setStep(step + 1);
   };
-
 
   const prevStep = () => {
     if (step > 1) setStep(step - 1);
   };
-  const storeTankerInfo = async (data) => {
 
+  const storeTankerInfo = async (data) => {
     try {
       const tankerInfo = {
         id: data?._id,
@@ -105,32 +97,27 @@ const TankerProviderRegistration = () => {
         vehicleNumber: data?.vehicleNumber
       };
 
-      const savedInfo = await AsyncStorage.setItem("tankerInfo", JSON.stringify(tankerInfo));
-
-      console.log("✅ Tanker info saved:", savedInfo);
+      await AsyncStorage.setItem("tankerInfo", JSON.stringify(tankerInfo));
+      console.log("✅ Tanker info saved");
     } catch (error) {
       console.error("❌ Error saving tanker info:", error);
     }
   };
 
   const handleSubmit = async () => {
-    const { waterSource, sourceAddress, sourceType, id } = formData;
-    if (!waterSource || !sourceAddress || !sourceType || !id) {
+    const { waterSource, sourceAddress, sourceType } = formData;
+    if (!waterSource || !sourceAddress || !sourceType) {
       Alert.alert("Missing Fields", "Please fill all water source details before submitting.");
       return;
     }
     try {
-      console.log("Submitting form:", formData);
-
       const response = await registerTankerProvider(formData);
 
       if (response.success) {
         Alert.alert("Success", "Registration submitted successfully!");
-        console.log("Form submitted:", response.data);
         storeTankerInfo(response.data);
 
         setFormData({
-
           fullName: '',
           phone: '',
           email: '',
@@ -152,24 +139,17 @@ const TankerProviderRegistration = () => {
         router.push("/tabSupplier/homeScreen");
         setStep(1);
       } else {
-        Alert.alert(" Failed", response.message || "Registration failed");
+        Alert.alert("Failed", response.message || "Registration failed");
       }
     } catch (error) {
-      Alert.alert(" Error", error.message || "Something went wrong!");
+      Alert.alert("Error", error.message || "Something went wrong!");
     }
   };
 
-
-
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <View style={styles.headerSection}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>📄</Text>
-        </View>
-        <Text style={styles.stepTitle}>Driver Information</Text>
-      </View>
-
+      <Text style={styles.sectionTitle}>Driver Information</Text>
+      
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Full Name *</Text>
         <TextInput
@@ -227,28 +207,12 @@ const TankerProviderRegistration = () => {
           placeholderTextColor="#999"
         />
       </View>
-      <View style={styles.buttonContainer}>
-
-        <TouchableOpacity
-          style={[styles.nextButton, step === 1 && styles.nextButtonFull]}
-          onPress={nextStep}
-        >
-          <Text style={styles.nextButtonText}>Next →</Text>
-        </TouchableOpacity>
-
-      </View>
-
     </View>
   );
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <View style={styles.headerSection}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>🚚</Text>
-        </View>
-        <Text style={styles.stepTitle}>Vehicle Information</Text>
-      </View>
+      <Text style={styles.sectionTitle}>Vehicle Information</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Select Tanker Capacity *</Text>
@@ -303,7 +267,6 @@ const TankerProviderRegistration = () => {
           onChangeText={(text) => handleInputChange('registrationNumber', text)}
           placeholder="Enter registration number"
           placeholderTextColor="#999"
-
         />
       </View>
 
@@ -315,7 +278,7 @@ const TankerProviderRegistration = () => {
           onChangeText={(text) => handleInputChange('vehicleModel', text)}
           placeholder="e.g., Hino 500"
           placeholderTextColor="#999"
-          keyboardType='phone-pad' />
+        />
       </View>
 
       <View style={styles.inputGroup}>
@@ -325,37 +288,16 @@ const TankerProviderRegistration = () => {
           value={formData.manufacturingYear}
           onChangeText={(text) => handleInputChange('manufacturingYear', text)}
           placeholder="YYYY"
-          k keyboardType='phone-pad'
+          keyboardType='phone-pad'
           placeholderTextColor="#999"
         />
-      </View>
-      <View style={styles.buttonContainer}>
-
-        <TouchableOpacity style={styles.backButton} onPress={prevStep}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-
-
-
-        <TouchableOpacity
-          style={[styles.nextButton, step === 1 && styles.nextButtonFull]}
-          onPress={nextStep}
-        >
-          <Text style={styles.nextButtonText}>Next →</Text>
-        </TouchableOpacity>
-
       </View>
     </View>
   );
 
   const renderStep3 = () => (
     <View style={styles.stepContainer}>
-      <View style={styles.headerSection}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>🪪</Text>
-        </View>
-        <Text style={styles.stepTitle}>License Information</Text>
-      </View>
+      <Text style={styles.sectionTitle}>License Information</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Driving License Number *</Text>
@@ -401,40 +343,12 @@ const TankerProviderRegistration = () => {
           placeholderTextColor="#999"
         />
       </View>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoIcon}>ℹ️</Text>
-        <Text style={styles.infoText}>
-          Please ensure your license is valid and matches the vehicle category you're registering.
-        </Text>
-      </View>
-      <View style={styles.buttonContainer}>
-
-        <TouchableOpacity style={styles.backButton} onPress={prevStep}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-
-
-
-        <TouchableOpacity
-          style={[styles.nextButton, step === 1 && styles.nextButtonFull]}
-          onPress={nextStep}
-        >
-          <Text style={styles.nextButtonText}>Next →</Text>
-        </TouchableOpacity>
-
-      </View>
     </View>
   );
 
   const renderStep4 = () => (
     <View style={styles.stepContainer}>
-      <View style={styles.headerSection}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>💧</Text>
-        </View>
-        <Text style={styles.stepTitle}>Water Source Details</Text>
-      </View>
+      <Text style={styles.sectionTitle}>Water Source Details</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Water Source Type *</Text>
@@ -503,29 +417,6 @@ const TankerProviderRegistration = () => {
           I have a valid water quality certificate
         </Text>
       </TouchableOpacity>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoIcon}>💡</Text>
-        <Text style={styles.infoText}>
-          Water quality certificate will be verified during approval process.
-        </Text>
-      </View>
-      <View style={styles.buttonContainer}>
-
-        <TouchableOpacity style={styles.backButton} onPress={prevStep}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-
-
-
-        <TouchableOpacity
-          style={[styles.submitButton, step === 1 && styles.nextButtonFull]}
-          onPress={handleSubmit}
-        >
-          <Text style={styles.submitButtonText}>Submit→</Text>
-        </TouchableOpacity>
-
-      </View>
     </View>
   );
 
@@ -540,17 +431,50 @@ const TankerProviderRegistration = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom','top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      
+      {/* Header Only */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Tanker Registration</Text>
+        <Text style={styles.stepIndicator}>Step {step} of 4</Text>
+      </View>
 
-
-
-
-      {/* Content */}
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {renderStepContent()}
-      </ScrollView>
-
-
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView 
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+          >
+            {renderStepContent()}
+            
+            {/* Navigation Buttons */}
+            <View style={styles.buttonContainer}>
+              {step > 1 && (
+                <TouchableOpacity style={styles.backButton} onPress={prevStep}>
+                  <Text style={styles.backButtonText}>Back</Text>
+                </TouchableOpacity>
+              )}
+              
+              {step < 4 ? (
+                <TouchableOpacity style={styles.nextButton} onPress={nextStep}>
+                  <Text style={styles.nextButtonText}>Next</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+                  <Text style={styles.submitButtonText}>Submit Registration</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -558,144 +482,93 @@ const TankerProviderRegistration = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    marginTop: 50
+    backgroundColor: '#fff',
   },
   header: {
-    marginTop: 20,
+    backgroundColor: '#fff',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 4,
-    marginHorizontal: "auto"
+    color: '#333',
+    textAlign: 'center',
   },
-  headerSubtitle: {
+  stepIndicator: {
     fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 4,
   },
-  stepIndicatorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: "auto",
-    paddingLeft: 40,
-    paddingVertical: 20,
-    backgroundColor: '#FFFFFF',
-  },
-  stepRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  keyboardAvoidingView: {
     flex: 1,
-
-  },
-  stepCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepCircleActive: {
-    backgroundColor: '#1976D2',
-  },
-  stepCircleInactive: {
-    backgroundColor: '#E0E0E0',
-  },
-  stepNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  stepNumberActive: {
-    color: '#FFFFFF',
-  },
-  stepNumberInactive: {
-    color: '#757575',
-  },
-  stepLine: {
-    flex: 1,
-    height: 3,
-    marginHorizontal: 8,
-  },
-  stepLineActive: {
-    backgroundColor: '#1976D2',
-  },
-  stepLineInactive: {
-    backgroundColor: '#E0E0E0',
   },
   scrollView: {
-    flex: 1,
-    paddingTop: 10
-
+    
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   stepContainer: {
     padding: 20,
   },
-  headerSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E3F2FD',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  iconText: {
-    fontSize: 24,
-  },
-  stepTitle: {
-    fontSize: 24,
+  sectionTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#212121',
-    flex: 1,
+    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#424242',
+    color: '#333',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#f8f9fa',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
+    borderColor: '#dee2e6',
+    borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#212121',
+    color: '#333',
   },
   textArea: {
-    height: 90,
+    height: 100,
     textAlignVertical: 'top',
     paddingTop: 14,
   },
   capacityContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 12,
   },
   capacityCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#f8f9fa',
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: '#dee2e6',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
   },
   capacityCardActive: {
-    borderColor: '#1976D2',
-    backgroundColor: '#E3F2FD',
+    borderColor: '#007bff',
+    backgroundColor: '#e7f3ff',
   },
   capacityIcon: {
     fontSize: 32,
@@ -704,139 +577,126 @@ const styles = StyleSheet.create({
   capacitySize: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#424242',
+    color: '#333',
     marginBottom: 4,
   },
   capacitySizeActive: {
-    color: '#1976D2',
+    color: '#007bff',
   },
   capacityPrice: {
-    fontSize: 13,
-    color: '#757575',
+    fontSize: 14,
+    color: '#666',
   },
   capacityPriceActive: {
-    color: '#1976D2',
+    color: '#007bff',
     fontWeight: '600',
   },
   radioContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   radioButton: {
-    paddingHorizontal: 20,
+    flex: 1,
+    minWidth: 100,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
-    backgroundColor: '#FFFFFF',
+    borderColor: '#dee2e6',
+    backgroundColor: '#f8f9fa',
+    alignItems: 'center',
   },
   radioButtonActive: {
-    borderColor: '#1976D2',
-    backgroundColor: '#E3F2FD',
+    borderColor: '#007bff',
+    backgroundColor: '#e7f3ff',
   },
   radioText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#757575',
+    color: '#666',
   },
   radioTextActive: {
-    color: '#1976D2',
+    color: '#007bff',
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
   },
   checkbox: {
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: '#dee2e6',
     borderRadius: 6,
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
   },
   checkboxChecked: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#28a745',
+    borderColor: '#28a745',
   },
   checkmark: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
   checkboxLabel: {
     flex: 1,
-    fontSize: 15,
-    color: '#424242',
-  },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF9C4',
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  infoIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#424242',
-    lineHeight: 20,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
   },
   buttonContainer: {
     flexDirection: 'row',
+    paddingHorizontal: 20,
     paddingTop: 20,
-
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    paddingBottom: 30,
     gap: 12,
   },
   backButton: {
-
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
     borderWidth: 2,
-    borderColor: '#1976D2',
-    paddingVertical: 10,
-    borderRadius: 8,
+    borderColor: '#6c757d',
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
   backButtonText: {
-    color: '#1976D2',
+    color: '#6c757d',
     fontSize: 16,
     fontWeight: 'bold',
   },
   nextButton: {
     flex: 1,
-    backgroundColor: '#1976D2',
-    paddingVertical: 10,
-    borderRadius: 8,
+    backgroundColor: '#007bff',
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
-  nextButtonFull: {
-    flex: 1,
-  },
   nextButtonText: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
   submitButton: {
     flex: 1,
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    borderRadius: 8,
+    backgroundColor: '#28a745',
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
   submitButtonText: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },

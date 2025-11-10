@@ -56,7 +56,15 @@ export default function SupplierTabs() {
             href: null, // 🚫 hides it from the tab bar
           }}
         />
+   
+      <Tabs.Screen
+          name="editProfile"
+          options={{
+            href: null, // 🚫 hides it from the tab bar
+          }}
+        />
       </Tabs>
+      
 
     </SafeAreaView>
   );

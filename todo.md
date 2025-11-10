@@ -35,12 +35,12 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
 User Module Integration :
 
-- Created Screen for strip Payment
-- Integrated Stripe payement for order
-- On Sucessfull Payement Order get saved
-- Integrated Socket for Real time order Fetching
-- Now When Customer Book Order ,Supplier will get Order without Refreshing
+- Adjusted Refresh Token error
+- Integrated Cancel order Functionality now Payment get refunded via stripe
+- Now after Approval from Admin Supplier will get Orders
+- Adjusted UI
 
-CustomerLoom : (https://www.loom.com/share/63706c7eacb34be2bfdf9e0f015c91f5)
+Loom : (
+https://www.loom.com/share/5bd11d6155f548aabd702963135304f5)
 
-SupplierLoom : (https://www.loom.com/share/50beac97cb92440985220afb1752aaff)
+

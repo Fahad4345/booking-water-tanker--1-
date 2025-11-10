@@ -21,6 +21,13 @@ export default function LoginScreen() {
 
   };
   const handleLogin = async () => {
+
+    if (!email.toLowerCase().endsWith("@gmail.com")) {
+      Alert.alert("Error", "Email must end with @gmail.com");
+      return;
+    }
+    
+    
     if (!email || !password) {
       Alert.alert("Error", "All fields are required");
       return;

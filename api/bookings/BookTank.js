@@ -1,8 +1,8 @@
 import { Auth } from "../Auth";
-export const BookTank = async (BookingDetail) => {
+export const BookTank = async (BookingDetail,PaymentIntentId) => {
   const { authFetch } = Auth();
   try {
-    console.log("BookingDetail before fetch:", BookingDetail);
+    console.log("BookingDetail before fetch:", BookingDetail, PaymentIntentId);
     const res = await authFetch(
       "http://192.168.100.187:5000/booking/createBooking",
       {
@@ -10,7 +10,8 @@ export const BookTank = async (BookingDetail) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(BookingDetail),
+        body: JSON.stringify({ ...BookingDetail,              // ✅ Spread booking details directly
+          paymentIntentId: PaymentIntentId,}),
       }
     );
     const data = await res.json();

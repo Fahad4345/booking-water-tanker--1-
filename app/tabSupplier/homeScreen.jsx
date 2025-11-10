@@ -1,9 +1,6 @@
 
 
 
-
-
-
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -19,18 +16,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Truck, Clock, CheckCircle, AlertCircle, MapPin, Calendar } from 'lucide-react-native';
 import { getOrders } from "../../api/suppliers/getOrder";
-import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity"; // ✅ added
+import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity";
 import { useRouter, useFocusEffect } from 'expo-router';
 import { acceptOrder } from '../../api/tankerProvider/acceptOrder';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { assignOrderToTanker } from "../../api/suppliers/assignOrder"; // ✅ added
+import { assignOrderToTanker } from "../../api/suppliers/assignOrder";
 import { useUser } from '../../context/context';
 import AssignTankerModal from '../../components/AssignModel';
 import EventBus from '../../utils/EventBus';
 import { socket } from '../../utils/socket';
-
-
-
 
 export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }) {
   const [activeTab, setActiveTab] = useState('Immediate');
@@ -39,12 +33,11 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
   const [showModal, setShowModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filteredTankers, setFilteredTankers] = useState([]);
-  const [fetchingTankers, setFetchingTankers] = useState(false); // ✅ added
+  const [fetchingTankers, setFetchingTankers] = useState(false);
   const { user } = useUser();
 
   const router = useRouter();
 
-  // ✅ Static fallback tankers
   const staticTankers = [
     { id: "1", name: "Tanker A", capacity: "10000" },
     { id: "2", name: "Tanker B", capacity: "15000" },
@@ -52,11 +45,6 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
     { id: "4", name: "Tanker D", capacity: "15000" },
   ];
 
-
-
-
-
-  // ✅ Modified Assign Press (fetch from API)
   const handleAssignPress = async (order) => {
     setSelectedOrder(order);
     setShowModal(true);
@@ -64,8 +52,6 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
 
     try {
       console.log("Fetching tankers for capacity:", order.tankSize);
-
-      // ✅ Fetch from your backend
       const tankers = await getTankerByCapacity(user._id, order.tankSize);
       console.log("Fetched Tankers:", tankers);
       if (tankers && tankers.length > 0) {
@@ -92,13 +78,11 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
   const handleAssignOrder = async (tankerId) => {
     try {
       setShowModal(false);
-
-
       const response = await assignOrderToTanker(selectedOrder._id, tankerId, user._id);
 
       if (response.success) {
         Alert.alert("✅ Success", "Order assigned successfully!");
-        fetchOrders(); // refresh list
+        fetchOrders();
       } else {
         Alert.alert("⚠️ Failed", response.message || "Could not assign order.");
       }
@@ -106,7 +90,6 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       console.error("Error assigning order:", error);
     }
   };
-
 
   const tabs = [
     { id: 'Immediate', label: 'Immediate', icon: AlertCircle },
@@ -122,7 +105,6 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       console.log("Fetching orders for user:", user._id);
       const data = await getOrders(user._id);
       setOrders(data || []);
-
     } catch (error) {
       console.error("Error fetching orders:", error);
       setOrders([]);
@@ -135,21 +117,12 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
     fetchOrders();
     socket.on("newOrder", (order) => {
       console.log("📩 New Order received in real-time:", order);
-      fetchOrders(); // re-fetch supplier orders
+      fetchOrders();
     });
 
     return () => {
       socket.off("newOrder");
     };
-    //fetchOrders();
-
-    // const subscription = EventBus.addListener('orderUpdated', () => {
-    //   console.log('Received update event on supplier side');
-    //   fetchOrders();
-    // });
-
-    // return () => subscription.remove();
-
   }, []);
 
   const getFilteredOrders = () => {
@@ -157,30 +130,28 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
 
     switch (activeTab) {
       case 'Immediate':
-        return orders.filter(o => o.bookingType === "Immediate" &&
-          o.bookingStatus !== 'Assigned');
+        return orders.filter(o => o.bookingType === "Immediate" && o.bookingStatus !== 'Assigned');
       case 'Pending':
-        return orders.filter(o => o.bookingStatus === "Pending" &&
-          o.bookingStatus !== 'Assigned');
+        return orders.filter(o => o.bookingStatus === "Pending" && o.bookingStatus !== 'Assigned');
       case 'Scheduled':
-        return orders.filter(o => o.bookingType === "Scheduled" &&
-          o.bookingStatus !== 'Assigned');
+        return orders.filter(o => o.bookingType === "Scheduled" && o.bookingStatus !== 'Assigned');
       case 'Assigned':
-        return orders.filter(o => o.bookingStatus === "Assigned"); // ✅ NEW
+        return orders.filter(o => o.bookingStatus === "Assigned");
       case 'Completed':
         return orders.filter(o => o.bookingStatus === "Completed");
       default:
         return orders;
     }
   };
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const extractDatePart = (deliveryTime) => {
+    if (!deliveryTime) return "Not scheduled";
+    return deliveryTime.split(' ').slice(0, 3).join(' ');
   };
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const extractTimePart = (deliveryTime) => {
+    if (!deliveryTime) return "";
+    return deliveryTime.split(' ').slice(3).join(' ');
   };
 
   const getStatusColor = (status) => {
@@ -190,8 +161,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       case 'Pending': return '#FFA726';
       case 'Cancelled': return '#999';
       case 'Active': return '#42a5f5';
-      case 'Assigned': return '#42a5f5'; // ✅ blue tone for Assigned
-
+      case 'Assigned': return '#42a5f5';
       default: return '#4FC3F7';
     }
   };
@@ -205,7 +175,12 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       </View>
 
       {/* Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer} contentContainerStyle={styles.tabsContent}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.tabsContainer}
+        contentContainerStyle={styles.tabsContent}
+      >
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -215,7 +190,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
               style={[styles.tab, isActive && { ...styles.activeTab, borderBottomColor: getStatusColor(tab.id) }]}
               onPress={() => setActiveTab(tab.id)}
             >
-              <Icon size={20} color={isActive ? getStatusColor(tab.id) : '#999'} />
+              <Icon size={18} color={isActive ? getStatusColor(tab.id) : '#999'} />
               <Text style={[styles.tabText, isActive && { ...styles.activeTabText, color: getStatusColor(tab.id) }]}>
                 {tab.label}
               </Text>
@@ -225,82 +200,91 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       </ScrollView>
 
       {/* Orders List */}
-      <ScrollView style={styles.ordersContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 40 }} />
-        ) : getFilteredOrders().length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Truck size={60} color="#DDD" />
-            <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
-          </View>
-        ) : (
-          getFilteredOrders().map((order) => (
-            <TouchableOpacity
-              key={order._id}
-              onPress={() =>
-                router.push({
-                  pathname: '/tabSupplier/orderDetail',
-                  params: { order: JSON.stringify(order) },
-                })
-              }
-              style={styles.orderCard}
-            >
-              <View style={styles.orderHeader}>
-                <View style={styles.orderHeaderLeft}>
-                  <View style={[styles.tankIcon, { backgroundColor: getStatusColor(order.bookingStatus) + '20' }]}>
-                    <Truck size={24} color={getStatusColor(order.bookingStatus)} />
+      <View style={styles.ordersWrapper}>
+        <ScrollView 
+          style={styles.ordersContainer}
+          contentContainerStyle={styles.ordersContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#4FC3F7" />
+              <Text style={styles.loadingText}>Loading orders...</Text>
+            </View>
+          ) : getFilteredOrders().length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Truck size={60} color="#DDD" />
+              <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
+            </View>
+          ) : (
+            getFilteredOrders().map((order) => (
+              <TouchableOpacity
+                key={order._id}
+                onPress={() =>
+                  router.push({
+                    pathname: '/tabSupplier/orderDetail',
+                    params: { order: JSON.stringify(order) },
+                  })
+                }
+                style={styles.orderCard}
+              >
+                <View style={styles.orderHeader}>
+                  <View style={styles.orderHeaderLeft}>
+                    <View style={[styles.tankIcon, { backgroundColor: getStatusColor(order.bookingStatus) + '20' }]}>
+                      <Truck size={22} color={getStatusColor(order.bookingStatus)} />
+                    </View>
+                    <View>
+                      <Text style={styles.tankSize}>{order.tankSize} L</Text>
+                      <Text style={styles.orderType}>{order.bookingType}</Text>
+                    </View>
                   </View>
-                  <View>
-                    <Text style={styles.tankSize}>{order.tankSize} L</Text>
-                    <Text style={styles.orderType}>{order.bookingType}</Text>
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.price}>{order.price}</Text>
                   </View>
                 </View>
-                <View style={styles.priceContainer}>
-                  <Text style={styles.price}>{order.price}</Text>
+
+                <View style={styles.infoRow}>
+                  <MapPin size={16} color="#666" />
+                  <Text style={styles.infoText} numberOfLines={2}>
+                    {order.dropLocation}
+                  </Text>
                 </View>
-              </View>
 
-              <View style={styles.infoRow}>
-                <MapPin size={16} color="#666" />
-                <Text style={styles.infoText}>{order.dropLocation}</Text>
-              </View>
+                <View style={styles.infoRow}>
+                  <Clock size={16} color="#666" />
+                  <Text style={styles.infoText}>
+                    {extractDatePart(order.deliveryTime)} at {extractTimePart(order.deliveryTime)}
+                  </Text>
+                </View>
 
-              <View style={styles.infoRow}>
-                <Clock size={16} color="#666" />
-                <Text style={styles.infoText}>
-                  {formatDate(order.deliveryTime)} at {formatTime(order.deliveryTime)}
-                </Text>
-              </View>
+                <View style={styles.actionButtons}>
+                  {(order.bookingType === 'Immediate' || order.bookingType === 'Scheduled') && (
+    <TouchableOpacity
+      disabled={order.bookingStatus === 'Assigned'}
+      onPress={() => handleAssignPress(order)}
+      style={[
+        styles.actionButton,
+        styles.acceptButton,
+        order.bookingStatus === 'Assigned' && { backgroundColor: '#ccc' },
+      ]}
+    >
+      <Text
+        style={[
+          styles.actionButtonText,
+          order.bookingStatus === 'Assigned' && { color: '#666' },
+        ]}
+      >
+        {order.bookingStatus === 'Assigned' ? 'Assigned' : 'Assign Order'}
+      </Text>
+    </TouchableOpacity>
+  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+      </View>
 
-              <View style={styles.actionButtons}>
-                {order.bookingType === 'Immediate' && (
-                  <TouchableOpacity
-                    disabled={order.bookingStatus === 'Assigned'} // ✅ disable when assigned
-                    onPress={() => handleAssignPress(order)}
-                    style={[
-                      styles.actionButton,
-                      styles.acceptButton,
-                      order.bookingStatus === 'Assigned' && { backgroundColor: '#ccc' }, // ✅ gray out
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.actionButtonText,
-                        order.bookingStatus === 'Assigned' && { color: '#666' }, // ✅ dim text
-                      ]}
-                    >
-                      {order.bookingStatus === 'Assigned' ? 'Assigned' : 'Assign Order'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
-
-      {/* 🚛 Modal for Tanker Selection */}
       <AssignTankerModal
         visible={showModal}
         onClose={() => {
@@ -312,175 +296,189 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
         loading={fetchingTankers}
         onAssign={handleAssignOrder}
       />
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#F5F5F5' 
+  },
   header: {
     backgroundColor: '#FFF',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   headerTitle: {
-    marginHorizontal: "auto",
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
+    textAlign: 'center',
   },
   tabsContainer: {
-    maxHeight: 50,
     backgroundColor: '#FFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    maxHeight: 52,
   },
-  tabsContent: { paddingHorizontal: 10 },
+  tabsContent: { 
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
     marginHorizontal: 4,
-    borderBottomWidth: 2,
+    borderBottomWidth: 3,
     borderBottomColor: 'transparent',
+    minWidth: 90, // Ensure minimum width for all tabs
   },
-  activeTab: { borderBottomWidth: 3 },
-  tabText: { fontSize: 14, color: '#999', marginLeft: 6, fontWeight: '500' },
-  activeTabText: { fontWeight: '700' },
-  ordersContainer: { flex: 1, padding: 16 },
-  emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: 16, color: '#999', marginTop: 16 },
+  activeTab: { 
+    borderBottomWidth: 3,
+  },
+  tabText: { 
+    fontSize: 13, 
+    color: '#999', 
+    marginLeft: 6, 
+    fontWeight: '600',
+    includeFontPadding: false, // Prevent extra padding
+  },
+  activeTabText: { 
+    fontWeight: '700',
+  },
+  ordersWrapper: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  ordersContainer: {
+    flex: 1,
+  },
+  ordersContent: {
+    flexGrow: 1,
+    paddingTop: 16,
+    paddingBottom: 120, // Extra padding to prevent cutoff
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  emptyContainer: { 
+    flex: 1,
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingVertical: 80 
+  },
+  emptyText: { 
+    fontSize: 16, 
+    color: '#999', 
+    marginTop: 16 
+  },
   orderCard: {
     backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 10,
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  orderHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
-  tankIcon: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  tankSize: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  orderType: { fontSize: 12, color: '#666', marginTop: 2 },
-  priceContainer: { backgroundColor: '#F0F0F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  price: { fontSize: 16, fontWeight: 'bold', color: '#333' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  infoText: { fontSize: 14, color: '#666', marginLeft: 8 },
-  instructionContainer: { backgroundColor: '#F8F8F8', padding: 12, borderRadius: 8, marginTop: 8, marginBottom: 2 },
-  instructionLabel: { fontSize: 12, color: '#999', marginBottom: 4 },
-  instructionText: { fontSize: 14, color: '#333' },
-  actionButtons: { flexDirection: 'row', marginTop: 12 },
-  actionButton: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  acceptButton: { backgroundColor: '#4FC3F7' },
-  startButton: { backgroundColor: '#66BB6A' },
-  viewButton: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#4FC3F7' },
-  actionButtonText: { fontSize: 14, fontWeight: '600', color: '#FFF' },
-  viewButtonText: { color: '#4FC3F7' },
-
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 20,
-    width: '85%',
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  tankerItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-  },
-  tankerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  tankerCapacity: {
-    fontSize: 13,
-    color: '#666',
-  },
-  noTankerText: {
-    textAlign: 'center',
-    color: '#999',
-    marginVertical: 20,
-  },
-  closeButton: {
-    backgroundColor: '#007BFF',
-    marginTop: 16,
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-  },
-  // Update/Add these styles to your existing styles object
-  tankerCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#f0f0f0',
   },
-  tankerInfo: {
+  orderHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 16 
+  },
+  orderHeaderLeft: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+  },
+  tankIcon: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 24, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginRight: 14 
+  },
+  tankSize: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#333' 
+  },
+  orderType: { 
+    fontSize: 13, 
+    color: '#666', 
+    marginTop: 4,
+    fontWeight: '500'
+  },
+  priceContainer: { 
+    backgroundColor: '#F8F9FA', 
+    paddingHorizontal: 14, 
+    paddingVertical: 8, 
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  price: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#333' 
+  },
+  infoRow: { 
+    flexDirection: 'row', 
+    alignItems: 'flex-start', 
+    marginBottom: 12 
+  },
+  infoText: { 
+    fontSize: 14, 
+    color: '#666', 
+    marginLeft: 10,
     flex: 1,
+    lineHeight: 18,
   },
-  tankerName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+  actionButtons: { 
+    flexDirection: 'row', 
+    marginTop: 16 
   },
-  tankerVehicle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+  actionButton: { 
+    flex: 1, 
+    paddingVertical: 14, 
+    borderRadius: 10, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
   },
-  tankerCapacity: {
-    fontSize: 14,
-    color: '#007bff',
-    fontWeight: '600',
+  acceptButton: { 
+    backgroundColor: '#4FC3F7' 
   },
-  assignButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginLeft: 12,
-  },
-  assignButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+  actionButtonText: { 
+    fontSize: 15, 
+    fontWeight: '600', 
+    color: '#FFF' 
   },
 });

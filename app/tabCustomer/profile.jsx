@@ -47,23 +47,24 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <>
+    <SafeAreaView>
+    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+   
+   
+
     <View style={styles.header}>
-       
-        <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
-          <Ionicons name="arrow-back-outline" size={24} color="#333" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>My Profile</Text>
+    
+    <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+      <Ionicons name="arrow-back-outline" size={24} color="#333" />
+    </TouchableOpacity>
+    <View style={styles.headerContent}>
+      <Text style={styles.title}>My Profile</Text>
 
-        </View>
-      </View>
-    <View style={styles.container}>
-
+    </View>
+  </View>
 
 
-
-
+<View style={styles.container}>
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}><Text style={styles.avatar}>👤</Text></View>
         <Text style={styles.name}>{user?.name}</Text>
@@ -93,7 +94,7 @@ export default function ProfileScreen() {
 
 
     </View>
-    </>
+   </SafeAreaView>
   );
 }
 

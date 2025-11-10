@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function CustomerTabs() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["right", "left", "bottom" ]}>
-     
+     <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <Tabs
         screenOptions={{
           headerShown: false,

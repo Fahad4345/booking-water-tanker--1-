@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,34 +9,30 @@ import {
   Alert,
   TouchableOpacity,
   Modal,
-  Linking
-} from 'react-native';
-import { CardField } from '@stripe/stripe-react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import DrawerMenu from '../../components/DrawerMenu';
-import { BookTank } from '../../api/bookings/BookTank';
-import { useUser } from '../../context/context';
-import { GetBookings } from '../../api/bookings/GetBooking';
-import OpenStreetMapView from './../../components/OpenStreetMap';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { getSuppliers } from '../../api/suppliers/getAllSupplier';
-import { useStripe } from '@stripe/stripe-react-native';
-import { useRouter } from 'expo-router';
-import DatePickerModal from"./../../components/DatePicker"
-
+  Linking,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import DrawerMenu from "../../components/DrawerMenu";
+import { BookTank } from "../../api/bookings/BookTank";
+import { useUser } from "../../context/context";
+import { GetBookings } from "../../api/bookings/GetBooking";
+import OpenStreetMapView from "./../../components/OpenStreetMap";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { getSuppliers } from "../../api/suppliers/getAllSupplier";
+import { useStripe } from "@stripe/stripe-react-native";
+import { useRouter } from "expo-router";
+import DatePickerModal from "./../../components/DatePicker";
 
 export default function HomeScreen() {
-
-
   const router = useRouter();
   const [selectedTanker, setSelectedTanker] = useState(0);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [bookingType, setBookingType] = useState('Immediate');
-  const [destination, setDestination] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
-  const [specialInstructions, setSpecialInstructions] = useState('');
+  const [bookingType, setBookingType] = useState("Immediate");
+  const [destination, setDestination] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
@@ -45,10 +41,10 @@ export default function HomeScreen() {
   const [bookings, setBookings] = useState([]);
   const { user } = useUser();
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [searchAddress, setSearchAddress] = useState('');
+  const [searchAddress, setSearchAddress] = useState("");
   const { confirmPayment } = useStripe();
 
-  // New state for payment flow
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingBooking, setPendingBooking] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -65,49 +61,85 @@ export default function HomeScreen() {
       } else {
         console.log("Failed:", result.message);
       }
-    }
+    };
     Getbookings();
   }, []);
-
+  useEffect(() => {
+    console.log("Selected Date", selectedDate);
+  }, [selectedDate]);
   const tankerOptions = [
-    { id: 0, name: '6,000', capacity: 6000, price: 'PKR 1,800', icon: '🚚', color: '#4FC3F7' },
-    { id: 1, name: '12,000L', capacity: 12000, price: 'PKR 3,200', icon: '🚛', color: '#4CAF50' },
-    { id: 2, name: '15,000L', capacity: 15000, price: 'PKR 3,800', icon: '🚛', color: '#2196F3' },
-    { id: 3, name: '22,000L', capacity: 22000, price: 'PKR 5,200', icon: '🚛', color: '#FF9800' },
+    {
+      id: 0,
+      name: "6,000",
+      capacity: 6000,
+      price: "PKR 1,800",
+      icon: "🚚",
+      color: "#4FC3F7",
+    },
+    {
+      id: 1,
+      name: "12,000L",
+      capacity: 12000,
+      price: "PKR 3,200",
+      icon: "🚛",
+      color: "#4CAF50",
+    },
+    {
+      id: 2,
+      name: "15,000L",
+      capacity: 15000,
+      price: "PKR 3,800",
+      icon: "🚛",
+      color: "#2196F3",
+    },
+    {
+      id: 3,
+      name: "22,000L",
+      capacity: 22000,
+      price: "PKR 5,200",
+      icon: "🚛",
+      color: "#FF9800",
+    },
   ];
 
   const timeSlots = [
-    '08:00 - 10:00 AM',
-    '10:00 - 12:00 PM',
-    '12:00 - 02:00 PM',
-    '02:00 - 04:00 PM',
-    '04:00 - 06:00 PM',
-    '06:00 - 08:00 PM'
+    "08:00 - 10:00 AM",
+    "10:00 - 12:00 PM",
+    "12:00 - 02:00 PM",
+    "02:00 - 04:00 PM",
+    "04:00 - 06:00 PM",
+    "06:00 - 08:00 PM",
   ];
 
   const handleBooking = async () => {
     if (!selectedSupplier) {
-      Alert.alert('Required', 'Please select a water supplier');
+      Alert.alert("Required", "Please select a water supplier");
       return;
     }
 
     if (!destination) {
-      Alert.alert('Required', 'Please enter your delivery address');
+      Alert.alert("Required", "Please enter your delivery address");
       return;
     }
 
-    if (bookingType === 'scheduled' && (!selectedDate || !selectedTime)) {
-      Alert.alert('Required', 'Please select date and time for scheduled delivery');
+    if (bookingType === "Scheduled" && (!selectedDate || !selectedTime)) {
+      Alert.alert(
+        "Required",
+        "Please select date and time for scheduled delivery"
+      );
       return;
     }
 
     const selectedTankerData = tankerOptions[selectedTanker];
-    let finalPrice = parseInt(selectedTankerData.price.replace(/[^\d]/g, ''), 10);
+    let finalPrice = parseInt(
+      selectedTankerData.price.replace(/[^\d]/g, ""),
+      10
+    );
 
-    if (bookingType === 'Immediate') {
+    if (bookingType === "Immediate") {
       finalPrice += 1000;
     }
-
+    console.log("Selected Date", selectedDate);
     const BookingDetail = {
       userId: user._id,
       supplierId: selectedSupplier._id,
@@ -118,37 +150,34 @@ export default function HomeScreen() {
       instruction: specialInstructions,
       price: `PKR ${finalPrice.toLocaleString()}`,
       priceNumeric: finalPrice,
-      deliveryTime: bookingType === "Immediate"
-        ? null
-        : `${selectedDate} ${selectedTime}`,
+      deliveryTime:
+        bookingType === "Immediate" ? null : `${selectedDate} ${selectedTime}`,
     };
 
     router.push({
-      pathname: '/tabCustomer/payment',
+      pathname: "/tabCustomer/payment",
       params: {
         bookingDetail: JSON.stringify(BookingDetail),
-        userEmail: user.email
-      }
+        userEmail: user.email,
+      },
     });
-  }
+  };
 
   const handleStripePayment = async () => {
     setIsProcessingPayment(true);
-
-
   };
   const handleCashPayment = async () => {
     setShowPaymentModal(false);
 
-    // Proceed with booking - Cash on Delivery
+  
     const result = await BookTank({
       ...pendingBooking,
-      paymentMethod: 'cash'
+      paymentMethod: "cash",
     });
 
     if (result.success === true) {
       Alert.alert("Booking Confirmed! 🎉", "Pay cash upon delivery");
-      // Refresh bookings
+
       const updatedBookings = await GetBookings(user._id);
       if (updatedBookings.success) {
         setBookings(updatedBookings.data);
@@ -160,15 +189,17 @@ export default function HomeScreen() {
 
   const handleRebook = (order) => {
     setDestination(order.dropLocation);
-    setSelectedTanker(tankerOptions.findIndex(t => t.capacity == order.tankSize));
-    setBookingType('Immediate');
-    setSelectedSupplier(suppliers.find(s => s._id === order.supplier));
+    setSelectedTanker(
+      tankerOptions.findIndex((t) => t.capacity == order.tankSize)
+    );
+    setBookingType("Immediate");
+    setSelectedSupplier(suppliers.find((s) => s._id === order.supplier));
     setSearchAddress(order.dropLocation);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-   
+    <View style={styles.safeContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
       <View style={styles.mapcontainer}>
         <OpenStreetMapView
@@ -181,30 +212,33 @@ export default function HomeScreen() {
       </View>
 
       <KeyboardAwareScrollView
-        style={styles.scrollView}
-        extraScrollHeight={100}
-        enableOnAndroid={true}
-        keyboardShouldPersistTaps="handled"
-      >
-
+    style={styles.scrollView}
+    contentContainerStyle={styles.scrollContent}
+    extraScrollHeight={100}
+    enableOnAndroid={true}
+    keyboardShouldPersistTaps="handled"
+    showsVerticalScrollIndicator={false}
+  >
         <View style={styles.bookingTypeSection}>
           <View style={styles.bookingTypeRow}>
             <TouchableOpacity
               style={[
                 styles.bookingTypeButton,
-                bookingType === 'Immediate' && styles.bookingTypeActive
+                bookingType === "Immediate" && styles.bookingTypeActive,
               ]}
-              onPress={() => setBookingType('Immediate')}
+              onPress={() => setBookingType("Immediate")}
             >
               <Ionicons
                 name="flash"
                 size={18}
-                color={bookingType === 'Immediate' ? '#fff' : '#666'}
+                color={bookingType === "Immediate" ? "#fff" : "#666"}
               />
-              <Text style={[
-                styles.bookingTypeText,
-                bookingType === 'Immediate' && styles.bookingTypeTextActive
-              ]}>
+              <Text
+                style={[
+                  styles.bookingTypeText,
+                  bookingType === "Immediate" && styles.bookingTypeTextActive,
+                ]}
+              >
                 Immediate
               </Text>
             </TouchableOpacity>
@@ -212,19 +246,21 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={[
                 styles.bookingTypeButton,
-                bookingType === 'Scheduled' && styles.bookingTypeActive
+                bookingType === "Scheduled" && styles.bookingTypeActive,
               ]}
-              onPress={() => setBookingType('Scheduled')}
+              onPress={() => setBookingType("Scheduled")}
             >
               <Ionicons
                 name="calendar"
                 size={18}
-                color={bookingType === 'Scheduled' ? '#fff' : '#666'}
+                color={bookingType === "Scheduled" ? "#fff" : "#666"}
               />
-              <Text style={[
-                styles.bookingTypeText,
-                bookingType === 'Scheduled' && styles.bookingTypeTextActive
-              ]}>
+              <Text
+                style={[
+                  styles.bookingTypeText,
+                  bookingType === "Scheduled" && styles.bookingTypeTextActive,
+                ]}
+              >
                 Scheduled
               </Text>
             </TouchableOpacity>
@@ -232,32 +268,36 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={[
                 styles.bookingTypeButton,
-                bookingType === 'rebook' && styles.bookingTypeActive
+                bookingType === "rebook" && styles.bookingTypeActive,
               ]}
-              onPress={() => setBookingType('rebook')}
+              onPress={() => setBookingType("rebook")}
             >
               <Ionicons
                 name="refresh"
                 size={18}
-                color={bookingType === 'rebook' ? '#fff' : '#666'}
+                color={bookingType === "rebook" ? "#fff" : "#666"}
               />
-              <Text style={[
-                styles.bookingTypeText,
-                bookingType === 'rebook' && styles.bookingTypeTextActive
-              ]}>
+              <Text
+                style={[
+                  styles.bookingTypeText,
+                  bookingType === "rebook" && styles.bookingTypeTextActive,
+                ]}
+              >
                 Rebook
               </Text>
             </TouchableOpacity>
           </View>
-          {bookingType === 'Immediate' && (
-            <Text style={styles.availabilityNote}>⚡ Subject to availability</Text>
+          {bookingType === "Immediate" && (
+            <Text style={styles.availabilityNote}>
+              ⚡ Subject to availability
+            </Text>
           )}
         </View>
 
-        {bookingType === 'rebook' && (
+        {bookingType === "rebook" && (
           <View style={styles.rebookSection}>
             <Text style={styles.sectionTitle}>Recent Orders</Text>
-            {bookings.map(order => (
+            {bookings.map((order) => (
               <TouchableOpacity
                 key={order._id}
                 style={styles.rebookCard}
@@ -268,7 +308,9 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.rebookInfo}>
                   <Text style={styles.rebookAddress}>{order.dropLocation}</Text>
-                  <Text style={styles.rebookDetails}>{order.tankSize} • {order.deliveryTime}</Text>
+                  <Text style={styles.rebookDetails}>
+                    {order.tankSize} • {order.deliveryTime}
+                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#999" />
               </TouchableOpacity>
@@ -276,7 +318,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {bookingType !== 'rebook' && (
+        {bookingType !== "rebook" && (
           <>
             <View style={styles.supplierSection}>
               <Text style={styles.sectionTitle}>Select Water Supplier</Text>
@@ -287,16 +329,25 @@ export default function HomeScreen() {
               >
                 {selectedSupplier ? (
                   <View style={styles.selectedSupplierContainer}>
-                    <View style={[styles.supplierIconSmall, { backgroundColor: "#2196F3" }]}>
+                    <View
+                      style={[
+                        styles.supplierIconSmall,
+                        { backgroundColor: "#2196F3" },
+                      ]}
+                    >
                       <Text style={styles.supplierEmojiSmall}>💧</Text>
                     </View>
                     <View style={styles.selectedSupplierInfo}>
-                      <Text style={styles.selectedSupplierName}>{selectedSupplier.name}</Text>
+                      <Text style={styles.selectedSupplierName}>
+                        {selectedSupplier.name}
+                      </Text>
                       <View style={styles.supplierMetaRow}>
                         <Ionicons name="star" size={12} color="#FFC107" />
                         <Text style={styles.supplierRatingSmall}>4.8</Text>
                         <Text style={styles.supplierDot}>•</Text>
-                        <Text style={styles.supplierDeliveriesSmall}>2500+ deliveries</Text>
+                        <Text style={styles.supplierDeliveriesSmall}>
+                          2500+ deliveries
+                        </Text>
                       </View>
                     </View>
                     <Ionicons name="chevron-down" size={20} color="#666" />
@@ -304,7 +355,9 @@ export default function HomeScreen() {
                 ) : (
                   <View style={styles.placeholderContainer}>
                     <Ionicons name="business-outline" size={20} color="#999" />
-                    <Text style={styles.placeholderText}>Tap to select supplier</Text>
+                    <Text style={styles.placeholderText}>
+                      Tap to select supplier
+                    </Text>
                     <Ionicons name="chevron-down" size={20} color="#999" />
                   </View>
                 )}
@@ -323,26 +376,35 @@ export default function HomeScreen() {
                     key={tanker.id}
                     style={[
                       styles.tankerCard,
-                      selectedTanker === index && styles.tankerCardActive
+                      selectedTanker === index && styles.tankerCardActive,
                     ]}
                     onPress={() => setSelectedTanker(index)}
                   >
-                    <View style={[
-                      styles.tankerIcon,
-                      { backgroundColor: selectedTanker === index ? tanker.color : '#f0f0f0' }
-                    ]}>
+                    <View
+                      style={[
+                        styles.tankerIcon,
+                        {
+                          backgroundColor:
+                            selectedTanker === index ? tanker.color : "#f0f0f0",
+                        },
+                      ]}
+                    >
                       <Text style={styles.tankerEmoji}>{tanker.icon}</Text>
                     </View>
-                    <Text style={[
-                      styles.tankerCapacity,
-                      selectedTanker === index && styles.tankerTextActive
-                    ]}>
+                    <Text
+                      style={[
+                        styles.tankerCapacity,
+                        selectedTanker === index && styles.tankerTextActive,
+                      ]}
+                    >
                       {tanker.capacity}
                     </Text>
-                    <Text style={[
-                      styles.tankerPrice,
-                      selectedTanker === index && styles.tankerPriceActive
-                    ]}>
+                    <Text
+                      style={[
+                        styles.tankerPrice,
+                        selectedTanker === index && styles.tankerPriceActive,
+                      ]}
+                    >
                       {tanker.price}
                     </Text>
                   </TouchableOpacity>
@@ -368,7 +430,7 @@ export default function HomeScreen() {
                       returnKeyType="search"
                     />
                     {destination.length > 0 && (
-                      <TouchableOpacity onPress={() => setDestination('')}>
+                      <TouchableOpacity onPress={() => setDestination("")}>
                         <Ionicons name="close-circle" size={20} color="#999" />
                       </TouchableOpacity>
                     )}
@@ -384,45 +446,77 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
+           
+{bookingType === "Scheduled" && (
+  <View style={styles.scheduleRow}>
+    {/* DATE PICKER BUTTON - FIXED */}
+    <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+      <Text style={styles.inputLabel}>Date *</Text>
+      <TouchableOpacity
+        style={styles.inputContainer}
+        onPress={() => {
+          console.log(" DATE PICKER BUTTON PRESSED - setting showDatePicker to true");
+          setShowDatePicker(true);
+        }}
+      >
+        <Ionicons name="calendar-outline" size={20} color="#666" />
+        <Text style={[styles.input, !selectedDate && { color: "#999" }]}>
+          {selectedDate || "Select date"}
+        </Text>
+      </TouchableOpacity>
+    </View>
 
-              {bookingType === 'Scheduled' && (
-                <View style={styles.scheduleRow}>
-               <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-  <Text style={styles.inputLabel}>Date *</Text>
-  <DatePickerModal
+    <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+      <Text style={styles.inputLabel}>Time Slot *</Text>
+      <TouchableOpacity
+        style={styles.inputContainer}
+        onPress={() => setShowTimePicker(true)}
+      >
+        <Ionicons name="time-outline" size={20} color="#666" />
+        <Text
+          style={[
+            styles.input,
+            !selectedTime && { color: "#999" },
+          ]}
+        >
+          {selectedTime || "Select time"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
+
+<DatePickerModal
   visible={showDatePicker}
-  onClose={() => setShowDatePicker(false)}
-  onSelectDate={setSelectedDate}
+  onClose={() => {
+    console.log("🔴 CLOSING DATE PICKER - setting showDatePicker to false");
+    setShowDatePicker(false);
+  }}
+  onSelectedDate={(date) => {
+    console.log("🟡 DATE SELECTED:", date);
+    setSelectedDate(date);
+  }}
   selectedDate={selectedDate}
 />
- 
-</View>
-
-
-
-
-                  <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                    <Text style={styles.inputLabel}>Time Slot *</Text>
-                    <TouchableOpacity
-                      style={styles.inputContainer}
-                      onPress={() => setShowTimePicker(true)}
-                    >
-                      <Ionicons name="time-outline" size={20} color="#666" />
-                      <Text style={[
-                        styles.input,
-                        !selectedTime && { color: '#999' }
-                      ]}>
-                        {selectedTime || 'Select time'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
+               <DatePickerModal
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        onSelectedDate={setSelectedDate}
+        selectedDate={selectedDate}
+      />
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Special Instructions (Optional)</Text>
+                <Text style={styles.inputLabel}>
+                  Special Instructions (Optional)
+                </Text>
                 <View style={[styles.inputContainer, styles.textAreaContainer]}>
-                  <Ionicons name="document-text-outline" size={20} color="#666" style={styles.textAreaIcon} />
+                  <Ionicons
+                    name="document-text-outline"
+                    size={20}
+                    color="#666"
+                    style={styles.textAreaIcon}
+                  />
                   <TextInput
                     style={[styles.input, styles.textArea]}
                     placeholder="Gate code, contact person, etc."
@@ -438,169 +532,40 @@ export default function HomeScreen() {
               <View style={styles.priceSummary}>
                 <Text style={styles.priceLabel}>Estimated Price:</Text>
                 <Text style={styles.priceValue}>
-                  {bookingType === 'Immediate'
-                    ? `PKR ${(parseInt(tankerOptions[selectedTanker].price.replace(/[^\d]/g, ''), 10) + 1000).toLocaleString()}`
+                  {bookingType === "Immediate"
+                    ? `PKR ${(
+                        parseInt(
+                          tankerOptions[selectedTanker].price.replace(
+                            /[^\d]/g,
+                            ""
+                          ),
+                          10
+                        ) + 1000
+                      ).toLocaleString()}`
                     : tankerOptions[selectedTanker].price}
                 </Text>
               </View>
-              {bookingType !== 'rebook' &&
-          <View style={styles.bookingFooter}>
-            <TouchableOpacity
-              style={styles.bookButton}
-              onPress={handleBooking}
-            >
-              <Text style={styles.bookButtonText}>
-                {bookingType === 'Immediate' ? 'Proceed to Payment' : 'Schedule & Pay'}
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        }
-
+              {bookingType !== "rebook" && (
+                <View style={styles.bookingFooter}>
+                  <TouchableOpacity
+                    style={styles.bookButton}
+                    onPress={handleBooking}
+                  >
+                    <Text style={styles.bookButtonText}>
+                      {bookingType === "Immediate"
+                        ? "Proceed to Payment"
+                        : "Schedule & Pay"}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={20} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </>
         )}
-
-        
       </KeyboardAwareScrollView>
 
-
-      <Modal
-        visible={showPaymentModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowPaymentModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Payment Method</Text>
-              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.paymentContainer}>
-              <View style={styles.orderSummary}>
-                <Text style={styles.summaryTitle}>Order Summary</Text>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Tanker Size:</Text>
-                  <Text style={styles.summaryValue}>{pendingBooking?.tankSize}L</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Supplier:</Text>
-                  <Text style={styles.summaryValue}>{pendingBooking?.supplierName}</Text>
-                </View>
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Type:</Text>
-                  <Text style={styles.summaryValue}>{pendingBooking?.bookingType}</Text>
-                </View>
-                <View style={[styles.summaryRow, styles.totalRow]}>
-                  <Text style={styles.totalLabel}>Total Amount:</Text>
-                  <Text style={styles.totalValue}>{pendingBooking?.price}</Text>
-                </View>
-              </View>
-              <View style={styles.paymentContainer}>
-                <View style={styles.orderSummary}>
-
-                </View>
-
-
-                <CardField
-                  postalCodeEnabled={false}
-                  placeholder={{
-                    number: '4242 4242 4242 4242',
-                  }}
-                  cardStyle={{
-                    backgroundColor: '#FFFFFF',
-                    textColor: '#000000',
-                    borderColor: '#1976D2',
-                    borderWidth: 1,
-                    borderRadius: 8,
-                  }}
-                  style={{
-                    width: '100%',
-                    height: 50,
-                    marginVertical: 20,
-                  }}
-                  onCardChange={(cardDetails) => {
-                    console.log('cardDetails', cardDetails);
-                  }}
-                />
-
-
-                <TouchableOpacity
-                  style={styles.paymentButton}
-                  onPress={handleStripePayment}
-                  disabled={isProcessingPayment}
-                >
-                  <View style={styles.paymentIconContainer}>
-                    <Ionicons name="card" size={24} color="#fff" />
-                  </View>
-                  <View style={styles.paymentTextContainer}>
-                    <Text style={styles.paymentButtonTitle}>Pay with Stripe</Text>
-                    <Text style={styles.paymentButtonSubtitle}>Credit/Debit Card • Secure</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.paymentButton, styles.cashButton]}
-                  onPress={handleCashPayment}
-                  disabled={isProcessingPayment}
-                >
-                  <View style={[styles.paymentIconContainer, styles.cashIconContainer]}>
-                    <Ionicons name="cash" size={24} color="#4CAF50" />
-                  </View>
-                  <View style={styles.paymentTextContainer}>
-                    <Text style={[styles.paymentButtonTitle, styles.cashButtonTitle]}>Cash on Delivery</Text>
-                    <Text style={[styles.paymentButtonSubtitle, styles.cashButtonSubtitle]}>
-                      Pay when tanker arrives
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#4CAF50" />
-                </TouchableOpacity>
-              </View>
-
-
-              <TouchableOpacity
-                style={styles.paymentButton}
-                onPress={handleStripePayment}
-                disabled={isProcessingPayment}
-              >
-                <View style={styles.paymentIconContainer}>
-                  <Ionicons name="card" size={24} color="#fff" />
-                </View>
-                <View style={styles.paymentTextContainer}>
-                  <Text style={styles.paymentButtonTitle}>Pay with Stripe</Text>
-                  <Text style={styles.paymentButtonSubtitle}>Credit/Debit Card • Secure</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#fff" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.paymentButton, styles.cashButton]}
-                onPress={handleCashPayment}
-                disabled={isProcessingPayment}
-              >
-                <View style={[styles.paymentIconContainer, styles.cashIconContainer]}>
-                  <Ionicons name="cash" size={24} color="#4CAF50" />
-                </View>
-                <View style={styles.paymentTextContainer}>
-                  <Text style={[styles.paymentButtonTitle, styles.cashButtonTitle]}>Cash on Delivery</Text>
-                  <Text style={[styles.paymentButtonSubtitle, styles.cashButtonSubtitle]}>Pay when tanker arrives</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#4CAF50" />
-              </TouchableOpacity>
-
-              {isProcessingPayment && (
-                <Text style={styles.processingText}>Processing payment...</Text>
-              )}
-            </View>
-          </View>
-        </View>
-      </Modal>
-
+     
       {/* SUPPLIER SELECTION MODAL */}
       <Modal
         visible={showSupplierModal}
@@ -622,7 +587,8 @@ export default function HomeScreen() {
                   key={index}
                   style={[
                     styles.supplierItem,
-                    selectedSupplier?.id === supplier.id && styles.supplierItemActive
+                    selectedSupplier?.id === supplier.id &&
+                      styles.supplierItemActive,
                   ]}
                   onPress={() => {
                     console.log("Selected Supplier:", supplier);
@@ -630,7 +596,12 @@ export default function HomeScreen() {
                     setShowSupplierModal(false);
                   }}
                 >
-                  <View style={[styles.supplierIconLarge, { backgroundColor: supplier.color }]}>
+                  <View
+                    style={[
+                      styles.supplierIconLarge,
+                      { backgroundColor: supplier.color },
+                    ]}
+                  >
                     <Text style={styles.supplierEmojiLarge}>💧</Text>
                   </View>
                   <View style={styles.supplierDetails}>
@@ -641,11 +612,17 @@ export default function HomeScreen() {
                         <Text style={styles.supplierRating}>4.8</Text>
                       </View>
                       <Text style={styles.supplierDot}>•</Text>
-                      <Text style={styles.supplierDeliveries}>2600+ deliveries</Text>
+                      <Text style={styles.supplierDeliveries}>
+                        2600+ deliveries
+                      </Text>
                     </View>
                   </View>
                   {selectedSupplier?.id === supplier.id && (
-                    <Ionicons name="checkmark-circle" size={24} color="#1976D2" />
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={24}
+                      color="#1976D2"
+                    />
                   )}
                 </TouchableOpacity>
               ))}
@@ -654,7 +631,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {/* TIME PICKER MODAL */}
+ 
       <Modal
         visible={showTimePicker}
         transparent
@@ -675,7 +652,7 @@ export default function HomeScreen() {
                   key={index}
                   style={[
                     styles.timeSlotItem,
-                    selectedTime === slot && styles.timeSlotItemActive
+                    selectedTime === slot && styles.timeSlotItemActive,
                   ]}
                   onPress={() => {
                     setSelectedTime(slot);
@@ -685,16 +662,22 @@ export default function HomeScreen() {
                   <Ionicons
                     name="time"
                     size={20}
-                    color={selectedTime === slot ? '#1976D2' : '#666'}
+                    color={selectedTime === slot ? "#1976D2" : "#666"}
                   />
-                  <Text style={[
-                    styles.timeSlotText,
-                    selectedTime === slot && styles.timeSlotTextActive
-                  ]}>
+                  <Text
+                    style={[
+                      styles.timeSlotText,
+                      selectedTime === slot && styles.timeSlotTextActive,
+                    ]}
+                  >
                     {slot}
                   </Text>
                   {selectedTime === slot && (
-                    <Ionicons name="checkmark-circle" size={20} color="#1976D2" />
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color="#1976D2"
+                    />
                   )}
                 </TouchableOpacity>
               ))}
@@ -702,86 +685,92 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+
+  safeContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   container: {
-    marginTop:-34,
- 
+    marginTop: -34,
   },
   mapcontainer: {
     height: 250,
   },
   scrollView: {
+     flexGrow:1,
+    backgroundColor: "#f5f5f5",
   
-    backgroundColor: '#f5f5f5',
-   marginBottom:200
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   bookingTypeSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   bookingTypeRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   bookingTypeButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   bookingTypeActive: {
-    backgroundColor: '#1976D2',
+    backgroundColor: "#1976D2",
   },
   bookingTypeText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
     marginLeft: 6,
   },
   bookingTypeTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   availabilityNote: {
     fontSize: 11,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginTop: 8,
   },
   rebookSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
     marginTop: 8,
     minHeight: 300,
   },
   rebookCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
   },
   rebookIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E3F2FD',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#E3F2FD",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   rebookInfo: {
@@ -789,36 +778,36 @@ const styles = StyleSheet.create({
   },
   rebookAddress: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 2,
   },
   rebookDetails: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   supplierSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
     marginTop: 8,
   },
   supplierSelectorButton: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   selectedSupplierContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
   },
   supplierIconSmall: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   supplierEmojiSmall: {
@@ -829,58 +818,58 @@ const styles = StyleSheet.create({
   },
   selectedSupplierName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 4,
   },
   supplierMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   supplierRatingSmall: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
     marginLeft: 4,
   },
   supplierDeliveriesSmall: {
     fontSize: 12,
-    color: '#999',
+    color: "#999",
   },
   placeholderContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 14,
   },
   placeholderText: {
     flex: 1,
     fontSize: 14,
-    color: '#999',
+    color: "#999",
     marginLeft: 12,
   },
   supplierList: {
     padding: 16,
   },
   supplierItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
     padding: 14,
     borderRadius: 12,
     marginBottom: 10,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   supplierItemActive: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#1976D2',
+    backgroundColor: "#E3F2FD",
+    borderColor: "#1976D2",
   },
   supplierIconLarge: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 14,
   },
   supplierEmojiLarge: {
@@ -891,42 +880,42 @@ const styles = StyleSheet.create({
   },
   supplierName: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
     marginBottom: 6,
   },
   supplierMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   supplierRating: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
     marginLeft: 4,
   },
   supplierDot: {
     fontSize: 13,
-    color: '#ccc',
+    color: "#ccc",
     marginHorizontal: 8,
   },
   supplierDeliveries: {
     fontSize: 13,
-    color: '#999',
+    color: "#999",
   },
   tankerSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 16,
     marginTop: 8,
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
     marginBottom: 12,
     paddingHorizontal: 16,
   },
@@ -934,25 +923,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   tankerCard: {
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
     borderRadius: 12,
     padding: 12,
     marginRight: 12,
     minWidth: 100,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   tankerCardActive: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#1976D2',
+    backgroundColor: "#E3F2FD",
+    borderColor: "#1976D2",
   },
   tankerIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 8,
   },
   tankerEmoji: {
@@ -960,23 +949,23 @@ const styles = StyleSheet.create({
   },
   tankerCapacity: {
     fontSize: 13,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
     marginBottom: 2,
   },
   tankerTextActive: {
-    color: '#1976D2',
+    color: "#1976D2",
   },
   tankerPrice: {
     fontSize: 11,
-    color: '#666',
+    color: "#666",
   },
   tankerPriceActive: {
-    color: '#1976D2',
-    fontWeight: '600',
+    color: "#1976D2",
+    fontWeight: "600",
   },
   detailsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
     marginTop: 8,
     marginBottom: 16,
@@ -986,16 +975,16 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -1003,24 +992,24 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 14,
-    color: '#333',
+    color: "#333",
     marginLeft: 8,
   },
   addressInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   searchButton: {
     marginLeft: 8,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     padding: 12,
     borderRadius: 8,
   },
   scheduleRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   textAreaContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     minHeight: 80,
   },
   textAreaIcon: {
@@ -1028,204 +1017,205 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 70,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   priceSummary: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#E3F2FD',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#E3F2FD",
     padding: 16,
     borderRadius: 8,
     marginTop: 8,
   },
   priceLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
   },
   priceValue: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#1976D2',
+    fontWeight: "700",
+    color: "#1976D2",
   },
   bookingFooter: {
-   
-   marginTop:14,
+    marginTop: 14,
     paddingVertical: 12,
-   
   },
   bookButton: {
-    backgroundColor: '#4CAF50',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#4CAF50",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     borderRadius: 8,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
   },
   bookButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     marginRight: 8,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: 600,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
   },
   timeSlotList: {
     padding: 16,
   },
   timeSlotItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
   },
   timeSlotItemActive: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#1976D2',
+    backgroundColor: "#E3F2FD",
+    borderColor: "#1976D2",
   },
   timeSlotText: {
     flex: 1,
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginLeft: 12,
   },
   timeSlotTextActive: {
-    color: '#1976D2',
+    color: "#1976D2",
   },
   // Payment Modal Styles
   paymentContainer: {
     padding: 20,
   },
   orderSummary: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     padding: 16,
     borderRadius: 12,
     marginBottom: 20,
   },
   summaryTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
     marginBottom: 12,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   summaryValue: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   totalRow: {
     marginTop: 8,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: "#e0e0e0",
   },
   totalLabel: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
   },
   totalValue: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1976D2',
+    fontWeight: "700",
+    color: "#1976D2",
   },
   paymentButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#635BFF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#635BFF",
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
   },
   cashButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 2,
-    borderColor: '#4CAF50',
+    borderColor: "#4CAF50",
   },
   paymentIconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
   },
   cashIconContainer: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: "#E8F5E9",
   },
   paymentTextContainer: {
     flex: 1,
   },
   paymentButtonTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     marginBottom: 2,
   },
   cashButtonTitle: {
-    color: '#4CAF50',
+    color: "#4CAF50",
   },
   paymentButtonSubtitle: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
+    color: "rgba(255,255,255,0.8)",
   },
   cashButtonSubtitle: {
-    color: '#81C784',
+    color: "#81C784",
   },
   processingText: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginTop: 12,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
-})
-  ;
+});
+
+
+
+
