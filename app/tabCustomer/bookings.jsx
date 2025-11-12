@@ -1,478 +1,703 @@
-import React, { useState, useCallback, useEffect } from 'react';
+// import React, { useEffect, useState } from 'react';
+// import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator, Alert } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
+// import { Ionicons } from '@expo/vector-icons';
+// import { router } from 'expo-router';
+
+// import { GetBookings } from '../../api/bookings/GetBooking';
+// import { useUser } from '../../context/context';
+// import EventBus from '../../utils/EventBus';
+
+// export default function BookingsScreen() {
+//   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+//   const [bookings, setBookings] = useState([]);
+//   const [loading, setLoading] = useState(false);
+
+//   const { user, clearUser } = useUser();
+
+//   const getTankLabel = (size) => {
+//     switch (Number(size)) {
+//       case 6000:
+//         return "Small";
+//       case 12000:
+//         return "Medium";
+//       case 15000:
+//         return "Large";
+//       case 22000:
+//         return "XL";
+//       default:
+//         return "Unknown";
+//     }
+//   };
+
+//   const handleCancelBooking = (orderId) => {
+//     Alert.alert(
+//       "Cancel Booking",
+//       "Are you sure you want to cancel this booking?",
+//       [
+//         { text: "No", style: "cancel" },
+//         {
+//           text: "Yes, Cancel",
+//           style: "destructive",
+//           onPress: async () => {
+//             try {
+
+//               const response = await fetch(`http://192.168.100.187:5000/stripe/cancel`, {
+//                 method: "POST",
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                   bookingId:  orderId,
+//                 }),
+//               });
+
+//               const data = await response.json();
+
+//               if (data.success) {
+//                 Alert.alert("✅ Success", data.message, [
+//                   {
+//                     text: "OK",
+//                     onPress: () => router.back(), // Go back to bookings list
+//                   },
+//                 ]);
+//               } else {
+//                 Alert.alert("⚠️ Failed", data.message || "Something went wrong");
+//               }
+//             } catch (error) {
+//               setLoading(false);
+//               console.error("Cancel Booking Error:", error);
+//               Alert.alert("❌ Error", "Server error occurred");
+//             }
+//           },
+//         },
+//       ]
+//     );
+//   };
+
+//   useEffect(() => {
+//     const fetchBookings = async () => {
+//       try {
+//         setLoading(true);
+//         const UserId = user._id;
+//         const result = await GetBookings(UserId);
+//         setLoading(false);
+
+//         if (result?.success) {
+//           setBookings(result.data || []);
+//         } else {
+//           console.log("❌ Failed:", result?.message);
+//           setBookings([]); // ensure it's empty
+//         }
+//       } catch (err) {
+//         console.error("Error fetching bookings:", err);
+//         setLoading(false);
+//         setBookings([]); // fallback
+//       }
+//     };
+
+//     fetchBookings();
+//   }, []); // re-run if user changes
+
+//   const getStatusColor = (status) => status === 'In Transit' ? '#FF9800' : '#4CAF50';
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+//       {/* Header */}
+//       <View style={styles.header}>
+
+//        <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+//          <Ionicons name="arrow-back-outline" size={24} color="#333" />
+//        </TouchableOpacity>
+//        <View style={styles.headerContent}>
+//          <Text style={styles.title}>My Bookings</Text>
+
+//        </View>
+//      </View>
+
+//       {loading ? (
+//         <View style={styles.centered}>
+//           <ActivityIndicator size="large" color="#4FC3F7" />
+//         </View>
+//       ) : bookings.length === 0 ? (
+//         <View style={styles.centered}>
+//           <Ionicons name="water-outline" size={60} color="#999" />
+//           <Text style={styles.noBookingText}>No bookings yet</Text>
+//           <Text style={styles.noBookingSubtext}>
+//             Book a tanker to see your orders here.
+//           </Text>
+//         </View>
+//       ) : (
+//         <ScrollView contentContainerStyle={styles.scrollContent}>
+//           {bookings.map((booking) => (
+//             <TouchableOpacity
+//               onPress={() => router.push({
+//                 pathname: '/tabCustomer/orderDetail',
+//                 params: { order: JSON.stringify(booking) },
+//               })}
+//               key={booking._id}
+//               style={styles.bookingCard}
+//             >
+//               <View style={styles.cardHeader}>
+//                 <View>
+//                   <Text style={styles.bookingSize}>
+//                     {getTankLabel(booking.tankSize)}
+//                   </Text>
+//                   <Text style={styles.bookingCapacity}>
+//                     {booking.tankSize}L
+//                   </Text>
+//                 </View>
+//                  <View style={{ justifyContent:"space-between"}}>
+//                 <TouchableOpacity
+//                  onPress={()=>{ handleCancelBooking(booking._id)}}
+//                   style={[
+
+//                     { backgroundColor:"orange" , alignSelf:"center", paddingVertical:6, paddingHorizontal:17, borderRadius:6},
+//                   ]}
+//                 >
+//                   <Text style={styles.statusText}>
+//                     Cancel
+//                   </Text>
+//                 </TouchableOpacity>
+//                 <View
+//                   style={[
+//                     styles.statusBadge,
+//                     { backgroundColor: getStatusColor(booking.bookingStatus || "Pending"), marginTop:10  },
+//                   ]}
+//                 >
+//                   <Text style={styles.statusText}>
+//                     {booking.bookingStatus || "Pending"}
+//                   </Text>
+//                 </View>
+//               </View>
+//               </View>
+
+//               <View style={styles.divider} />
+
+//               <View style={styles.cardHeader}>
+//                 <View>
+//                   <Text style={styles.detailValue}>
+//                     📍 {booking.dropLocation}
+//                   </Text>
+//                   <Text style={styles.priceValue}>💰 Rs {booking.price}</Text>
+//                 </View>
+//               </View>
+//             </TouchableOpacity>
+//           ))}
+//         </ScrollView>
+//       )}
+//     </SafeAreaView>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {   backgroundColor: '#f5f5f5' },
+//   header: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     paddingHorizontal: 20,
+//     paddingVertical: 16,
+//     backgroundColor: '#fff',
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#e0e0e0',
+//     elevation: 2,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 3,
+//   },
+//   headerContent: {
+//     flex: 1,
+//      marginLeft:60
+//   },
+//   title: {
+//     fontSize: 24,
+//     fontWeight: '700',
+//     color: '#333',
+//     marginBottom: 4
+//   },
+//   subtitle: {
+//     fontSize: 14,
+//     color: '#666'
+//   },
+//   iconButton: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//     backgroundColor: '#f0f0f0',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   scrollContent: {
+//     flexGrow: 1,
+
+//   padding:20,
+//   paddingTop: 16,
+//   paddingBottom: 80,
+//   }
+//   ,
+//   bookingCard: {
+//     backgroundColor: '#fff',
+//     borderRadius: 12,
+//     padding: 16,
+//     marginBottom: 16,
+//     elevation: 3,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 4,
+//   },
+//   cardHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     marginBottom: 12
+//   },
+//   bookingSize: {
+//     fontSize: 18,
+//     fontWeight: '700',
+//     color: '#333'
+//   },
+//   bookingCapacity: {
+//     fontSize: 14,
+//     color: '#666'
+//   },
+//   statusBadge: {
+//     paddingHorizontal: 12,
+//     paddingVertical: 6,
+//     borderRadius: 6,
+//     alignSelf: 'flex-start'
+//   },
+//   statusText: {
+//     color: '#fff',
+//     fontSize: 12,
+//     fontWeight: '600'
+//   },
+//   divider: {
+//     height: 1,
+//     backgroundColor: '#eee',
+//     marginVertical: 12
+//   },
+//   detailValue: {
+//     fontSize: 14,
+//     color: '#333',
+//     marginBottom: 8
+//   },
+//   priceValue: {
+//     fontSize: 16,
+//     fontWeight: '700',
+//     color: '#4FC3F7'
+//   },
+//   centered: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   noBookingText: {
+//     fontSize: 18,
+//     fontWeight: "600",
+//     color: "#555",
+//     marginTop: 8,
+//   },
+//   noBookingSubtext: {
+//     fontSize: 14,
+//     color: "#888"
+//   },
+// });
+
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
+  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
+  StatusBar,
   ActivityIndicator,
-  Modal,
-  Alert
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { Truck, Clock, CheckCircle, AlertCircle, MapPin, Calendar } from 'lucide-react-native';
-import { getOrders } from "../../api/suppliers/getOrder";
-import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity";
-import { useRouter, useFocusEffect } from 'expo-router';
-import { acceptOrder } from '../../api/tankerProvider/acceptOrder';
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { assignOrderToTanker } from "../../api/suppliers/assignOrder";
-import { useUser } from '../../context/context';
-import AssignTankerModal from '../../components/AssignModel';
-import EventBus from '../../utils/EventBus';
-import { socket } from '../../utils/socket';
+  Alert,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { RefreshControl } from "react-native";
 
-export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }) {
-  const [activeTab, setActiveTab] = useState('Immediate');
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [filteredTankers, setFilteredTankers] = useState([]);
-  const [fetchingTankers, setFetchingTankers] = useState(false);
-  const { user } = useUser();
+import { GetBookings } from "../../api/bookings/GetBooking";
+import { useUser } from "../../context/context";
+import EventBus from "../../utils/EventBus";
 
-  const router = useRouter();
+export default function BookingsScreen() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const staticTankers = [
-    { id: "1", name: "Tanker A", capacity: "10000" },
-    { id: "2", name: "Tanker B", capacity: "15000" },
-    { id: "3", name: "Tanker C", capacity: "20000" },
-    { id: "4", name: "Tanker D", capacity: "15000" },
-  ];
+  const { user, clearUser } = useUser();
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleAssignPress = async (order) => {
-    setSelectedOrder(order);
-    setShowModal(true);
-    setFetchingTankers(true);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchBookings(); // Re-fetch data
+    setRefreshing(false);
+  };
 
-    try {
-      console.log("Fetching tankers for capacity:", order.tankSize);
-      const tankers = await getTankerByCapacity(user._id, order.tankSize);
-      console.log("Fetched Tankers:", tankers);
-      if (tankers && tankers.length > 0) {
-        setFilteredTankers(
-          tankers.map((t) => ({
-            _id: t._id,
-            name: t.fullName || t.vehicleNumber,
-            vehicleNumber: t.vehicleNumber || 'N/A',
-            capacity: t.capacity.toString(),
-          }))
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching tankers:", error);
-      const matchingTankers = staticTankers.filter(
-        (tanker) => tanker.capacity === order.tankSize
-      );
-      setFilteredTankers(matchingTankers);
-    } finally {
-      setFetchingTankers(false);
+  const getTankLabel = (size) => {
+    switch (Number(size)) {
+      case 6000:
+        return "Small";
+      case 12000:
+        return "Medium";
+      case 15000:
+        return "Large";
+      case 22000:
+        return "XL";
+      default:
+        return "Unknown";
     }
   };
 
-  const handleAssignOrder = async (tankerId) => {
-    try {
-      setShowModal(false);
-      const response = await assignOrderToTanker(selectedOrder._id, tankerId, user._id);
-
-      if (response.success) {
-        Alert.alert("✅ Success", "Order assigned successfully!");
-        fetchOrders();
-      } else {
-        Alert.alert("⚠️ Failed", response.message || "Could not assign order.");
-      }
-    } catch (error) {
-      console.error("Error assigning order:", error);
-    }
-  };
-
-  const tabs = [
-    { id: 'Immediate', label: 'Immediate', icon: AlertCircle },
-    { id: 'Scheduled', label: 'Scheduled', icon: Calendar },
-    { id: 'Pending', label: 'Pending', icon: Clock },
-    { id: 'Assigned', label: 'Assigned', icon: Truck },
-    { id: 'Completed', label: 'Completed', icon: CheckCircle },
-  ];
-
-  const fetchOrders = async () => {
+  const fetchBookings = async () => {
     try {
       setLoading(true);
-      console.log("Fetching orders for user:", user._id);
-      const data = await getOrders(user._id);
-      setOrders(data || []);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setOrders([]);
-    } finally {
+      const UserId = user._id;
+      const result = await GetBookings(UserId);
       setLoading(false);
+
+      if (result?.success) {
+        setBookings(result.data || []);
+      } else {
+        console.log("❌ Failed:", result?.message);
+        setBookings([]); // ensure it's empty
+      }
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+      setLoading(false);
+      setBookings([]); // fallback
     }
+  };
+
+  const handleCancelBooking = (orderId) => {
+    Alert.alert(
+      "Cancel Booking",
+      "Are you sure you want to cancel this booking?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes, Cancel",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const response = await fetch(
+                `http://192.168.100.187:5000/stripe/cancel`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    bookingId: orderId,
+                  }),
+                }
+              );
+
+              const data = await response.json();
+
+              if (data.success) {
+                Alert.alert("✅ Success", data.message, [
+                  {
+                    text: "OK",
+                    onPress: () => {
+                      // Refetch bookings to get updated data
+                      fetchBookings();
+                    },
+                  },
+                ]);
+              } else {
+                setLoading(false);
+                Alert.alert(
+                  "⚠️ Failed",
+                  data.message || "Something went wrong"
+                );
+              }
+            } catch (error) {
+              setLoading(false);
+              console.error("Cancel Booking Error:", error);
+              Alert.alert("❌ Error", "Server error occurred");
+            }
+          },
+        },
+      ]
+    );
   };
 
   useEffect(() => {
-    fetchOrders();
-    socket.on("newOrder", (order) => {
-      console.log("📩 New Order received in real-time:", order);
-      fetchOrders();
-    });
-
-    return () => {
-      socket.off("newOrder");
-    };
-  }, []);
-
-  const getFilteredOrders = () => {
-    if (!Array.isArray(orders)) return [];
-
-    switch (activeTab) {
-      case 'Immediate':
-        return orders.filter(o => o.bookingType === "Immediate" && o.bookingStatus !== 'Assigned');
-      case 'Pending':
-        return orders.filter(o => o.bookingStatus === "Pending" && o.bookingStatus !== 'Assigned');
-      case 'Scheduled':
-        return orders.filter(o => o.bookingType === "Scheduled" && o.bookingStatus !== 'Assigned');
-      case 'Assigned':
-        return orders.filter(o => o.bookingStatus === "Assigned");
-      case 'Completed':
-        return orders.filter(o => o.bookingStatus === "Completed");
-      default:
-        return orders;
-    }
-  };
-
-  const extractDatePart = (deliveryTime) => {
-    if (!deliveryTime) return "Not scheduled";
-    return deliveryTime.split(' ').slice(0, 3).join(' ');
-  };
-
-  const extractTimePart = (deliveryTime) => {
-    if (!deliveryTime) return "";
-    return deliveryTime.split(' ').slice(3).join(' ');
-  };
+    fetchBookings();
+  }, [user]); // re-run if user changes
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Immediate': return '#FF6B6B';
-      case 'Scheduled': return '#4FC3F7';
-      case 'Pending': return '#FFA726';
-      case 'Cancelled': return '#999';
-      case 'Active': return '#42a5f5';
-      case 'Assigned': return '#42a5f5';
-      default: return '#4FC3F7';
+      case "In Transit":
+        return "#FF9800";
+      case "Cancelled":
+        return "#F44336";
+      case "Completed":
+        return "#4CAF50";
+      case "Pending":
+        return "#FFC107";
+      default:
+        return "#9E9E9E";
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+  // Check if booking can be cancelled (only allow cancellation for certain statuses)
+  const canCancelBooking = (status) => {
+    const cancellableStatuses = ["Pending", "Confirmed", "Scheduled"]; // Add statuses that can be cancelled
+    return cancellableStatuses.includes(status);
+  };
 
+  return (
+    <SafeAreaView style={styles.container}   edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Orders</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.iconButton}
+        >
+          <Ionicons name="arrow-back-outline" size={24} color="#333" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>My Bookings</Text>
+        </View>
       </View>
 
-      {/* Tabs */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        style={styles.tabsContainer}
-        contentContainerStyle={styles.tabsContent}
-      >
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              style={[styles.tab, isActive && { ...styles.activeTab, borderBottomColor: getStatusColor(tab.id) }]}
-              onPress={() => setActiveTab(tab.id)}
-            >
-              <Icon size={20} color={isActive ? getStatusColor(tab.id) : '#999'} />
-              <Text style={[styles.tabText, isActive && { ...styles.activeTabText, color: getStatusColor(tab.id) }]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {/* Orders List */}
-      <View style={styles.ordersWrapper}>
-        <ScrollView 
-          style={styles.ordersContainer}
-          contentContainerStyle={styles.ordersContent}
-          showsVerticalScrollIndicator={false}
+      {loading ?  (
+  <View style={styles.loadingCenter}>
+  <ActivityIndicator size="large" color="#4FC3F7" />
+  <Text style={styles.loadingText}>Loading orders...</Text>
+</View>
+): bookings.length === 0 ? (
+        <View style={styles.centered}>
+          <Ionicons name="water-outline" size={60} color="#999" />
+          <Text style={styles.noBookingText}>No bookings yet</Text>
+          <Text style={styles.noBookingSubtext}>
+            Book a tanker to see your orders here.
+          </Text>
+        </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#4FC3F7"]} // Android loading color
+              tintColor="#4FC3F7" // iOS loading color
+              title="Refreshing..." // Optional
+              titleColor="#4FC3F7"
+            />
+          }
         >
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#4FC3F7" />
-              <Text style={styles.loadingText}>Loading orders...</Text>
-            </View>
-          ) : getFilteredOrders().length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Truck size={60} color="#DDD" />
-              <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
-            </View>
-          ) : (
-            getFilteredOrders().map((order) => (
-              <TouchableOpacity
-                key={order._id}
-                onPress={() =>
-                  router.push({
-                    pathname: '/tabSupplier/orderDetail',
-                    params: { order: JSON.stringify(order) },
-                  })
-                }
-                style={styles.orderCard}
-              >
-                <View style={styles.orderHeader}>
-                  <View style={styles.orderHeaderLeft}>
-                    <View style={[styles.tankIcon, { backgroundColor: getStatusColor(order.bookingStatus) + '20' }]}>
-                      <Truck size={24} color={getStatusColor(order.bookingStatus)} />
-                    </View>
-                    <View>
-                      <Text style={styles.tankSize}>{order.tankSize} L</Text>
-                      <Text style={styles.orderType}>{order.bookingType}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.priceContainer}>
-                    <Text style={styles.price}>{order.price}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <MapPin size={16} color="#666" />
-                  <Text style={styles.infoText} numberOfLines={2}>
-                    {order.dropLocation}
+          {bookings.map((booking) => (
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "/tabCustomer/orderDetail",
+                  params: { order: JSON.stringify(booking) },
+                })
+              }
+              key={booking._id}
+              style={styles.bookingCard}
+            >
+              <View style={styles.cardHeader}>
+                <View>
+                  <Text style={styles.bookingSize}>
+                    {getTankLabel(booking.tankSize)}
+                  </Text>
+                  <Text style={styles.bookingCapacity}>
+                    {booking.tankSize}L
                   </Text>
                 </View>
 
-                <View style={styles.infoRow}>
-                  <Clock size={16} color="#666" />
-                  <Text style={styles.infoText}>
-                    {extractDatePart(order.deliveryTime)} at {extractTimePart(order.deliveryTime)}
-                  </Text>
-                </View>
-
-                <View style={styles.actionButtons}>
-                  {order.bookingType === 'Immediate' && (
+                <View style={{ justifyContent: "space-between" }}>
+                  {canCancelBooking(booking.bookingStatus) && (
                     <TouchableOpacity
-                      disabled={order.bookingStatus === 'Assigned'}
-                      onPress={() => handleAssignPress(order)}
-                      style={[
-                        styles.actionButton,
-                        styles.acceptButton,
-                        order.bookingStatus === 'Assigned' && { backgroundColor: '#ccc' },
-                      ]}
+                      onPress={() => handleCancelBooking(booking._id)}
+                      style={{
+                        backgroundColor: "orange",
+                        alignSelf: "center",
+                        paddingVertical: 6,
+                        paddingHorizontal: 17,
+                        borderRadius: 6,
+                      }}
                     >
-                      <Text
-                        style={[
-                          styles.actionButtonText,
-                          order.bookingStatus === 'Assigned' && { color: '#666' },
-                        ]}
-                      >
-                        {order.bookingStatus === 'Assigned' ? 'Assigned' : 'Assign Order'}
-                      </Text>
+                      <Text style={styles.statusText}>Cancel</Text>
                     </TouchableOpacity>
                   )}
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor: getStatusColor(
+                          booking.bookingStatus || "Pending"
+                        ),
+                        marginTop: canCancelBooking(booking.bookingStatus)
+                          ? 10
+                          : 0,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.statusText}>
+                      {booking.bookingStatus || "Pending"}
+                    </Text>
+                  </View>
                 </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-      </View>
+              </View>
 
-      <AssignTankerModal
-        visible={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setFilteredTankers([]);
-        }}
-        order={selectedOrder}
-        tankers={filteredTankers}
-        loading={fetchingTankers}
-        onAssign={handleAssignOrder}
-      />
+              <View style={styles.divider} />
+
+              <View style={styles.cardHeader}>
+                <View>
+                  <Text style={styles.detailValue}>
+                    📍 {booking.dropLocation}
+                  </Text>
+                  <Text style={styles.priceValue}>💰 Rs {booking.price}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#F5F5F5' 
-  },
+  container: { flex:1,backgroundColor: "#f5f5f5" },
   header: {
-    backgroundColor: '#FFF',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#e0e0e0",
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 3,
   },
-  headerTitle: {
+  headerContent: {
+    flex: 1,
+    marginLeft: 60,
+  },
+  title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 4,
   },
-  tabsContainer: {
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+  subtitle: {
+    fontSize: 14,
+    color: "#666",
   },
-  tabsContent: { 
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  tab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    marginHorizontal: 4,
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
-  },
-  activeTab: { 
-    borderBottomWidth: 3,
-  },
-  tabText: { 
-    fontSize: 14, 
-    color: '#999', 
-    marginLeft: 8, 
-    fontWeight: '500' 
-  },
-  activeTabText: { 
-    fontWeight: '700' 
-  },
-  ordersWrapper: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  ordersContainer: {
-    flex: 1,
-  },
-  ordersContent: {
+  scrollContent: {
     flexGrow: 1,
+    padding: 20,
     paddingTop: 16,
-    paddingBottom: 120, // Increased padding to prevent cutoff
+    paddingBottom: 80,
   },
-  loadingContainer: {
+  bookingCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  bookingSize: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+  },
+  bookingCapacity: {
+    fontSize: 14,
+    color: "#666",
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  statusText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#eee",
+    marginVertical: 12,
+  },
+  detailValue: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 8,
+  },
+  priceValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#4FC3F7",
+  },
+  centered: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noBookingText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#555",
+    marginTop: 8,
+  },
+  noBookingSubtext: {
+    fontSize: 14,
+    color: "#888",
+  },
+  loadingCenter: {
+    flex: 1,
+   
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
+    fontWeight: "500",
   },
-  emptyContainer: { 
-    flex: 1,
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    paddingVertical: 80 
-  },
-  emptyText: { 
-    fontSize: 16, 
-    color: '#999', 
-    marginTop: 16 
-  },
-  orderCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  orderHeader: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: 16 
-  },
-  orderHeaderLeft: { 
-    flexDirection: 'row', 
-    alignItems: 'center' 
-  },
-  tankIcon: { 
-    width: 56, 
-    height: 56, 
-    borderRadius: 28, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    marginRight: 16 
-  },
-  tankSize: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    color: '#333' 
-  },
-  orderType: { 
-    fontSize: 14, 
-    color: '#666', 
-    marginTop: 4,
-    fontWeight: '500'
-  },
-  priceContainer: { 
-    backgroundColor: '#F8F9FA', 
-    paddingHorizontal: 16, 
-    paddingVertical: 8, 
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
-  },
-  price: { 
-    fontSize: 18, 
-    fontWeight: 'bold', 
-    color: '#333' 
-  },
-  infoRow: { 
-    flexDirection: 'row', 
-    alignItems: 'flex-start', 
-    marginBottom: 12 
-  },
-  infoText: { 
-    fontSize: 15, 
-    color: '#666', 
-    marginLeft: 12,
-    flex: 1,
-    lineHeight: 20,
-  },
-  actionButtons: { 
-    flexDirection: 'row', 
-    marginTop: 16 
-  },
-  actionButton: { 
-    flex: 1, 
-    paddingVertical: 14, 
-    borderRadius: 12, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  acceptButton: { 
-    backgroundColor: '#4FC3F7' 
-  },
-  actionButtonText: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: '#FFF' 
-  },
+  
 });

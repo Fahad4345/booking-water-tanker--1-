@@ -1,73 +1,5 @@
-// import React, { useEffect, useState } from 'react';
-// import { Button, ActivityIndicator, View, Text, TouchableOpacity } from 'react-native';
-// import * as WebBrowser from 'expo-web-browser';
-// import * as Google from 'expo-auth-session/providers/google';
-// import { Touchable } from 'react-native';
-
-// WebBrowser.maybeCompleteAuthSession();
-
-// export default function GoogleLoginButton({ onLoginSuccess }) {
-//   const [userInfo, setUserInfo] = useState(null);
-//   const [loading, setLoading] = useState(false);
-
-
-//   const [request, response, promptAsync] = Google.useAuthRequest({
-//     expoClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com',
-//     androidClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com',
-//     useProxy: true,
-//     scopes: ['profile', 'email'],
-//   });
-
-//   useEffect(() => {
-//     if (response?.type === 'success') {
-//       setLoading(true);
-//       const { authentication } = response;
-//       fetchUserInfo(authentication.accessToken);
-//     }
-//   }, [response]);
-
-//   const fetchUserInfo = async (token) => {
-//     try {
-//       const res = await fetch('https://www.googleapis.com/userinfo/v2/me', {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       const data = await res.json();
-//       setUserInfo(data);
-//       onLoginSuccess && onLoginSuccess(data); // send user info to parent
-//     } catch (err) {
-//       console.log('Google login error:', err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <View style={{ marginVertical: 10 }}>
-//       {loading ? (
-//         <ActivityIndicator size="small" color="#4285F4" />
-//       ) : (
-//         <TouchableOpacity    onPress={() => promptAsync()}>
-//         <View
-//           disabled={!request}
-//            style={{ backgroundColor:"#4285F4",  borderRadius:8, padding:18, alignItems:"center"}}
-        
-//           color=""
-//         ><Text style={{  color:"white" }}>Login with Google</Text></View></TouchableOpacity>
-//       )}
-
-//       {userInfo && (
-//         <Text style={{ marginTop: 10, textAlign: 'center' }}>
-//           Logged in as {userInfo.name} ({userInfo.email})
-//         </Text>
-//       )}
-//     </View>
-//   );
-// }
-
-
-
 import React, { useEffect, useState } from 'react';
-import { Button, ActivityIndicator, View, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, View, Text, TouchableOpacity, Alert } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 
@@ -78,75 +10,75 @@ export default function GoogleLoginButton({ onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    expoClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com',
-    androidClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com',
-    iosClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com', // Add iOS if needed
-    webClientId: '60522827713-c4sucf170hee7t3bbkkb4t812d7quh3c.apps.googleusercontent.com', // Add web client ID
-    useProxy: true,
+    // Use Web Client ID for development (works on both iOS & Android)
+    expoClientId: '60522827713-d0g3l4v0gnaa7dsoe3ijd2ojq1sjb1gr.apps.googleusercontent.com',
+    
+    androidClientId: '60522827713-melia71sh9tjtb5th3596aurtik22v1v.apps.googleusercontent.com',
+    useProxy: true, // ← This makes it work with Web Client ID
     scopes: ['openid', 'profile', 'email'],
   });
+  useEffect(() => {
+    if (request) {
+      console.log('Using Web Client ID for Expo proxy');
+      console.log('Redirect URI:', request.redirectUri);
+    }
+  }, [request]);
 
   useEffect(() => {
+    console.log('Response:', response);
+    
     if (response?.type === 'success') {
       setLoading(true);
       const { authentication } = response;
-      fetchUserInfo(authentication.accessToken);
+      if (authentication?.accessToken) {
+        fetchUserInfo(authentication.accessToken);
+      }
+    } else if (response?.type === 'error') {
+      console.log('Error:', response.error);
+      Alert.alert('Login Failed', response.error);
+      setLoading(false);
     }
   }, [response]);
 
   const fetchUserInfo = async (token) => {
-    if (!token) return;
-    
     try {
       const res = await fetch('https://www.googleapis.com/userinfo/v2/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       
       const data = await res.json();
       setUserInfo(data);
       onLoginSuccess && onLoginSuccess(data);
     } catch (err) {
-      console.log('Google login error:', err);
-      alert('Failed to fetch user info: ' + err.message);
+      console.log('Fetch user error:', err);
+      Alert.alert('Error', 'Failed to get user information');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogin = async () => {
-    try {
-      await promptAsync();
-    } catch (error) {
-      console.log('Login prompt error:', error);
-      alert('Login failed: ' + error.message);
-    }
-  };
-
   return (
     <View style={{ marginVertical: 10 }}>
-      {loading ? (
-        <ActivityIndicator size="small" color="#4285F4" />
-      ) : (
-        <TouchableOpacity 
-          onPress={handleLogin}
-          disabled={!request || loading}
-          style={{ 
-            backgroundColor: loading ? '#cccccc' : '#4285F4', 
-            borderRadius: 8, 
-            padding: 18, 
-            alignItems: "center",
-            opacity: (!request || loading) ? 0.6 : 1
-          }}
-        >
-          <Text style={{ color: "white" }}>
-            {loading ? 'Loading...' : 'Login with Google'}
+      <TouchableOpacity 
+        onPress={() => promptAsync()}
+        disabled={!request || loading}
+        style={{ 
+          backgroundColor: (!request || loading) ? '#cccccc' : '#4285F4', 
+          borderRadius: 8, 
+          padding: 18, 
+          alignItems: "center",
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text style={{ color: "white", fontWeight: 'bold' }}>
+            Login with Google
           </Text>
-        </TouchableOpacity>
-      )}
+        )}
+      </TouchableOpacity>
 
       {userInfo && (
         <Text style={{ marginTop: 10, textAlign: 'center' }}>

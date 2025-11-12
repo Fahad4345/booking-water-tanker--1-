@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import AssignTankerModal from "../../components/AssignModel";
+
 import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity";
 import { assignOrderToTanker } from "../../api/suppliers/assignOrder";
 import { useUser } from '../../context/context';
@@ -36,7 +36,7 @@ const OrderDetailScreen = () => {
     try {
       const parsedOrder = typeof order === "string" ? JSON.parse(order) : order;
       setOrderDetails(parsedOrder);
-      console.log("Order Details:", parsedOrder);
+     
     } catch (error) {
       console.log("Error parsing order:", error);
     }
@@ -215,14 +215,7 @@ const OrderDetailScreen = () => {
 
       </View>
 
-      <AssignTankerModal
-        visible={showModal}
-        onClose={() => setShowModal(false)}
-        order={orderDetails}
-        tankers={tankers}
-        loading={loading}
-        onAssign={handleAssignOrder}
-      />
+      
     </SafeAreaView>
   );
 };

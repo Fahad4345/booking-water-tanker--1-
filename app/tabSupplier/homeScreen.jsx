@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -14,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Truck, Clock, CheckCircle, AlertCircle, MapPin, Calendar } from 'lucide-react-native';
+import { Truck, Clock, CheckCircle, AlertCircle, MapPin, Calendar, XCircle} from 'lucide-react-native';
 import { getOrders } from "../../api/suppliers/getOrder";
 import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity";
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -25,6 +22,8 @@ import { useUser } from '../../context/context';
 import AssignTankerModal from '../../components/AssignModel';
 import EventBus from '../../utils/EventBus';
 import { socket } from '../../utils/socket';
+import { RefreshControl } from "react-native";
+
 
 export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }) {
   const [activeTab, setActiveTab] = useState('Immediate');
@@ -34,6 +33,14 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [filteredTankers, setFilteredTankers] = useState([]);
   const [fetchingTankers, setFetchingTankers] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+const onRefresh = async () => {
+  setRefreshing(true);
+  await fetchOrders();
+  setRefreshing(false);
+};
+
   const { user } = useUser();
 
   const router = useRouter();
@@ -96,6 +103,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
     { id: 'Scheduled', label: 'Scheduled', icon: Calendar },
     { id: 'Pending', label: 'Pending', icon: Clock },
     { id: 'Assigned', label: 'Assigned', icon: Truck },
+    { id: 'Cancelled', label: 'Cancelled', icon: XCircle },
     { id: 'Completed', label: 'Completed', icon: CheckCircle },
   ];
 
@@ -127,22 +135,39 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
 
   const getFilteredOrders = () => {
     if (!Array.isArray(orders)) return [];
-
+  
     switch (activeTab) {
       case 'Immediate':
-        return orders.filter(o => o.bookingType === "Immediate" && o.bookingStatus !== 'Assigned');
-      case 'Pending':
-        return orders.filter(o => o.bookingStatus === "Pending" && o.bookingStatus !== 'Assigned');
+        return orders.filter(
+          o =>
+            o.bookingType === "Immediate" &&
+            !["Assigned", "Cancelled", "Completed"].includes(o.bookingStatus)
+        );
+  
       case 'Scheduled':
-        return orders.filter(o => o.bookingType === "Scheduled" && o.bookingStatus !== 'Assigned');
+        return orders.filter(
+          o =>
+            o.bookingType === "Scheduled" &&
+            !["Assigned", "Cancelled", "Completed"].includes(o.bookingStatus)
+        );
+  
+      case 'Pending':
+        return orders.filter(o => o.bookingStatus === "Pending");
+  
       case 'Assigned':
         return orders.filter(o => o.bookingStatus === "Assigned");
+  
+      case 'Cancelled':
+        return orders.filter(o => o.bookingStatus === "Cancelled");
+  
       case 'Completed':
         return orders.filter(o => o.bookingStatus === "Completed");
+  
       default:
         return orders;
     }
   };
+  
 
   const extractDatePart = (deliveryTime) => {
     if (!deliveryTime) return "Not scheduled";
@@ -200,90 +225,125 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
       </ScrollView>
 
       {/* Orders List */}
-      <View style={styles.ordersWrapper}>
-        <ScrollView 
-          style={styles.ordersContainer}
-          contentContainerStyle={styles.ordersContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#4FC3F7" />
-              <Text style={styles.loadingText}>Loading orders...</Text>
-            </View>
-          ) : getFilteredOrders().length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Truck size={60} color="#DDD" />
-              <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
-            </View>
-          ) : (
-            getFilteredOrders().map((order) => (
-              <TouchableOpacity
-                key={order._id}
-                onPress={() =>
-                  router.push({
-                    pathname: '/tabSupplier/orderDetail',
-                    params: { order: JSON.stringify(order) },
-                  })
-                }
-                style={styles.orderCard}
-              >
-                <View style={styles.orderHeader}>
-                  <View style={styles.orderHeaderLeft}>
-                    <View style={[styles.tankIcon, { backgroundColor: getStatusColor(order.bookingStatus) + '20' }]}>
-                      <Truck size={22} color={getStatusColor(order.bookingStatus)} />
-                    </View>
-                    <View>
-                      <Text style={styles.tankSize}>{order.tankSize} L</Text>
-                      <Text style={styles.orderType}>{order.bookingType}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.priceContainer}>
-                    <Text style={styles.price}>{order.price}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <MapPin size={16} color="#666" />
-                  <Text style={styles.infoText} numberOfLines={2}>
-                    {order.dropLocation}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Clock size={16} color="#666" />
-                  <Text style={styles.infoText}>
-                    {extractDatePart(order.deliveryTime)} at {extractTimePart(order.deliveryTime)}
-                  </Text>
-                </View>
-
-                <View style={styles.actionButtons}>
-                  {(order.bookingType === 'Immediate' || order.bookingType === 'Scheduled') && (
-    <TouchableOpacity
-      disabled={order.bookingStatus === 'Assigned'}
-      onPress={() => handleAssignPress(order)}
-      style={[
-        styles.actionButton,
-        styles.acceptButton,
-        order.bookingStatus === 'Assigned' && { backgroundColor: '#ccc' },
-      ]}
+     {/* Orders List */}
+<View style={styles.ordersWrapper}>
+  {loading ? (
+    // 🔹 Centered Loader
+    <View style={styles.loadingCenter}>
+      <ActivityIndicator size="large" color="#4FC3F7" />
+      <Text style={styles.loadingText}>Loading orders...</Text>
+    </View>
+  ) : (
+    <ScrollView
+      style={styles.ordersContainer}
+      contentContainerStyle={styles.ordersContent}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#4FC3F7"]}
+          tintColor="#4FC3F7"
+          title="Refreshing..."
+          titleColor="#4FC3F7"
+        />
+      }
     >
-      <Text
-        style={[
-          styles.actionButtonText,
-          order.bookingStatus === 'Assigned' && { color: '#666' },
-        ]}
-      >
-        {order.bookingStatus === 'Assigned' ? 'Assigned' : 'Assign Order'}
-      </Text>
-    </TouchableOpacity>
-  )}
+      {getFilteredOrders().length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Truck size={60} color="#DDD" />
+          <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
+        </View>
+      ) : (
+        getFilteredOrders().map((order) => (
+          <TouchableOpacity
+            key={order._id}
+            onPress={() =>
+              router.push({
+                pathname: "/tabSupplier/orderDetail",
+                params: { order: JSON.stringify(order) },
+              })
+            }
+            style={styles.orderCard}
+          >
+            <View style={styles.orderHeader}>
+              <View style={styles.orderHeaderLeft}>
+                <View
+                  style={[
+                    styles.tankIcon,
+                    { backgroundColor: getStatusColor(order.bookingStatus) + "20" },
+                  ]}
+                >
+                  <Truck size={22} color={getStatusColor(order.bookingStatus)} />
                 </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
-      </View>
+                <View>
+                  <Text style={styles.tankSize}>{order.tankSize} L</Text>
+                  <Text style={styles.orderType}>{order.bookingType}</Text>
+                </View>
+              </View>
+              <View style={styles.priceContainer}>
+                <Text style={styles.price}>{order.price}</Text>
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <MapPin size={16} color="#666" />
+              <Text style={styles.infoText} numberOfLines={2}>
+                {order.dropLocation}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Clock size={16} color="#666" />
+              <Text style={styles.infoText}>
+                {extractDatePart(order.deliveryTime)} at{" "}
+                {extractTimePart(order.deliveryTime)}
+              </Text>
+            </View>
+
+            <View style={styles.actionButtons}>
+              {(order.bookingType === "Immediate" ||
+                order.bookingType === "Scheduled") && (
+                  <TouchableOpacity
+                  disabled={
+                    ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus)
+                  }
+                  onPress={() => handleAssignPress(order)}
+                  style={[
+                    styles.actionButton,
+                    styles.acceptButton,
+                    ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
+                      backgroundColor: "#ccc",
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.actionButtonText,
+                      ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
+                        color: "#666",
+                      },
+                    ]}
+                  >
+                    {order.bookingStatus === "Assigned"
+                      ? "Assigned"
+                      : order.bookingStatus === "Cancelled"
+                      ? "Cancelled"
+                      : order.bookingStatus === "Completed"
+                      ? "Completed"
+                      : "Assign Order"}
+                  </Text>
+                </TouchableOpacity>
+                
+              )}
+            </View>
+          </TouchableOpacity>
+        ))
+      )}
+    </ScrollView>
+  )}
+</View>
+
 
       <AssignTankerModal
         visible={showModal}
@@ -379,11 +439,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 40,
   },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
+ 
   emptyContainer: { 
     flex: 1,
     alignItems: 'center', 
@@ -481,4 +537,12 @@ const styles = StyleSheet.create({
     fontWeight: '600', 
     color: '#FFF' 
   },
+  loadingCenter: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 100,
+  },
+  loadingText: { marginTop: 12, fontSize: 16, color: "#666", fontWeight: "500" },
+  
 });

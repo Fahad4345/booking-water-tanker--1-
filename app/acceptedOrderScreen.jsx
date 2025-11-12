@@ -18,7 +18,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 const { width, height } = Dimensions.get("window");
 
 const DriverRideScreen = () => {
-  const [rideStatus, setRideStatus] = useState("Accepted"); // accepted, filling, in_transit, completed
+  const [rideStatus, setRideStatus] = useState("Accepted"); 
   const { order } = useLocalSearchParams();
   const [orderDetails, setOrderDetails] = useState(null);
    const router= useRouter();
@@ -27,7 +27,7 @@ const DriverRideScreen = () => {
     try {
       const parsedOrder = typeof order === "string" ? JSON.parse(order) : order;
       setOrderDetails(parsedOrder);
-      console.log("Order Details:", parsedOrder);
+      // console.log("Order Details:", parsedOrder);
     } catch (error) {
       console.log("Error parsing order:", error);
     }

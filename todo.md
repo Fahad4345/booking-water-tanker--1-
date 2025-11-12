@@ -35,12 +35,11 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
 User Module Integration :
 
-- Adjusted Refresh Token error
-- Integrated Cancel order Functionality now Payment get refunded via stripe
-- Now after Approval from Admin Supplier will get Orders
-- Adjusted UI
+- Added more detail of user , supplier , admin inadmin dashboard
+- Adjusted UI of Admin Dashboard
+- Added Refeshes in  Supplier Home screen and Customer Booking
+- Added Availabillty status for tanker Now supplier will  Assign order to tanker that have availabillity status Online 
 
-Loom : (
-https://www.loom.com/share/5bd11d6155f548aabd702963135304f5)
+Loom : (https://www.loom.com/share/1f43e35e987e43da92f139089e1eb78c)
 
 

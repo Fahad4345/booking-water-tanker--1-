@@ -50,9 +50,10 @@ export default function HomeScreen() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
+     console.log("In Home");
     const Getbookings = async () => {
       const UserId = user._id || "";
-
+       console.log("_id",user._id);
       const result = await GetBookings(UserId);
       const supplierList = await getSuppliers();
       if (result.success === true) {

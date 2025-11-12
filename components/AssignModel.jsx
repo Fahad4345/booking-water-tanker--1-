@@ -17,10 +17,26 @@ const AssignTankerModal = ({
     loading,
     onAssign,
 }) => {
+
+
+    if (!order) {
+        return (
+          <Modal visible={visible} animationType="slide" transparent>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text>No order data available</Text>
+                <TouchableOpacity onPress={onClose}>
+                  <Text>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        );
+      }
     return (
 
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-            {console.log("Order Details:", order)}
+            {console.log("Order Details on assign model:", order)}
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContainer}>
                     <Text style={styles.modalTitle}>

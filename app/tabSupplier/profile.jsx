@@ -24,10 +24,22 @@ export default function ProfileScreen() {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
-          try {
-            const result = await logout();
-            await clearUser();
-            router.push("/");
+          try {  
+
+
+           
+         
+          
+          
+          // ✅ 2. Then call logout API (optional - can be skipped if no token)
+          const result = await logout();
+          await clearUser();
+          
+          // ✅ 3. Finally navigate to login screen
+            console.log("Navigating");
+          router.push("/"); 
+          
+          
             console.log("Logged out successfully:", result);
           } catch (err) {
             console.error("Logout error:", err);

@@ -138,8 +138,8 @@ export function Auth() {
       const token = await AsyncStorage.getItem("refreshToken");
 
       if (!token) {
-        console.log("No refresh token found");
-        return { success: false, error: "No refresh token found" };
+        console.log("No refresh token found - already logged out");
+        return { success: true, message: "Already logged out" }; // ✅ Return success even if no token
       }
       console.log("Logout running", token);
 
@@ -155,7 +155,7 @@ export function Auth() {
         return { success: false, error: data.error || "Logout failed" };
       }
 
-      await AsyncStorage.multiRemove(["accessToken", "refreshToken", "user"]);
+      
       console.log("Logout data", data);
       return { success: true, data, message: "Logout sucessfull" };
     } catch (err) {

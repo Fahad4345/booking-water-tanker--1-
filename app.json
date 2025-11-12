@@ -1,38 +1,40 @@
 {
   "expo": {
-    "name": "Water Tanker Booking",
+    "name": "H2O Water Suppliers",
     "slug": "booking-water-tanker",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "",
     "scheme": "booking-water-tanker",
     "userInterfaceStyle": "automatic",
-
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.fahadrehan.bookingwatertanker",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
+      
       "edgeToEdgeEnabled": true
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": ""
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme":"com.googleusercontent.apps.161923102465-0jtrsbdkkmki11st6r0mh9i8pjpjqf3o"
         }
       ]
     ],
@@ -41,6 +43,12 @@
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "21a0feb0-f743-4950-a6df-0c5c5d2da9fd"
+      }
     }
   }
 }

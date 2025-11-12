@@ -25,9 +25,16 @@ export default function ProfileScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
+           
+            
+           
             const result = await logout();
             await clearUser();
             router.push("/");
+            
+
+            
+          
             console.log("Logged out successfully:", result);
           } catch (err) {
             console.error("Logout error:", err);
