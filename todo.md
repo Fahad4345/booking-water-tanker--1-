@@ -35,14 +35,15 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
 Tanker Module Integration :
 
-- Adjusted UI
-- In Supplier App create a screen for Supplier tanker and  display all tanker of that Supplier
-- Delete tanker functionality Integrated
-- Adjusted Order Status Sequence of accepted Order
-- Before Order booking integrated a functionality of displaying suppliers to customer which have tanker with the customer selected capcity and availiballity Status Online
+- Some the Errors that come on log out
+- Added Validation of email and Phone while registering tanker
+- Added Validation of email and Phone while in login signup
+- Adjusted space that come on scroll when keyboard get open in customer homescreen
+- Adjusted bottom    navigation
 
 
-Loom : (https://www.loom.com/share/b6441f6247b5490790509987d68bec79)
+
+Loom : (https://www.loom.com/share/c02dcd46e1ff481a88acac94209db551)
 
 
  Completed features

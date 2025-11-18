@@ -11,7 +11,10 @@ export default function WelcomeScreen() {
   const router = useRouter();
 
   
- 
+  useEffect(() => {
+    NavigationBar.setBackgroundColorAsync("transparent");
+    NavigationBar.setButtonStyleAsync("dark");
+  }, []);
 
 
   return (
@@ -54,10 +57,11 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:"transparent" 
+    backgroundColor: "#000",
   },
   background: {
     flex: 1,
+  backgroundColor: "#000"
   },
   overlay: {
     flex: 1,

@@ -10,14 +10,17 @@ export default function CustomerTabs() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarHideOnKeyboard: true,
           tabBarStyle: {
-            height: 50,
+            height: 60,
             paddingBottom: 8,
             backgroundColor: "#fff",
+            borderTopWidth: 0,
+            borderTopColor: "transparent",
             elevation: 0,
             shadowOpacity: 0,
+            shadowColor: "transparent",
           },
+          tabBarLabelStyle: {},
         }}
       >
 

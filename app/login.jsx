@@ -22,11 +22,11 @@ export default function LoginScreen() {
   };
   const handleLogin = async () => {
 
-    if (!email.toLowerCase().endsWith("@gmail.com")) {
-      Alert.alert("Error", "Email must end with @gmail.com");
-      return;
-    }
-    
+    const emailRegex=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+     Alert.alert("Invalid Email", "Please enter a valid email address.");
+     return;
+   }
     
     if (!email || !password) {
       Alert.alert("Error", "All fields are required");
@@ -88,10 +88,10 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push("/")}>
+          <TouchableOpacity onPress={() => router.replace("/")}>
             <Text style={styles.backButton}>←</Text>
           </TouchableOpacity>
         </View>

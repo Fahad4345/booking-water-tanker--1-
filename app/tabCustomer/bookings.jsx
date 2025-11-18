@@ -51,6 +51,10 @@ export default function BookingsScreen() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
+      if (!user || !user._id) {
+        console.log("No user logged in — skipping booking fetch");
+        return;
+      }
       const UserId = user._id;
       const result = await GetBookings(UserId);
       setLoading(false);
