@@ -8,11 +8,14 @@
     "scheme": "booking-water-tanker",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fahadrehan.bookingwatertanker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.fahadrehan.bookingwatertanker",
-      
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -34,7 +37,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme":"com.googleusercontent.apps.161923102465-0jtrsbdkkmki11st6r0mh9i8pjpjqf3o"
+          "iosUrlScheme": "com.googleusercontent.apps.161923102465-0jtrsbdkkmki11st6r0mh9i8pjpjqf3o"
         }
       ]
     ],

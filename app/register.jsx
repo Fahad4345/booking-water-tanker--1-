@@ -27,10 +27,11 @@ export default function RegisterScreen() {
     }
 
 
-    if (!email.toLowerCase().endsWith("@gmail.com")) {
-      Alert.alert("Error", "Email must end with @gmail.com");
-      return;
-    }
+    const emailRegex=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+       if (!emailRegex.test(email)) {
+        Alert.alert("Invalid Email", "Please enter a valid email address.");
+        return;
+      }
     if (password.length < 8) {
       Alert.alert("Error", "Password must be at least 8 characters long");
       return;
@@ -78,7 +79,7 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.push("/")}>
@@ -120,7 +121,7 @@ export default function RegisterScreen() {
             secureTextEntry
           />
 
-          {/* 🟢 Radio Buttons for Role */}
+     
           <View style={styles.roleContainer}>
             <Text style={styles.roleLabel}>Select Role</Text>
             <View style={styles.radioGroup}>
@@ -149,18 +150,7 @@ export default function RegisterScreen() {
                 />
                 <Text style={styles.radioText}>Supplier</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.radioOption}
-                onPress={() => setRole('Tanker')}
-              >
-                <View
-                  style={[
-                    styles.radioCircle,
-                    role === 'Tanker' && styles.radioSelected,
-                  ]}
-                />
-                <Text style={styles.radioText}>Tanker</Text>
-              </TouchableOpacity>
+             
             </View>
           </View>
 
@@ -231,7 +221,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // 🌈 Role selection styles
+
   roleContainer: {
     marginTop: 10,
     marginBottom: 10,

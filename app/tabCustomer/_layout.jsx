@@ -10,17 +10,14 @@ export default function CustomerTabs() {
       <Tabs
         screenOptions={{
           headerShown: false,
+          tabBarHideOnKeyboard: true,
           tabBarStyle: {
             height: 50,
             paddingBottom: 8,
             backgroundColor: "#fff",
-            borderTopWidth: 0,
-            borderTopColor: "transparent",
             elevation: 0,
             shadowOpacity: 0,
-            shadowColor: "transparent",
           },
-          tabBarLabelStyle: {},
         }}
       >
 
@@ -54,19 +51,19 @@ export default function CustomerTabs() {
         <Tabs.Screen
           name="orderDetail"
           options={{
-            href: null, // 🚫 hides it from the tab bar
+            href: null, 
           }}
         />
         <Tabs.Screen
           name="payment"
           options={{
-            href: null, // 🚫 hides it from the tab bar
+            href: null, 
           }}
         />
           <Tabs.Screen
           name="editProfile"
           options={{
-            href: null, // 🚫 hides it from the tab bar
+            href: null, 
           }}
         />
       </Tabs>

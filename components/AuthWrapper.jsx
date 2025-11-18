@@ -11,39 +11,70 @@ export default function AuthWrapper({ children }) {
   const pathname = usePathname();
   const hasRedirected = useRef(false);
 
-  useEffect(() => {
-    console.log("Auth Wrapper", user, isAuthenticated);
 
+useEffect(() => {
+  console.log("Auth Wrapper", user, isAuthenticated);
+
+  const checkAuthAndNavigate = async () => {
     if (isAuthenticated && user?.role) {
-      console.log("User role:", user.role);
-      const targetRoute =
-        user.role === "Supplier"
-          ? "/tabSupplier/homeScreen"
-          : user.role === "Tanker"
-            ? "/tabTanker/homeScreen"
-            : "/tabCustomer/home";
+      console.log("✅ User authenticated:", user.role);
+      console.log("📊 Tanker availability from context:", user.Tanker?.availabilityStatus);
+
+      let targetRoute;
+
+      if (user.role === "Supplier") {
+        targetRoute = "/tabSupplier/homeScreen";
+      } 
+      else if (user.role === "Tanker") {
+ 
+        const storedTankerStatus = await AsyncStorage.getItem('tankerStatus');
+        const storedOrder = await AsyncStorage.getItem('currentOrder');
+        
+        console.log("🔍 Stored tankerStatus:", storedTankerStatus);
+        console.log("🔍 Stored order exists:", !!storedOrder);
 
 
-      // Only redirect if we're on the login page
-      if (pathname === "/" || pathname === "/login") {
+        const effectiveStatus = user.Tanker?.availabilityStatus || storedTankerStatus;
+        
+        if (effectiveStatus === "OnRide" && storedOrder) {
+          console.log("🎯 Tanker is on ride, navigating to accepted order");
+          router.replace({
+            pathname: '/acceptedOrderScreen',
+            params: { order: storedOrder }
+          });
+          return;
+        } else {
+          console.log("🏠 Tanker is available, navigating to home");
+          targetRoute = "/tabTanker/homeScreen";
+        }
+      } 
+      else {
+        targetRoute = "/tabCustomer/home";
+      }
+
+      if ((pathname === "/" || pathname === "/login") && targetRoute) {
+        console.log("📍 Navigating to:", targetRoute);
         router.replace(targetRoute);
       }
-    } else if (!isAuthenticated && pathname !== "/") {
+    } 
+    else if (!isAuthenticated && pathname !== "/") {
       hasRedirected.current = true;
       router.replace("/");
     }
-  }, [userLoading, isAuthenticated, user?.role, pathname]);
+  };
 
-  if (userLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4FC3F7" />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
+  checkAuthAndNavigate();
+}, [userLoading, isAuthenticated, user?.role, pathname]);
 
-  // ✅ Always render children - let the routing handle the rest
+if (userLoading) {
+  return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" color="#4FC3F7" />
+      <Text style={styles.loadingText}>Loading...</Text>
+    </View>
+  );
+}
+
   return <>{children}</>;
 }
 const styles = StyleSheet.create({
@@ -51,7 +82,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#000",
   },
   loadingText: {
     marginTop: 10,

@@ -74,10 +74,10 @@ const OrderDetailScreen = () => {
       if (response.success) {
         console.log("Order assigned successfully:", response);
 
-        Alert.alert("✅ Success", "Order assigned successfully!");
+        Alert.alert("Success", "Order assigned successfully!");
 
       } else {
-        Alert.alert("⚠️ Failed", response.message || "Could not assign order.");
+        Alert.alert("Failed", response.message || "Could not assign order.");
       }
     } catch (error) {
       console.error("Error assigning order:", error);
@@ -133,7 +133,7 @@ const OrderDetailScreen = () => {
       </View>
 
       <View style={styles.contentContainer}>
-        {/* Price and Type Row */}
+       
         <View style={styles.topRow}>
           <View style={styles.compactSection}>
             <Text style={styles.miniLabel}>Price</Text>
@@ -150,7 +150,7 @@ const OrderDetailScreen = () => {
           </View>
         </View>
 
-        {/* Location */}
+    
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <View style={styles.miniIconCircle}>
@@ -165,7 +165,7 @@ const OrderDetailScreen = () => {
           </View>
         </View>
 
-        {/* Scheduled Time */}
+     
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <View style={styles.miniIconCircle}>
@@ -180,7 +180,7 @@ const OrderDetailScreen = () => {
           </View>
         </View>
 
-        {/* Instructions */}
+    
         {instruction && (
           <View style={styles.instructionsCompact}>
             <Text style={styles.instructionsIcon}>📝</Text>
@@ -190,7 +190,7 @@ const OrderDetailScreen = () => {
           </View>
         )}
 
-        {/* Customer Info */}
+       
         <View style={styles.customerRow}>
           <View style={styles.customerInfo}>
             <View style={styles.miniIconCircle}>
@@ -211,7 +211,7 @@ const OrderDetailScreen = () => {
           </View>
         </View>
 
-        {/* Action Button */}
+    
 
       </View>
 

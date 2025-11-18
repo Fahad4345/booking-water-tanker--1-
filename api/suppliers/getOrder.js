@@ -2,6 +2,7 @@ import { Auth } from "../Auth";
 
 export const getOrders = async (supplierId) => {
   const { authFetch } = Auth();
+   console.log("Get order by supplier running .....", supplierId);
 
   try {
     console.log("Get Order Running");

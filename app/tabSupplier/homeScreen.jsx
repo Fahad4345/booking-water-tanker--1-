@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -35,11 +38,11 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
   const [fetchingTankers, setFetchingTankers] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-const onRefresh = async () => {
-  setRefreshing(true);
-  await fetchOrders();
-  setRefreshing(false);
-};
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOrders();
+    setRefreshing(false);
+  };
 
   const { user } = useUser();
 
@@ -52,7 +55,31 @@ const onRefresh = async () => {
     { id: "4", name: "Tanker D", capacity: "15000" },
   ];
 
+
+  const checkUserStatus = () => {
+    if (user?.status === 'Pending') {
+      Alert.alert(
+        "Account Pending Approval",
+        "Your account is pending approval by admin. Please wait until your account is approved to access all features.",
+        [
+          {
+            text: "OK",
+            style: "default"
+          }
+        ],
+        { cancelable: false }
+      );
+      return true;
+    }
+    return false;
+  };
+
   const handleAssignPress = async (order) => {
+   
+    if (checkUserStatus()) {
+      return;
+    }
+
     setSelectedOrder(order);
     setShowModal(true);
     setFetchingTankers(true);
@@ -98,6 +125,26 @@ const onRefresh = async () => {
     }
   };
 
+  const handleTabPress = (tabId) => {
+ 
+    if (checkUserStatus()) {
+      return;
+    }
+    setActiveTab(tabId);
+  };
+
+  const handleOrderPress = (order) => {
+
+    if (checkUserStatus()) {
+      return;
+    }
+    
+    router.push({
+      pathname: "/tabSupplier/orderDetail",
+      params: { order: JSON.stringify(order) },
+    })
+  };
+
   const tabs = [
     { id: 'Immediate', label: 'Immediate', icon: AlertCircle },
     { id: 'Scheduled', label: 'Scheduled', icon: Calendar },
@@ -110,8 +157,15 @@ const onRefresh = async () => {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      console.log("Fetching orders for user:", user._id);
-      const data = await getOrders(user._id);
+   
+      
+
+      if (user?.status === 'Pending') {
+        setOrders([]);
+        return;
+      }
+       console.log("Fetching Order",user._id)
+      const data = await getOrders(user?._id);
       setOrders(data || []);
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -122,8 +176,28 @@ const onRefresh = async () => {
   };
 
   useEffect(() => {
+    console.log("Supplier Home Screen",user
+    );
     fetchOrders();
-    socket.on("newOrder", (order) => {
+    
+  
+    if (user?.status === 'Pending') {
+      setTimeout(() => {
+        Alert.alert(
+          "Account Pending Approval",
+          "Your account is pending approval by admin. Please wait until your account is approved to access all features.",
+          [
+            {
+              text: "OK",
+              style: "default"
+            }
+          ],
+          { cancelable: false }
+        );
+      }, 500);
+    }
+
+    socket.on("newOrder", (order) => {          
       console.log("📩 New Order received in real-time:", order);
       fetchOrders();
     });
@@ -134,6 +208,11 @@ const onRefresh = async () => {
   }, []);
 
   const getFilteredOrders = () => {
+   
+    if (user?.status === 'Pending') {
+      return [];
+    }
+    
     if (!Array.isArray(orders)) return [];
   
     switch (activeTab) {
@@ -195,11 +274,20 @@ const onRefresh = async () => {
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
 
+      {/* Show pending status banner if user is pending */}
+      {/* {user?.status === 'Pending' && (
+        <View style={styles.pendingBanner}>
+          <AlertCircle size={20} color="#FFF" />
+          <Text style={styles.pendingText}>
+            Account Pending Approval - Limited Access
+          </Text>
+        </View>
+      )} */}
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Orders</Text>
       </View>
 
-      {/* Tabs */}
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false} 
@@ -213,7 +301,7 @@ const onRefresh = async () => {
             <TouchableOpacity
               key={tab.id}
               style={[styles.tab, isActive && { ...styles.activeTab, borderBottomColor: getStatusColor(tab.id) }]}
-              onPress={() => setActiveTab(tab.id)}
+              onPress={() => handleTabPress(tab.id)}
             >
               <Icon size={18} color={isActive ? getStatusColor(tab.id) : '#999'} />
               <Text style={[styles.tabText, isActive && { ...styles.activeTabText, color: getStatusColor(tab.id) }]}>
@@ -224,126 +312,129 @@ const onRefresh = async () => {
         })}
       </ScrollView>
 
-      {/* Orders List */}
-     {/* Orders List */}
-<View style={styles.ordersWrapper}>
-  {loading ? (
-    // 🔹 Centered Loader
-    <View style={styles.loadingCenter}>
-      <ActivityIndicator size="large" color="#4FC3F7" />
-      <Text style={styles.loadingText}>Loading orders...</Text>
-    </View>
-  ) : (
-    <ScrollView
-      style={styles.ordersContainer}
-      contentContainerStyle={styles.ordersContent}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={["#4FC3F7"]}
-          tintColor="#4FC3F7"
-          title="Refreshing..."
-          titleColor="#4FC3F7"
-        />
-      }
-    >
-      {getFilteredOrders().length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Truck size={60} color="#DDD" />
-          <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
-        </View>
-      ) : (
-        getFilteredOrders().map((order) => (
-          <TouchableOpacity
-            key={order._id}
-            onPress={() =>
-              router.push({
-                pathname: "/tabSupplier/orderDetail",
-                params: { order: JSON.stringify(order) },
-              })
+      <View style={styles.ordersWrapper}>
+        {user?.status === 'Pending' ? (
+          <View style={styles.pendingContainer}>
+            <AlertCircle size={60} color="#FFA726" />
+            <Text style={styles.pendingTitle}>Account Pending Approval</Text>
+            <Text style={styles.pendingMessage}>
+              Your account is currently under review by our admin team. 
+              You'll be able to view and manage orders once your account is approved.
+            </Text>
+            <Text style={styles.pendingNote}>
+              Please check back later or contact support if this takes longer than expected.
+            </Text>
+          </View>
+        ) : loading ? (
+          <View style={styles.loadingCenter}>
+            <ActivityIndicator size="large" color="#4FC3F7" />
+            <Text style={styles.loadingText}>Loading orders...</Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.ordersContainer}
+            contentContainerStyle={styles.ordersContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#4FC3F7"]}
+                tintColor="#4FC3F7"
+                title="Refreshing..."
+                titleColor="#4FC3F7"
+              />
             }
-            style={styles.orderCard}
           >
-            <View style={styles.orderHeader}>
-              <View style={styles.orderHeaderLeft}>
-                <View
-                  style={[
-                    styles.tankIcon,
-                    { backgroundColor: getStatusColor(order.bookingStatus) + "20" },
-                  ]}
-                >
-                  <Truck size={22} color={getStatusColor(order.bookingStatus)} />
-                </View>
-                <View>
-                  <Text style={styles.tankSize}>{order.tankSize} L</Text>
-                  <Text style={styles.orderType}>{order.bookingType}</Text>
-                </View>
+            {getFilteredOrders().length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Truck size={60} color="#DDD" />
+                <Text style={styles.emptyText}>No {activeTab.toLowerCase()} orders</Text>
               </View>
-              <View style={styles.priceContainer}>
-                <Text style={styles.price}>{order.price}</Text>
-              </View>
-            </View>
-
-            <View style={styles.infoRow}>
-              <MapPin size={16} color="#666" />
-              <Text style={styles.infoText} numberOfLines={2}>
-                {order.dropLocation}
-              </Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Clock size={16} color="#666" />
-              <Text style={styles.infoText}>
-                {extractDatePart(order.deliveryTime)} at{" "}
-                {extractTimePart(order.deliveryTime)}
-              </Text>
-            </View>
-
-            <View style={styles.actionButtons}>
-              {(order.bookingType === "Immediate" ||
-                order.bookingType === "Scheduled") && (
-                  <TouchableOpacity
-                  disabled={
-                    ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus)
-                  }
-                  onPress={() => handleAssignPress(order)}
-                  style={[
-                    styles.actionButton,
-                    styles.acceptButton,
-                    ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
-                      backgroundColor: "#ccc",
-                    },
-                  ]}
+            ) : (
+              getFilteredOrders().map((order) => (
+                <TouchableOpacity
+                  key={order._id}
+                  onPress={() => handleOrderPress(order)}
+                  style={styles.orderCard}
                 >
-                  <Text
-                    style={[
-                      styles.actionButtonText,
-                      ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
-                        color: "#666",
-                      },
-                    ]}
-                  >
-                    {order.bookingStatus === "Assigned"
-                      ? "Assigned"
-                      : order.bookingStatus === "Cancelled"
-                      ? "Cancelled"
-                      : order.bookingStatus === "Completed"
-                      ? "Completed"
-                      : "Assign Order"}
-                  </Text>
+                  <View style={styles.orderHeader}>
+                    <View style={styles.orderHeaderLeft}>
+                      <View
+                        style={[
+                          styles.tankIcon,
+                          { backgroundColor: getStatusColor(order.bookingStatus) + "20" },
+                        ]}
+                      >
+                        <Truck size={22} color={getStatusColor(order.bookingStatus)} />
+                      </View>
+                      <View>
+                        <Text style={styles.tankSize}>{order.tankSize} L</Text>
+                        <Text style={styles.orderType}>{order.bookingType}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.priceContainer}>
+                      <Text style={styles.price}>{order.price}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <MapPin size={16} color="#666" />
+                    <Text style={styles.infoText} numberOfLines={2}>
+                      {order.dropLocation}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Clock size={16} color="#666" />
+                    <Text style={styles.infoText}>
+                      {extractDatePart(order.deliveryTime)} at{" "}
+                      {extractTimePart(order.deliveryTime)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.actionButtons}>
+                    {(order.bookingType === "Immediate" ||
+                      order.bookingType === "Scheduled") && (
+                        <TouchableOpacity
+                        disabled={
+                          ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus)
+                        }
+                        onPress={() => handleAssignPress(order)}
+                        style={[
+                          styles.actionButton,
+                          styles.acceptButton,
+                          ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
+                            backgroundColor: "#ccc",
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.actionButtonText,
+                            ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
+                              color: "#666",
+                            },
+                          ]}
+                        >
+                          {order.bookingStatus === "Assigned"
+                            ? "Assigned"
+                            : order.bookingStatus === "Cancelled"
+                            ? "Cancelled"
+                            : order.bookingStatus === "Completed"
+                            ? "Completed"
+                            : "Assign Order"}
+                        </Text>
+                      </TouchableOpacity>
+                      
+                    )}
+                  </View>
                 </TouchableOpacity>
-                
-              )}
-            </View>
-          </TouchableOpacity>
-        ))
-      )}
-    </ScrollView>
-  )}
-</View>
-
+              ))
+            )}
+          </ScrollView>
+        )}
+      </View>
 
       <AssignTankerModal
         visible={showModal}
@@ -364,6 +455,50 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: '#F5F5F5' 
+  },
+
+  pendingBanner: {
+    backgroundColor: '#FFA726',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  pendingText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  pendingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  pendingTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFA726',
+    marginTop: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  pendingMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  pendingNote: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    lineHeight: 20,
   },
   header: {
     backgroundColor: '#FFF',
@@ -406,7 +541,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
-    minWidth: 90, // Ensure minimum width for all tabs
+    minWidth: 90,
   },
   activeTab: { 
     borderBottomWidth: 3,
@@ -416,7 +551,7 @@ const styles = StyleSheet.create({
     color: '#999', 
     marginLeft: 6, 
     fontWeight: '600',
-    includeFontPadding: false, // Prevent extra padding
+    includeFontPadding: false,
   },
   activeTabText: { 
     fontWeight: '700',
@@ -431,7 +566,7 @@ const styles = StyleSheet.create({
   ordersContent: {
     flexGrow: 1,
     paddingTop: 16,
-    paddingBottom: 120, // Extra padding to prevent cutoff
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,
@@ -439,7 +574,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 40,
   },
- 
   emptyContainer: { 
     flex: 1,
     alignItems: 'center', 
@@ -544,5 +678,4 @@ const styles = StyleSheet.create({
     marginTop: 100,
   },
   loadingText: { marginTop: 12, fontSize: 16, color: "#666", fontWeight: "500" },
-  
 });

@@ -23,6 +23,7 @@ import { getSuppliers } from "../../api/suppliers/getAllSupplier";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useRouter } from "expo-router";
 import DatePickerModal from "./../../components/DatePicker";
+import { KeyboardAvoidingView, Platform } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -55,7 +56,8 @@ export default function HomeScreen() {
       const UserId = user._id || "";
        console.log("_id",user._id);
       const result = await GetBookings(UserId);
-      const supplierList = await getSuppliers();
+      const defaultCapacity = tankerOptions[0].capacity;
+      const supplierList = await getSuppliers(defaultCapacity);
       if (result.success === true) {
         setBookings(result.data);
         setSuppliers(supplierList);
@@ -65,6 +67,23 @@ export default function HomeScreen() {
     };
     Getbookings();
   }, []);
+
+
+
+useEffect(() => {
+  const updateSuppliers = async () => {
+    const selectedCapacity = tankerOptions[selectedTanker].capacity;
+    const supplierList = await getSuppliers(selectedCapacity);
+    setSuppliers(supplierList);
+    
+ 
+    if (selectedSupplier && !supplierList.some(s => s._id === selectedSupplier._id)) {
+      setSelectedSupplier(null);
+    }
+  };
+  
+  updateSuppliers();
+}, [selectedTanker]);
   useEffect(() => {
     console.log("Selected Date", selectedDate);
   }, [selectedDate]);
@@ -211,14 +230,17 @@ export default function HomeScreen() {
           address={searchAddress}
         />
       </View>
-
-      <KeyboardAwareScrollView
+      <KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+>
+  <ScrollView
     style={styles.scrollView}
     contentContainerStyle={styles.scrollContent}
-    extraScrollHeight={100}
-    enableOnAndroid={true}
     keyboardShouldPersistTaps="handled"
     showsVerticalScrollIndicator={false}
+    contentInsetAdjustmentBehavior="automatic"
   >
         <View style={styles.bookingTypeSection}>
           <View style={styles.bookingTypeRow}>
@@ -321,49 +343,7 @@ export default function HomeScreen() {
 
         {bookingType !== "rebook" && (
           <>
-            <View style={styles.supplierSection}>
-              <Text style={styles.sectionTitle}>Select Water Supplier</Text>
-
-              <TouchableOpacity
-                style={styles.supplierSelectorButton}
-                onPress={() => setShowSupplierModal(true)}
-              >
-                {selectedSupplier ? (
-                  <View style={styles.selectedSupplierContainer}>
-                    <View
-                      style={[
-                        styles.supplierIconSmall,
-                        { backgroundColor: "#2196F3" },
-                      ]}
-                    >
-                      <Text style={styles.supplierEmojiSmall}>💧</Text>
-                    </View>
-                    <View style={styles.selectedSupplierInfo}>
-                      <Text style={styles.selectedSupplierName}>
-                        {selectedSupplier.name}
-                      </Text>
-                      <View style={styles.supplierMetaRow}>
-                        <Ionicons name="star" size={12} color="#FFC107" />
-                        <Text style={styles.supplierRatingSmall}>4.8</Text>
-                        <Text style={styles.supplierDot}>•</Text>
-                        <Text style={styles.supplierDeliveriesSmall}>
-                          2500+ deliveries
-                        </Text>
-                      </View>
-                    </View>
-                    <Ionicons name="chevron-down" size={20} color="#666" />
-                  </View>
-                ) : (
-                  <View style={styles.placeholderContainer}>
-                    <Ionicons name="business-outline" size={20} color="#999" />
-                    <Text style={styles.placeholderText}>
-                      Tap to select supplier
-                    </Text>
-                    <Ionicons name="chevron-down" size={20} color="#999" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
+          
 
             <View style={styles.tankerSection}>
               <Text style={styles.sectionTitle}>Select Tanker Size</Text>
@@ -412,6 +392,51 @@ export default function HomeScreen() {
                 ))}
               </ScrollView>
             </View>
+            <View style={styles.supplierSection}>
+              <Text style={styles.sectionTitle}>Select Water Supplier</Text>
+
+              <TouchableOpacity
+  style={styles.supplierSelectorButton}
+  onPress={() => setShowSupplierModal(true)}
+>
+  {selectedSupplier ? (
+    <View style={styles.selectedSupplierContainer}>
+      <View
+        style={[
+          styles.supplierIconSmall,
+          { backgroundColor: "#2196F3" },
+        ]}
+      >
+        <Text style={styles.supplierEmojiSmall}>💧</Text>
+      </View>
+      <View style={styles.selectedSupplierInfo}>
+        <Text style={styles.selectedSupplierName}>
+          {selectedSupplier.name}
+        </Text>
+        <View style={styles.supplierMetaRow}>
+          <View style={styles.availabilityBadgeSmall}>
+            <Ionicons name="checkmark-circle" size={10} color="#4CAF50" />
+            <Text style={styles.availabilityTextSmall}>Online</Text>
+          </View>
+          <Text style={styles.supplierDot}>•</Text>
+          <Text style={styles.supplierCapacitySmall}>
+            {tankerOptions[selectedTanker].capacity}L Tanker
+          </Text>
+        </View>
+      </View>
+      <Ionicons name="chevron-down" size={20} color="#666" />
+    </View>
+  ) : (
+    <View style={styles.placeholderContainer}>
+      <Ionicons name="business-outline" size={20} color="#999" />
+      <Text style={styles.placeholderText}>
+        Tap to select supplier ({tankerOptions[selectedTanker].capacity}L)
+      </Text>
+      <Ionicons name="chevron-down" size={20} color="#999" />
+    </View>
+  )}
+</TouchableOpacity>
+            </View>
 
             <View style={styles.detailsSection}>
               <Text style={styles.sectionTitle}>Delivery Details</Text>
@@ -450,7 +475,7 @@ export default function HomeScreen() {
            
 {bookingType === "Scheduled" && (
   <View style={styles.scheduleRow}>
-    {/* DATE PICKER BUTTON - FIXED */}
+    
     <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
       <Text style={styles.inputLabel}>Date *</Text>
       <TouchableOpacity
@@ -564,74 +589,89 @@ export default function HomeScreen() {
             </View>
           </>
         )}
-      </KeyboardAwareScrollView>
+        </ScrollView>
+</KeyboardAvoidingView>
+
 
      
-      {/* SUPPLIER SELECTION MODAL */}
+    
       <Modal
-        visible={showSupplierModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowSupplierModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Water Supplier</Text>
-              <TouchableOpacity onPress={() => setShowSupplierModal(false)}>
-                <Ionicons name="close" size={24} color="#333" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.supplierList}>
-              {suppliers.map((supplier, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.supplierItem,
-                    selectedSupplier?.id === supplier.id &&
-                      styles.supplierItemActive,
-                  ]}
-                  onPress={() => {
-                    console.log("Selected Supplier:", supplier);
-                    setSelectedSupplier(supplier);
-                    setShowSupplierModal(false);
-                  }}
-                >
-                  <View
-                    style={[
-                      styles.supplierIconLarge,
-                      { backgroundColor: supplier.color },
-                    ]}
-                  >
-                    <Text style={styles.supplierEmojiLarge}>💧</Text>
-                  </View>
-                  <View style={styles.supplierDetails}>
-                    <Text style={styles.supplierName}>{supplier.name}</Text>
-                    <View style={styles.supplierMeta}>
-                      <View style={styles.ratingContainer}>
-                        <Ionicons name="star" size={14} color="#FFC107" />
-                        <Text style={styles.supplierRating}>4.8</Text>
-                      </View>
-                      <Text style={styles.supplierDot}>•</Text>
-                      <Text style={styles.supplierDeliveries}>
-                        2600+ deliveries
-                      </Text>
-                    </View>
-                  </View>
-                  {selectedSupplier?.id === supplier.id && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={24}
-                      color="#1976D2"
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+  visible={showSupplierModal}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setShowSupplierModal(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <View style={styles.modalHeader}>
+        <Text style={styles.modalTitle}>
+          Select Water Supplier ({tankerOptions[selectedTanker].capacity}L)
+        </Text>
+        <TouchableOpacity onPress={() => setShowSupplierModal(false)}>
+          <Ionicons name="close" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+      
+      {suppliers.length === 0 ? (
+        <View style={styles.noSuppliersContainer}>
+          <Ionicons name="warning-outline" size={48} color="#999" />
+          <Text style={styles.noSuppliersText}>
+            No suppliers available for {tankerOptions[selectedTanker].capacity}L tankers
+          </Text>
+          <Text style={styles.noSuppliersSubtext}>
+            Try selecting a different tanker size
+          </Text>
         </View>
-      </Modal>
-
+      ) : (
+        <ScrollView style={styles.supplierList}>
+          {suppliers.map((supplier, index) => (
+            <TouchableOpacity
+              key={supplier._id}
+              style={[
+                styles.supplierItem,
+                selectedSupplier?._id === supplier._id && styles.supplierItemActive,
+              ]}
+              onPress={() => {
+                console.log("Selected Supplier:", supplier);
+                setSelectedSupplier(supplier);
+                setShowSupplierModal(false);
+              }}
+            >
+              <View
+                style={[
+                  styles.supplierIconLarge,
+                  { backgroundColor: "#2196F3" },
+                ]}
+              >
+                <Text style={styles.supplierEmojiLarge}>💧</Text>
+              </View>
+              <View style={styles.supplierDetails}>
+                <Text style={styles.supplierName}>{supplier.name}</Text>
+                <View style={styles.supplierMeta}>
+                  <View style={styles.availabilityBadge}>
+                    <Ionicons name="checkmark-circle" size={12} color="#4CAF50" />
+                    <Text style={styles.availabilityText}>Online</Text>
+                  </View>
+                  <Text style={styles.supplierDot}>•</Text>
+                  <Text style={styles.supplierCapacity}>
+                    {tankerOptions[selectedTanker].capacity}L Available
+                  </Text>
+                </View>
+              </View>
+              {selectedSupplier?._id === supplier._id && (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={24}
+                  color="#1976D2"
+                />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  </View>
+</Modal>
  
       <Modal
         visible={showTimePicker}
@@ -703,12 +743,12 @@ const styles = StyleSheet.create({
     height: 250,
   },
   scrollView: {
-     flexGrow:1,
+   
     backgroundColor: "#f5f5f5",
-  
+       
   },
   scrollContent: {
-    flexGrow: 1,
+
   },
   bookingTypeSection: {
     backgroundColor: "#fff",
@@ -995,6 +1035,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginLeft: 8,
+    textAlign: 'left',
+    textAlignVertical: 'center'
   },
   addressInputRow: {
     flexDirection: "row",
@@ -1113,7 +1155,7 @@ const styles = StyleSheet.create({
   timeSlotTextActive: {
     color: "#1976D2",
   },
-  // Payment Modal Styles
+
   paymentContainer: {
     padding: 20,
   },
@@ -1214,6 +1256,63 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 12,
     fontStyle: "italic",
+  },
+
+
+  noSuppliersContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noSuppliersText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noSuppliersSubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  availabilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  availabilityText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginLeft: 4,
+  },
+  supplierCapacity: {
+    fontSize: 13,
+    color: '#666',
+  },
+
+  availabilityBadgeSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  availabilityTextSmall: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginLeft: 2,
+  },
+  supplierCapacitySmall: {
+    fontSize: 11,
+    color: '#666',
   },
 });
 

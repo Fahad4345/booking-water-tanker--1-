@@ -19,7 +19,6 @@ export default function EditProfileScreen() {
 
   useEffect(() => {
     loadUserData();
-  console.log("Supplier Edit Screen");
   }, []);
 
   const loadUserData = async () => {

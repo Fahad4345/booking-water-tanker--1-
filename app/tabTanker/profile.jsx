@@ -37,7 +37,7 @@ export default function ProfileScreen() {
 
 
   const menuItems = [
-    { icon: '👤', title: 'Edit Profile', onPress: () => router.push('/editProfile') },
+    { icon: '👤', title: 'Edit Profile', onPress: () => router.push('/tabTanker/editProfile') },
     { icon: '📍', title: 'Saved Addresses', onPress: () => { } },
 
     { icon: '🔔', title: 'Notifications', onPress: () => { } },

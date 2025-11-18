@@ -10,16 +10,13 @@ export default function SupplierTabs() {
       <Tabs
         screenOptions={{
           headerShown: false,
+          tabBarHideOnKeyboard: true,
           tabBarStyle: {
-            height: 60,
+            height: 50,
             paddingBottom: 8,
             backgroundColor: "#fff",
-            borderTopWidth: 0,
             elevation: 0,
             shadowOpacity: 0,
-          },
-          tabBarLabelStyle: {
-            marginBottom: 4,
           },
         }}
       >
@@ -31,17 +28,26 @@ export default function SupplierTabs() {
               <Ionicons name="home-outline" size={size} color={color} />
             ),
           }}
-        />
+        /><Tabs.Screen
+        name="viewTanker"
+        options={{
+          title: "Tankers",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="car-outline" size={size} color={color} />
+          ),
+        }}
+      />
+       
         <Tabs.Screen
-          name="tankerRegistration"
-          options={{
-            title: "Tankers",
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="car-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
+        name="tankerRegistration"
+        options={{
+          title: "Register",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
           name="profile"
           options={{
             title: "Profile",
@@ -49,18 +55,19 @@ export default function SupplierTabs() {
               <Ionicons name="person-outline" size={size} color={color} />
             ),
           }}
-        />
+        /> 
+         
         <Tabs.Screen
           name="orderDetail"
           options={{
-            href: null, // 🚫 hides it from the tab bar
+            href: null, 
           }}
         />
    
       <Tabs.Screen
           name="editProfile"
           options={{
-            href: null, // 🚫 hides it from the tab bar
+            href: null, 
           }}
         />
       </Tabs>

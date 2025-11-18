@@ -11,7 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  ActivityIndicator
+  
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerTankerProvider } from "../../api/tankerProvider/register";
@@ -23,31 +25,47 @@ import { useEffect } from 'react';
 const TankerProviderRegistration = () => {
   const [step, setStep] = useState(1);
   const { user, clearUser } = useUser();
+  const [isLoading, setisLoading]= useState(false);
 
   useEffect(() => {
     console.log("Navigated to Tanker Provider Registration");
   }, []);
 
   const [formData, setFormData] = useState({
-    id: user?._id || '',
-    fullName: '',
+    id:  '',
+    TankerName: '',
     phone: '',
     email: '',
-    cnic: '',
-    cnicExpiry: '',
+    password: '',
     vehicleNumber: '',
     registrationNumber: '',
     capacity: '6000',
     vehicleModel: '',
     manufacturingYear: '',
-    licenseNumber: '',
-    licenseExpiry: '',
-    licenseType: 'LTV',
-    waterSource: '',
-    sourceAddress: '',
-    sourceType: 'municipal',
-    waterQualityCertificate: false,
+    // licenseNumber: '',
+    // licenseExpiry: '',
+    // licenseType: 'LTV',
+    // waterSource: '',
+    // sourceAddress: '',
+    // sourceType: 'municipal',
+    // waterQualityCertificate: false,
   });
+
+  useEffect(() => {
+    if (user?._id) {
+      setFormData(prev => ({
+        ...prev,
+        id: user._id
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    console.log("Navigated to Tanker Provider Registration");
+    console.log("User ID:", user?._id);
+    console.log("Form Data ID:", formData.id);
+  }, [user, formData.id]);
+
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -57,11 +75,24 @@ const TankerProviderRegistration = () => {
 
   const nextStep = () => {
     if (step === 1) {
-      const { fullName, phone, cnic, cnicExpiry } = formData;
-      if (!fullName || !phone || !cnic || !cnicExpiry) {
+      const { TankerName, phone, email, password} = formData;
+      if (!TankerName || !phone || !email || !password) {
         Alert.alert("Missing Fields", "Please fill all driver information fields before continuing.");
         return;
       }
+       const emailRegex=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+       if (!emailRegex.test(email)) {
+        Alert.alert("Invalid Email", "Please enter a valid email address.");
+        return;
+      }
+      // const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+      
+      
+      // const cleanPhone = phone.replace(/[\s\-\(\)]/g, ''); 
+      // if (!phoneRegex.test(cleanPhone)) {
+      //   Alert.alert("Invalid Phone Number", "Please enter a valid phone number.");
+      //   return;
+      // }
     }
 
     if (step === 2) {
@@ -72,13 +103,13 @@ const TankerProviderRegistration = () => {
       }
     }
 
-    if (step === 3) {
-      const { licenseNumber, licenseExpiry, licenseType } = formData;
-      if (!licenseNumber || !licenseExpiry || !licenseType) {
-        Alert.alert("Missing Fields", "Please complete all license details before continuing.");
-        return;
-      }
-    }
+    // if (step === 3) {
+    //   const { licenseNumber, licenseExpiry, licenseType } = formData;
+    //   if (!licenseNumber || !licenseExpiry || !licenseType) {
+    //     Alert.alert("Missing Fields", "Please complete all license details before continuing.");
+    //     return;
+    //   }
+    // }
 
     if (step < 4) setStep(step + 1);
   };
@@ -98,18 +129,26 @@ const TankerProviderRegistration = () => {
       };
 
       await AsyncStorage.setItem("tankerInfo", JSON.stringify(tankerInfo));
-      console.log("✅ Tanker info saved");
+      console.log("Tanker info saved");
     } catch (error) {
-      console.error("❌ Error saving tanker info:", error);
+      console.error(" Error saving tanker info:", error);
     }
   };
 
   const handleSubmit = async () => {
-    const { waterSource, sourceAddress, sourceType } = formData;
-    if (!waterSource || !sourceAddress || !sourceType) {
-      Alert.alert("Missing Fields", "Please fill all water source details before submitting.");
+
+    if (isLoading) return;
+
+    if (!formData.id) {
+      Alert.alert("Error", "User ID is missing. Please try again.");
       return;
     }
+    const {  vehicleNumber, registrationNumber, vehicleModel, manufacturingYear, capacity } = formData;
+    if (!vehicleNumber || !registrationNumber || !vehicleModel || !manufacturingYear || !capacity) {
+      Alert.alert("Missing Fields", "Please fill all  details before submitting.");
+      return;
+    }
+    setisLoading(true);
     try {
       const response = await registerTankerProvider(formData);
 
@@ -118,23 +157,23 @@ const TankerProviderRegistration = () => {
         storeTankerInfo(response.data);
 
         setFormData({
-          fullName: '',
+          id: user?._id || '',
+          TankerName: '',
           phone: '',
           email: '',
-          cnic: '',
-          cnicExpiry: '',
+          password: '',
           vehicleNumber: '',
           registrationNumber: '',
           capacity: '6000',
           vehicleModel: '',
           manufacturingYear: '',
-          licenseNumber: '',
-          licenseExpiry: '',
-          licenseType: 'LTV',
-          waterSource: '',
-          sourceAddress: '',
-          sourceType: 'municipal',
-          waterQualityCertificate: false,
+          // licenseNumber: '',
+          // licenseExpiry: '',
+          // licenseType: 'LTV',
+          // waterSource: '',
+          // sourceAddress: '',
+          // sourceType: 'municipal',
+          // waterQualityCertificate: false,
         });
         router.push("/tabSupplier/homeScreen");
         setStep(1);
@@ -143,20 +182,23 @@ const TankerProviderRegistration = () => {
       }
     } catch (error) {
       Alert.alert("Error", error.message || "Something went wrong!");
+    }finally {
+      setisLoading(false);
     }
+
   };
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Driver Information</Text>
+      <Text style={styles.sectionTitle}> Create Tanker ID</Text>
       
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Full Name *</Text>
+        <Text style={styles.label}>Tanker Name*</Text>
         <TextInput
           style={styles.input}
-          value={formData.fullName}
-          onChangeText={(text) => handleInputChange('fullName', text)}
-          placeholder="Enter your full name"
+          value={formData.TankerName}
+          onChangeText={(text) => handleInputChange('TankerName', text)}
+          placeholder="Enter Tanker Name"
           placeholderTextColor="#999"
         />
       </View>
@@ -170,6 +212,7 @@ const TankerProviderRegistration = () => {
           placeholder="03XX-XXXXXXX"
           keyboardType="phone-pad"
           placeholderTextColor="#999"
+           maxLength={11}
         />
       </View>
 
@@ -186,27 +229,18 @@ const TankerProviderRegistration = () => {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>CNIC Number *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.cnic}
-          onChangeText={(text) => handleInputChange('cnic', text)}
-          placeholder="XXXXX-XXXXXXX-X"
-          keyboardType="phone-pad"
-          placeholderTextColor="#999"
-        />
-      </View>
+  <Text style={styles.label}>Password</Text>
+  <TextInput
+    style={styles.input}
+    value={formData.password} 
+    onChangeText={(text) => handleInputChange('password', text)} 
+    secureTextEntry={true} 
+    placeholder="Enter your password"
+    placeholderTextColor="#999"
+  />
+</View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>CNIC Expiry Date *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.cnicExpiry}
-          onChangeText={(text) => handleInputChange('cnicExpiry', text)}
-          placeholder="DD/MM/YYYY"
-          placeholderTextColor="#999"
-        />
-      </View>
+   
     </View>
   );
 
@@ -215,38 +249,45 @@ const TankerProviderRegistration = () => {
       <Text style={styles.sectionTitle}>Vehicle Information</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Select Tanker Capacity *</Text>
-        <View style={styles.capacityContainer}>
-          {[
-            { size: '6000', price: 'PKR 1,800', icon: '🚛' },
-            { size: '12000', price: 'PKR 3,200', icon: '🚚' },
-            { size: '15000', price: 'PKR 3,800', icon: '🚚' }
-          ].map(option => (
-            <TouchableOpacity
-              key={option.size}
-              style={[
-                styles.capacityCard,
-                formData.capacity === option.size && styles.capacityCardActive
-              ]}
-              onPress={() => handleInputChange('capacity', option.size)}
-            >
-              <Text style={styles.capacityIcon}>{option.icon}</Text>
-              <Text style={[
-                styles.capacitySize,
-                formData.capacity === option.size && styles.capacitySizeActive
-              ]}>
-                {option.size}
-              </Text>
-              <Text style={[
-                styles.capacityPrice,
-                formData.capacity === option.size && styles.capacityPriceActive
-              ]}>
-                {option.price}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+  <Text style={styles.label}>Select Tanker Capacity *</Text>
+  <ScrollView 
+    horizontal 
+    showsHorizontalScrollIndicator={false}
+    contentContainerStyle={styles.capacityScrollContainer}
+  >
+    <View style={styles.capacityContainer}>
+      {[
+        { size: '6000', price: 'PKR 1,800', icon: '🚛' },
+        { size: '12000', price: 'PKR 3,200', icon: '🚚' },
+        { size: '15000', price: 'PKR 3,800', icon: '🚚' },
+        { size: '22000', price: 'PKR 5,200', icon: '🚚' }
+      ].map(option => (
+        <TouchableOpacity
+          key={option.size}
+          style={[
+            styles.capacityCard,
+            formData.capacity === option.size && styles.capacityCardActive
+          ]}
+          onPress={() => handleInputChange('capacity', option.size)}
+        >
+          <Text style={styles.capacityIcon}>{option.icon}</Text>
+          <Text style={[
+            styles.capacitySize,
+            formData.capacity === option.size && styles.capacitySizeActive
+          ]}>
+            {option.size}
+          </Text>
+          <Text style={[
+            styles.capacityPrice,
+            formData.capacity === option.size && styles.capacityPriceActive
+          ]}>
+            {option.price}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  </ScrollView>
+</View>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Vehicle Number *</Text>
@@ -276,6 +317,7 @@ const TankerProviderRegistration = () => {
           style={styles.input}
           value={formData.vehicleModel}
           onChangeText={(text) => handleInputChange('vehicleModel', text)}
+           keyboardType='phone-pad'  
           placeholder="e.g., Hino 500"
           placeholderTextColor="#999"
         />
@@ -295,149 +337,149 @@ const TankerProviderRegistration = () => {
     </View>
   );
 
-  const renderStep3 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>License Information</Text>
+  // const renderStep3 = () => (
+  //   <View style={styles.stepContainer}>
+  //     <Text style={styles.sectionTitle}>License Information</Text>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Driving License Number *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.licenseNumber}
-          onChangeText={(text) => handleInputChange('licenseNumber', text)}
-          placeholder="Enter license number"
-          placeholderTextColor="#999"
-        />
-      </View>
+  //     <View style={styles.inputGroup}>
+  //       <Text style={styles.label}>Driving License Number *</Text>
+  //       <TextInput
+  //         style={styles.input}
+  //         value={formData.licenseNumber}
+  //         onChangeText={(text) => handleInputChange('licenseNumber', text)}
+  //         placeholder="Enter license number"
+  //         placeholderTextColor="#999"
+  //       />
+  //     </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>License Type *</Text>
-        <View style={styles.radioContainer}>
-          {['LTV', 'HTV', 'PSV'].map(type => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.radioButton,
-                formData.licenseType === type && styles.radioButtonActive
-              ]}
-              onPress={() => handleInputChange('licenseType', type)}
-            >
-              <Text style={[
-                styles.radioText,
-                formData.licenseType === type && styles.radioTextActive
-              ]}>
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+  //     <View style={styles.inputGroup}>
+  //       <Text style={styles.label}>License Type *</Text>
+  //       <View style={styles.radioContainer}>
+  //         {['LTV', 'HTV', 'PSV'].map(type => (
+  //           <TouchableOpacity
+  //             key={type}
+  //             style={[
+  //               styles.radioButton,
+  //               formData.licenseType === type && styles.radioButtonActive
+  //             ]}
+  //             onPress={() => handleInputChange('licenseType', type)}
+  //           >
+  //             <Text style={[
+  //               styles.radioText,
+  //               formData.licenseType === type && styles.radioTextActive
+  //             ]}>
+  //               {type}
+  //             </Text>
+  //           </TouchableOpacity>
+  //         ))}
+  //       </View>
+  //     </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>License Expiry Date *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.licenseExpiry}
-          onChangeText={(text) => handleInputChange('licenseExpiry', text)}
-          placeholder="DD/MM/YYYY"
-          placeholderTextColor="#999"
-        />
-      </View>
-    </View>
-  );
+  //     <View style={styles.inputGroup}>
+  //       <Text style={styles.label}>License Expiry Date *</Text>
+  //       <TextInput
+  //         style={styles.input}
+  //         value={formData.licenseExpiry}
+  //         onChangeText={(text) => handleInputChange('licenseExpiry', text)}
+  //         placeholder="DD/MM/YYYY"
+  //         placeholderTextColor="#999"
+  //       />
+  //     </View>
+  //   </View>
+  // );
 
-  const renderStep4 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.sectionTitle}>Water Source Details</Text>
+  // const renderStep3 = () => (
+  //   <View style={styles.stepContainer}>
+  //     <Text style={styles.sectionTitle}>Water Source Details</Text>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Water Source Type *</Text>
-        <View style={styles.radioContainer}>
-          {[
-            { value: 'Municipal', label: 'Municipal' },
-            { value: 'Boring', label: 'Boring' },
-            { value: 'Filtration Plant', label: 'Filtration Plant' }
-          ].map(option => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.radioButton,
-                formData.sourceType === option.value && styles.radioButtonActive
-              ]}
-              onPress={() => handleInputChange('sourceType', option.value)}
-            >
-              <Text style={[
-                styles.radioText,
-                formData.sourceType === option.value && styles.radioTextActive
-              ]}>
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+  //     <View style={styles.inputGroup}>
+  //       <Text style={styles.label}>Water Source Type *</Text>
+  //       <View style={styles.radioContainer}>
+  //         {[
+  //           { value: 'Municipal', label: 'Municipal' },
+  //           { value: 'Boring', label: 'Boring' },
+  //           { value: 'Filtration Plant', label: 'Filtration Plant' }
+  //         ].map(option => (
+  //           <TouchableOpacity
+  //             key={option.value}
+  //             style={[
+  //               styles.radioButton,
+  //               formData.sourceType === option.value && styles.radioButtonActive
+  //             ]}
+  //             onPress={() => handleInputChange('sourceType', option.value)}
+  //           >
+  //             <Text style={[
+  //               styles.radioText,
+  //               formData.sourceType === option.value && styles.radioTextActive
+  //             ]}>
+  //               {option.label}
+  //             </Text>
+  //           </TouchableOpacity>
+  //         ))}
+  //       </View>
+  //     </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Water Source Name *</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.waterSource}
-          onChangeText={(text) => handleInputChange('waterSource', text)}
-          placeholder="Enter water source name"
-          placeholderTextColor="#999"
-        />
-      </View>
+  //     <View style={styles.inputGroup}>
+  //       <Text style={styles.label}>Water Source Name *</Text>
+  //       <TextInput
+  //         style={styles.input}
+  //         value={formData.waterSource}
+  //         onChangeText={(text) => handleInputChange('waterSource', text)}
+  //         placeholder="Enter water source name"
+  //         placeholderTextColor="#999"
+  //       />
+  //     </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Source Address *</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={formData.sourceAddress}
-          onChangeText={(text) => handleInputChange('sourceAddress', text)}
-          placeholder="Enter complete address of water source"
-          multiline
-          numberOfLines={3}
-          placeholderTextColor="#999"
-        />
-      </View>
+  //     <View style={styles.inputGroup}>
+  //       <Text style={styles.label}>Source Address *</Text>
+  //       <TextInput
+  //         style={[styles.input, styles.textArea]}
+  //         value={formData.sourceAddress}
+  //         onChangeText={(text) => handleInputChange('sourceAddress', text)}
+  //         placeholder="Enter complete address of water source"
+  //         multiline
+  //         numberOfLines={3}
+  //         placeholderTextColor="#999"
+  //       />
+  //     </View>
 
-      <TouchableOpacity
-        style={styles.checkboxContainer}
-        onPress={() => handleInputChange('waterQualityCertificate', !formData.waterQualityCertificate)}
-      >
-        <View style={[
-          styles.checkbox,
-          formData.waterQualityCertificate && styles.checkboxChecked
-        ]}>
-          {formData.waterQualityCertificate && (
-            <Text style={styles.checkmark}>✓</Text>
-          )}
-        </View>
-        <Text style={styles.checkboxLabel}>
-          I have a valid water quality certificate
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
+  //     <TouchableOpacity
+  //       style={styles.checkboxContainer}
+  //       onPress={() => handleInputChange('waterQualityCertificate', !formData.waterQualityCertificate)}
+  //     >
+  //       <View style={[
+  //         styles.checkbox,
+  //         formData.waterQualityCertificate && styles.checkboxChecked
+  //       ]}>
+  //         {formData.waterQualityCertificate && (
+  //           <Text style={styles.checkmark}>✓</Text>
+  //         )}
+  //       </View>
+  //       <Text style={styles.checkboxLabel}>
+  //         I have a valid water quality certificate
+  //       </Text>
+  //     </TouchableOpacity>
+  //   </View>
+  // );
 
   const renderStepContent = () => {
     switch (step) {
       case 1: return renderStep1();
       case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
+     
+     
       default: return renderStep1();
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom','top']}>
+    <SafeAreaView style={styles.container}   edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      {/* Header Only */}
+ 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tanker Registration</Text>
-        <Text style={styles.stepIndicator}>Step {step} of 4</Text>
+        {/* <Text style={styles.stepIndicator}>Step {step} of 2</Text> */}
       </View>
 
       <KeyboardAvoidingView
@@ -454,7 +496,7 @@ const TankerProviderRegistration = () => {
           >
             {renderStepContent()}
             
-            {/* Navigation Buttons */}
+          
             <View style={styles.buttonContainer}>
               {step > 1 && (
                 <TouchableOpacity style={styles.backButton} onPress={prevStep}>
@@ -462,13 +504,27 @@ const TankerProviderRegistration = () => {
                 </TouchableOpacity>
               )}
               
-              {step < 4 ? (
+              {step < 2 ? (
                 <TouchableOpacity style={styles.nextButton} onPress={nextStep}>
                   <Text style={styles.nextButtonText}>Next</Text>
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                  <Text style={styles.submitButtonText}>Submit Registration</Text>
+                <TouchableOpacity 
+                  style={[
+                    styles.submitButton, 
+                    isLoading && styles.submitButtonLoading
+                  ]} 
+                  onPress={handleSubmit}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color="#fff" />
+                      <Text style={styles.submitButtonText}>Submitting...</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.submitButtonText}>Submit Registration</Text>
+                  )}
                 </TouchableOpacity>
               )}
             </View>
@@ -552,43 +608,46 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     paddingTop: 14,
   },
+  capacityScrollContainer: {
+    paddingHorizontal: 5,
+  },
   capacityContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 12,
+    paddingVertical: 5,
   },
   capacityCard: {
-    flex: 1,
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 12,
     backgroundColor: '#f8f9fa',
     borderWidth: 2,
-    borderColor: '#dee2e6',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
+    borderColor: '#e9ecef',
+    minWidth: 95,
   },
   capacityCardActive: {
-    borderColor: '#007bff',
-    backgroundColor: '#e7f3ff',
+    backgroundColor: '#e3f2fd',
+    borderColor: '#2196f3',
   },
   capacityIcon: {
-    fontSize: 32,
+    fontSize: 24,
     marginBottom: 8,
   },
   capacitySize: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#495057',
     marginBottom: 4,
   },
   capacitySizeActive: {
-    color: '#007bff',
+    color: '#1976d2',
   },
   capacityPrice: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 12,
+    color: '#6c757d',
   },
   capacityPriceActive: {
-    color: '#007bff',
+    color: '#1976d2',
     fontWeight: '600',
   },
   radioContainer: {
@@ -699,6 +758,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });
 

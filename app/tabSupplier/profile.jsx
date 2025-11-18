@@ -14,7 +14,7 @@ export default function ProfileScreen() {
 
   const { logout } = Auth();
 
-
+  useEffect(()=>{console.log("Supplier Profile Screen");},[])
 
 
   const handleLogout = () => {
@@ -31,13 +31,13 @@ export default function ProfileScreen() {
          
           
           
-          // ✅ 2. Then call logout API (optional - can be skipped if no token)
+  
           const result = await logout();
           await clearUser();
           
-          // ✅ 3. Finally navigate to login screen
+      
             console.log("Navigating");
-          router.push("/"); 
+          router.replace("/"); 
           
           
             console.log("Logged out successfully:", result);

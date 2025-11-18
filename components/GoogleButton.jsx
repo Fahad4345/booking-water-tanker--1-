@@ -10,11 +10,11 @@ export default function GoogleLoginButton({ onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    // Use Web Client ID for development (works on both iOS & Android)
+  
     expoClientId: '60522827713-d0g3l4v0gnaa7dsoe3ijd2ojq1sjb1gr.apps.googleusercontent.com',
     
     androidClientId: '60522827713-melia71sh9tjtb5th3596aurtik22v1v.apps.googleusercontent.com',
-    useProxy: true, // ← This makes it work with Web Client ID
+    useProxy: true, 
     scopes: ['openid', 'profile', 'email'],
   });
   useEffect(() => {

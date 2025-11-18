@@ -29,13 +29,13 @@ export default function ProfileScreen() {
             
            
             const result = await logout();
-            await clearUser();
+            console.log("Logged out successfully:", result);
+            const res =await clearUser();
             router.push("/");
             
 
             
           
-            console.log("Logged out successfully:", result);
           } catch (err) {
             console.error("Logout error:", err);
           }

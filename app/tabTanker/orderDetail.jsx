@@ -21,32 +21,34 @@ import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity";
 import { assignOrderToTanker } from "../../api/suppliers/assignOrder";
 import { useUser } from '../../context/context';
 import OpenStreetMapView from './../../components/OpenStreetMap';
+import { useUpdateStatus } from "../../components/updateStatus";
 
 const { width, height } = Dimensions.get("window");
+ 
 
 const OrderDetailScreen = () => {
   const router = useRouter();
   const { order } = useLocalSearchParams();
   const [orderDetails, setOrderDetails] = useState(null);
   const { user } = useUser();
+   const{handleUpdateStatus}= useUpdateStatus();
 
   const [showModal, setShowModal] = useState(false);
   const [tankers, setTankers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-
-
-   useEffect(()=>{console.log("Supplier Order Detail Screen");},[])
   useEffect(() => {
     try {
-        console.log("Supplier Order Detail Screen");
+
+
+      console.log("user", user)
       const parsedOrder = typeof order === "string" ? JSON.parse(order) : order;
       setOrderDetails(parsedOrder);
        console.log("parsed order", parsedOrder);
     } catch (error) {
       console.log("Error parsing order:", error);
     }
-  }, [order]);
+  }, []);
 
   const loadTankers = async (tankSize) => {
     setLoading(true);
@@ -226,7 +228,6 @@ const OrderDetailScreen = () => {
           </View>
         </View>
 
-   
         {orderDetails.bookingType === "Scheduled" ? (
   <View style={styles.infoRow}>
     <View style={styles.infoItem}>
@@ -253,8 +254,7 @@ const OrderDetailScreen = () => {
       </View>
     </View>
   </View>
-)}  
-
+)}
       
         {instruction && (
           <View style={styles.instructionsCompact}>
@@ -278,7 +278,7 @@ const OrderDetailScreen = () => {
           </View>
           <View style={styles.phoneBox}>
             <Text style={styles.phoneNumber}>
-              {user?.phone || "03001234567"}
+              {user?.Tanker.phone || "03001234567"}
             </Text>
             <TouchableOpacity style={styles.callButton} onPress={makeCall}>
               <Text style={styles.callButtonText}>📞</Text>
@@ -286,15 +286,12 @@ const OrderDetailScreen = () => {
           </View>
         </View>
 
-        {orderDetails.bookingStatus == "Pending" ? (
+        {orderDetails.bookingStatus == "Assigned" ? (
           <TouchableOpacity
             style={styles.assignButton}
-            onPress={() => {
-              loadTankers(orderDetails.tankSize);
-              setShowModal(true);
-            }}
+            onPress={() => handleUpdateStatus(orderDetails)}
           >
-            <Text style={styles.assignButtonText}>Assign Tanker</Text>
+            <Text style={styles.assignButtonText}>Accept Order</Text>
           </TouchableOpacity>
         ) : (
           <View
@@ -311,16 +308,7 @@ const OrderDetailScreen = () => {
           
         )}
 
-{orderDetails.bookingStatus === "Pending" && (
-    <TouchableOpacity
-      style={styles.assignButton}
-      onPress={() => {
-        handleCancelBooking(orderDetails._id);
-      }}
-    >
-      <Text style={styles.assignButtonText}>Cancel Order</Text>
-    </TouchableOpacity>
-  )}   
+
       </ScrollView>
 
       <AssignTankerModal

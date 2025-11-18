@@ -104,7 +104,7 @@ import { Ionicons } from '@expo/vector-icons';
           </View>
           
           <View style={styles.calendarContainer}>
-            {/* Month Navigation */}
+    
             <View style={styles.monthNavigation}>
               <TouchableOpacity 
                 onPress={handlePreviousMonth}
@@ -125,7 +125,7 @@ import { Ionicons } from '@expo/vector-icons';
               </TouchableOpacity>
             </View>
             
-            {/* Week Day Headers */}
+      
             <View style={styles.weekDaysContainer}>
               {weekDays.map((day, index) => (
                 <View key={index} style={styles.weekDayCell}>
@@ -134,7 +134,7 @@ import { Ionicons } from '@expo/vector-icons';
               ))}
             </View>
             
-            {/* Calendar Days */}
+       
             <ScrollView style={styles.daysScrollView}>
               <View style={styles.daysContainer}>
                 {days.map((date, index) => (

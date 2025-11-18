@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UserContext } from "./context";
@@ -13,7 +15,29 @@ export const UserProvider = ({ children }) => {
         const data = await AsyncStorage.getItem("user");
         console.log(data, "data--------");
         if (data) {
-          setUser(JSON.parse(data));
+          const parsedUser = JSON.parse(data);
+          setUser(parsedUser);
+  
+          const tankerStatus = await AsyncStorage.getItem('tankerStatus');
+          const currentOrder = await AsyncStorage.getItem('currentOrder');
+          
+          console.log("🔄 Syncing from storage - tankerStatus:", tankerStatus);
+          console.log("🔄 Syncing from storage - currentOrder:", !!currentOrder);
+          
+   
+          if (parsedUser?.role === 'Tanker' && tankerStatus && parsedUser.Tanker?.availabilityStatus !== tankerStatus) {
+            console.log("🔄 Updating user context from storage...");
+            const updatedUser = {
+              ...parsedUser,
+              Tanker: {
+                ...parsedUser.Tanker,
+                availabilityStatus: tankerStatus
+              },
+              ...(currentOrder && { currentOrder: JSON.parse(currentOrder) })
+            };
+            setUser(updatedUser);
+            await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+          }
         } else {
           setUser(null);
         }
@@ -29,6 +53,7 @@ export const UserProvider = ({ children }) => {
     try {
       setUser(data);
       await AsyncStorage.setItem("user", JSON.stringify(data));
+      console.log("💾 User saved to storage");
     } catch (err) {
       console.error("Error saving user:", err);
     }
@@ -38,14 +63,49 @@ export const UserProvider = ({ children }) => {
     try {
       console.log("🧹 Clearing user context...");
       setUser(null);
-
-      // Wait for React to process the state update
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       await AsyncStorage.clear();
-      console.log("✅ User and storage fully cleared");
+      console.log("User and storage fully cleared");
     } catch (err) {
       console.error("Error clearing user:", err);
+    }
+  };
+
+  const updateTankerStatus = async (availabilityStatus, currentOrder = null) => {
+    console.log("🔄 updateTankerStatus called with:", availabilityStatus);
+    
+    setUser(prevUser => {
+      if (!prevUser || prevUser.role !== 'Tanker') return prevUser;
+      
+      const updatedUser = {
+        ...prevUser,
+        Tanker: {
+          ...prevUser.Tanker,
+          availabilityStatus: availabilityStatus
+        },
+        ...(currentOrder && { currentOrder: currentOrder })
+      };
+      
+      console.log("✅ User context updated to:", availabilityStatus);
+      
+
+      AsyncStorage.setItem("user", JSON.stringify(updatedUser)).catch(err => {
+        console.error("❌ Error saving user to storage:", err);
+      });
+      
+      return updatedUser;
+    });
+
+ 
+    try {
+      await AsyncStorage.setItem('tankerStatus', availabilityStatus);
+      if (currentOrder) {
+        await AsyncStorage.setItem('currentOrder', JSON.stringify(currentOrder));
+      } else {
+        await AsyncStorage.removeItem('currentOrder');
+      }
+      console.log("💾 Separate storage updated");
+    } catch (error) {
+      console.error("❌ Error updating separate storage:", error);
     }
   };
 
@@ -56,6 +116,7 @@ export const UserProvider = ({ children }) => {
     updateUser,
     clearUser,
     setUser,
+    updateTankerStatus
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

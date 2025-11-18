@@ -11,13 +11,13 @@ const OpenMapButton = ({ location, position }) => {
         let url = '';
 
         if (typeof location === 'string') {
-            // If location is an address
+       
             url =
                 Platform.OS === 'ios'
                     ? `http://maps.apple.com/?q=${encodeURIComponent(location)}`
                     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
         } else if (typeof location === 'object' && location.lat && location.lng) {
-            // If location is coordinates
+          
             url =
                 Platform.OS === 'ios'
                     ? `http://maps.apple.com/?ll=${location.lat},${location.lng}`

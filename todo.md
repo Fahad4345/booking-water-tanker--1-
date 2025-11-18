@@ -33,13 +33,42 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
 ### H2O Water Supply :
 
-User Module Integration :
+Tanker Module Integration :
 
-- Added more detail of user , supplier , admin inadmin dashboard
-- Adjusted UI of Admin Dashboard
-- Added Refeshes in  Supplier Home screen and Customer Booking
-- Added Availabillty status for tanker Now supplier will  Assign order to tanker that have availabillity status Online 
+- Adjusted UI
+- In Supplier App create a screen for Supplier tanker and  display all tanker of that Supplier
+- Delete tanker functionality Integrated
+- Adjusted Order Status Sequence of accepted Order
+- Before Order booking integrated a functionality of displaying suppliers to customer which have tanker with the customer selected capcity and availiballity Status Online
 
-Loom : (https://www.loom.com/share/1f43e35e987e43da92f139089e1eb78c)
+
+Loom : (https://www.loom.com/share/b6441f6247b5490790509987d68bec79)
 
 
+ Completed features
+  Login Signup for Customer Supplier
+  Forget Password
+  Customer and Supplier can update their profile
+  Selection of Addresse via Maps
+  Customer Rebook their past order via single click
+  Customer can Book Order Immediate, Scheduled and Also select Supplier
+  Stripe Payment before Booking Order
+  Customer Can  Cancel Booking  after cancellation refund will be generated
+  Supplier will Login after Approval by admin it will come in list of supplier
+  Supplier will recive order and assign to their tank and also cancel their order
+  Supplier can register new Tanker
+  Web Admin Dashboard  Show info of user , supplier, tanker
+  Admin can approve block suspend supplier
+  Admin can approve block suspend Tanker
+
+  Not Completed Feature
+
+  Google login Integrated but have some error
+  Notifications
+  Finance Management
+  Driver app
+
+Admin Loom:(https://www.loom.com/share/319c8ab3e3fd415d95a76eb3aab9f21c)
+
+
+App Loom:(https://www.loom.com/share/2c5af5e734ce4960952fb76c7f149dfc)

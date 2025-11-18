@@ -1,5 +1,6 @@
 export const acceptOrder = async (orderId, status, tankerId) => {
   try {
+      console.log("Accept Order running......");
     const res = await fetch("http://192.168.100.187:5000/tanker/updateStatus", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

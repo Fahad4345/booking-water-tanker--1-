@@ -3,20 +3,21 @@ import { View, Text, StyleSheet, ImageBackground, StatusBar } from 'react-native
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 import AuthWrapper from '../components/AuthWrapper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as NavigationBar from 'expo-navigation-bar';
 
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  useEffect(() => {
-    console.log("Navigated to Index");
 
-  }, []);
+  
+ 
 
 
   return (
     <AuthWrapper>
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" />
+      <View style={styles.container} >
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent/>
         <ImageBackground
           source={{ uri: 'https://d64gsuwffb70l.cloudfront.net/68f0f60b9252847ebae1d642_1760622237534_fb64fefd.png' }}
           style={styles.background}
@@ -53,6 +54,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor:"transparent" 
   },
   background: {
     flex: 1,

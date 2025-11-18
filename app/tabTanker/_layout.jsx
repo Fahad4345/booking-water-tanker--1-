@@ -32,15 +32,7 @@ export default function SupplierTabs() {
             ),
           }}
         />
-        <Tabs.Screen
-          name="tankerRegistration"
-          options={{
-            title: "Tankers",
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="car-outline" size={size} color={color} />
-            ),
-          }}
-        />
+      
         <Tabs.Screen
           name="profile"
           options={{
@@ -48,6 +40,18 @@ export default function SupplierTabs() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="person-outline" size={size} color={color} />
             ),
+          }}
+        />
+          <Tabs.Screen
+          name="orderDetail"
+          options={{
+            href: null, 
+          }}
+        />
+          <Tabs.Screen
+          name="editProfile"
+          options={{
+            href: null, 
           }}
         />
       </Tabs>

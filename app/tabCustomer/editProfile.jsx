@@ -104,11 +104,7 @@ export default function EditProfileScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatar}>👤</Text>
-          </View>
-        </View> */}
+       
 
         <View style={styles.formSection}>
           <Input
@@ -185,7 +181,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingBottom: 40,
-     marginTop:50, // Extra padding at bottom
+     marginTop:50,
   },
   profileSection: {
     alignItems: 'center',

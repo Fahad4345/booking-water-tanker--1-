@@ -17,7 +17,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const { login } = Auth();
   const handleGoogleLogin = (user) => {
-    console.log('User info:', user);
+
 
   };
   const handleLogin = async () => {
@@ -34,7 +34,7 @@ export default function LoginScreen() {
     }
 
     const result = await login(email, password);
-
+   console.log("Login Result",result);
     if (result.success) {
       const { user, accessToken, refreshToken } = result.data;
 
@@ -42,7 +42,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem("refreshToken", refreshToken);
       await updateUser(user);
 
-      // ✅ Register supplier to Socket.IO immediately after login
+    
       if (user.role === "Supplier") {
         console.log("📡 Registering supplier on socket:", user._id);
         socket.emit("registerSupplier", user._id);
@@ -63,6 +63,10 @@ export default function LoginScreen() {
   };
 
   const handleSendOtp = async (email) => {
+     if(!email){
+      Alert.alert("Error","Please Enter Email");
+      return; 
+     }
     try {
       console.log("forget Password running");
       const res = await fetch("http://192.168.100.187:5000/auth/forgotPassword", {
@@ -84,10 +88,10 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.push("/")}>
             <Text style={styles.backButton}>←</Text>
           </TouchableOpacity>
         </View>

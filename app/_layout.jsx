@@ -20,10 +20,20 @@ function LayoutContent() {
   return (
     <SafeAreaProvider>
 
-      {/* include bottom so screens and tab bars have white background under them */}
+ 
       <SafeAreaView edges={['right', 'left',]} style={{ flex: 1, backgroundColor: '#fff' }}>
-        <Stack screenOptions={{ headerShown: false }}>
-          {/* Auth Screens */}
+        <Stack  screenOptions={{
+      headerShown: false,
+      tabBarHideOnKeyboard: true,
+      tabBarStyle: {
+        height: 50,
+        paddingBottom: 8,
+        backgroundColor: "#fff",
+        elevation: 0,
+        shadowOpacity: 0,
+      },
+    }}>
+      
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />
           <Stack.Screen name="register" />
@@ -37,8 +47,8 @@ export default function RootLayout() {
   return (
     <StripeProvider
       publishableKey="pk_test_51S90zX3hLambblRsM0nx1NdKtRw9smh8ePN12VMHMQQvsyjBNYaDwVUJPRj3qRBjTlpcNJILBcjoH1c8ZNA8JS7G00dd99U1yI"
-      merchantIdentifier="merchant.com.yourapp" // for Apple Pay
-      urlScheme="yourapp" // for deep linking
+      merchantIdentifier="merchant.com.yourapp" 
+      urlScheme="yourapp"
     >
       <UserProvider>
         <LayoutContent />
