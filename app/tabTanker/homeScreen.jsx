@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -57,30 +53,6 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
     }
     return null;
   };
-//  const handleUpdateStatus = async (order) => {
- 
-//     if (checkUserStatus()) {
-//       return;
-//     }
-  
-//     try {
-//       const data = await acceptOrder(order._id, "Accepted", user.Tanker._id);
-  
-//       if (data) {
-//         updateTankerStatus("OnRide", order);
-//         await AsyncStorage.setItem('tankerStatus', 'OnRide');
-//         await AsyncStorage.setItem('currentOrder', JSON.stringify(order));
-        
-//         router.push({
-//           pathname: '/acceptedOrderScreen',
-//           params: { order: JSON.stringify(order) },
-//         });
-//       }
-//     } catch (error) {
-//       console.error("Error accepting order:", error);
-//       Alert.alert("Error", "Failed to accept order. Please try again.");
-//     }
-//   };
 
   const handleTabPress = (tabId) => {
    
@@ -170,21 +142,15 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
     return orders.filter(order => order.bookingType === activeTab && order.bookingStatus === "Assigned");
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    });
+
+  const extractDatePart = (deliveryTime) => {
+    if (!deliveryTime) return "Not scheduled";
+    return deliveryTime.split(' ').slice(0, 3).join(' ');
   };
 
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+  const extractTimePart = (deliveryTime) => {
+    if (!deliveryTime) return "";
+    return deliveryTime.split(' ').slice(3).join(' ');
   };
 
   const getStatusColor = (status) => {
@@ -346,7 +312,8 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
                   <View style={styles.infoRow}>
                     <Clock size={16} color="#666" />
                     <Text style={styles.infoText}>
-                      {formatDate(order.deliveryTime)} at {formatTime(order.deliveryTime)}
+                      {extractDatePart(order.deliveryTime)} at{" "}
+                      {extractTimePart(order.deliveryTime)}
                     </Text>
                   </View>
 

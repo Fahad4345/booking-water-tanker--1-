@@ -34,7 +34,7 @@ export default function LoginScreen() {
     }
 
     const result = await login(email, password);
-   console.log("Login Result",result);
+
     if (result.success) {
       const { user, accessToken, refreshToken } = result.data;
 
@@ -132,7 +132,7 @@ export default function LoginScreen() {
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
-          <GoogleLoginButton onLoginSuccess={handleGoogleLogin} />
+          {/* <GoogleLoginButton onLoginSuccess={handleGoogleLogin} /> */}
         </View>
       </ScrollView>
 

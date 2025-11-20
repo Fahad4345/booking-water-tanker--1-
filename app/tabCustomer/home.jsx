@@ -23,8 +23,8 @@ import { getSuppliers } from "../../api/suppliers/getAllSupplier";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useRouter } from "expo-router";
 import DatePickerModal from "./../../components/DatePicker";
-import { KeyboardAvoidingView, Platform } from "react-native";
-
+import { KeyboardAvoidingView, Platform, Dimensions } from "react-native";
+const { width, height } = Dimensions.get("window");
 export default function HomeScreen() {
   const router = useRouter();
   const [selectedTanker, setSelectedTanker] = useState(0);
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
     marginTop: -34,
   },
   mapcontainer: {
-    height: 250,
+    height: height*0.40,
   },
   scrollView: {
    
