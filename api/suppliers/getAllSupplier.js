@@ -15,9 +15,9 @@ export const getSuppliers = async (capacity) => {
     });
     
     const data = await res.json();
-    console.log(data)
+ 
     if (data.success) {
-       console.log(data.data)
+      
       return data.data;
     }
     return [];

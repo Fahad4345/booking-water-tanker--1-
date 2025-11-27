@@ -19,7 +19,7 @@ export default function RegisterScreen() {
   const [role, setRole] = useState('customer');
   const { signup, login } = Auth();
   const { updateUser } = useUser();
-
+  const normalizedEmail = email.toLowerCase().trim();
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "All fields are required");
@@ -28,7 +28,7 @@ export default function RegisterScreen() {
 
 
     const emailRegex=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-       if (!emailRegex.test(email)) {
+       if (!emailRegex.test(normalizedEmail)) {
         Alert.alert("Invalid Email", "Please enter a valid email address.");
         return;
       }
@@ -43,7 +43,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    const result = await signup(name, email, password, role);
+    const result = await signup(name,normalizedEmail, password, role);
     console.log("Signup result:", result);
 
 

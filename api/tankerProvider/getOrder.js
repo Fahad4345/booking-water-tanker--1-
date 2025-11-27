@@ -9,8 +9,9 @@ export const getOrders = async (tankerId) => {
     if (!response.ok) throw new Error("Failed to fetch orders for this tanker");
 
     const data = await response.json();
-   
+    console.log("Tanker Order", data.orders);
     return data.orders || [];
+     console.log("Tanker Order", data.orders);
   } catch (error) {
     console.error("Error in getOrdersByTanker:", error);
     return [];

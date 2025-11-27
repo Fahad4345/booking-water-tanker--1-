@@ -12,7 +12,7 @@ Admin Module Integration :
 - Integrated Assigning Order functiuonality to Tankers
 
   User Module Integration :
-
+   
 - Integrated Login Signup for User
 - Integrated Forget Password
 - Integrated Maps for Delivery Location Selection
@@ -33,17 +33,15 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
 ### H2O Water Supply :
 
-Tanker Module Integration :
+ Module Integration :
 
-- Some the Errors that come on log out
-- Added Validation of email and Phone while registering tanker
-- Added Validation of email and Phone while in login signup
-- Adjusted space that come on scroll when keyboard get open in customer homescreen
-- Adjusted bottom    navigation
-
+- Adjusted the Disturbtion that is coming on rendering in customer app
+- Integrated Google place Api to show sujestion of location
+- Hide order booking container on map drag
+- Make Order Container use full heigth on clicking arrow button
 
 
-Loom : (https://www.loom.com/share/c02dcd46e1ff481a88acac94209db551)
+Loom : (https://www.loom.com/share/1186d14e49b440878d304b33629b1489)
 
 
  Completed features

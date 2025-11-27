@@ -16,8 +16,8 @@
     },
     "android": {
       "package": "com.fahadrehan.bookingwatertanker",
-      "edgeToEdgeEnabled": true,
-       "backgroundColor": "#000000"
+      // "edgeToEdgeEnabled": true,
+      //  "backgroundColor": "#000000"
     },
     "web": {
       "bundler": "metro",

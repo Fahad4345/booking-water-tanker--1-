@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react"; 
 import { acceptOrder } from "../api/tankerProvider/acceptOrder";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -17,7 +17,7 @@ import { useRouter } from "expo-router";
 import { useUser } from "../context/context";
 import RouteMap from "../components/DriverMap";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { registerTanker, sendLocation,sendTrackingStopped } from "../utils/socket";
 import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get("window");
@@ -34,17 +34,34 @@ const DriverRideScreen = () => {
   const [loadingLocations, setLoadingLocations] = useState(true);
   const [isTracking, setIsTracking] = useState(false);
   const [tankerLocations, setTankerLocations] = useState([]);
-  const [locationInterval, setLocationInterval] = useState(null);
+  
+ 
+  const locationIntervalRef = useRef(null);
 
+  const[Ids, setIds]= useState({
+    orderId:null,
+    userId:null,
+    supplierId:null,
+    tankerId:null,
+  });
+// useEffect(()=>{
+// AsyncStorage.clear();
+// },{})
   useEffect(() => {
     const initializeLocations = async () => {
       try {
         const parsedOrder = typeof order === "string" ? JSON.parse(order) : order;
+        console.log("Parsed Order", order);
         setOrderDetails(parsedOrder);
+        setIds({
+          orderId: parsedOrder?._id || null,
+          userId: parsedOrder?.user?._id || null,
+          supplierId: parsedOrder?.supplier?._id || null,
+          tankerId: parsedOrder?.tanker?._id || null
+        });
 
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status === 'granted') {
-          
           await getCurrentLocation();
         } else {
           Alert.alert("Location Permission Required", "Please enable location services to see the route.");
@@ -56,7 +73,7 @@ const DriverRideScreen = () => {
           Alert.alert("Error", "No delivery address found in order details.");
         }
       } catch (error) {
-        console.error("❌ Error initializing locations:", error);
+        console.error("Error initializing locations:", error);
         Alert.alert("Error", "Failed to load location data");
       } finally {
         setLoadingLocations(false);
@@ -65,13 +82,49 @@ const DriverRideScreen = () => {
 
     initializeLocations();
 
- 
-    return () => {
-      if (locationInterval) {
-        clearInterval(locationInterval);
-      }
-    };
+    
   }, [order]);
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000; 
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    return distance;
+  };
+
+  const isWithinArrivalDistance = () => {
+    if (!currentLocation || !destinationCoords) {
+      console.log("❌ Missing location data");
+      return false;
+    }
+
+    const distance = calculateDistance(
+      currentLocation.lat,
+      currentLocation.lng,
+      destinationCoords.lat,
+      destinationCoords.lng
+    );
+
+    
+    
+    const isWithinRange = distance <= 200;
+    
+    if (!isWithinRange) {
+      Alert.alert(
+        "Too Far From Destination",
+        `You need to be within 200 meters of the destination to mark as arrived. \n\nCurrent distance: ${distance.toFixed(0)} meters away.`,
+        [{ text: "OK" }]
+      );
+    }
+    
+    return isWithinRange;
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -86,11 +139,7 @@ const DriverRideScreen = () => {
         timestamp: new Date().toISOString()
       };
       
-      console.log("📍 Current location:", newLocation);
-      
       setCurrentLocation(newLocation);
-      
-    
       setTankerLocations(prev => {
         const updated = [...prev, newLocation];
         return updated.length > 100 ? updated.slice(-100) : updated;
@@ -102,35 +151,63 @@ const DriverRideScreen = () => {
       return null;
     }
   };
+  const getTrackingLocation = async () => {
+    try {
+      console.log("📍 Getting tracking location...");
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+      
+      const newLocation = {
+        lat: location.coords.latitude,
+        lng: location.coords.longitude,
+        accuracy: location.coords.accuracy,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log("📍 Sending location to server");
+      sendLocation({
+        orderId: Ids.orderId, 
+        userId: Ids.userId, 
+        lat: newLocation.lat,
+        lng: newLocation.lng
+      });
+      
+      setCurrentLocation(newLocation);
+      setTankerLocations(prev => {
+        const updated = [...prev, newLocation];
+        return updated.length > 100 ? updated.slice(-100) : updated;
+      });
+      
+      return newLocation;
+    } catch (error) {
+      console.error("❌ Error getting tracking location:", error);
+      return null;
+    }
+  };
 
   const startLocationTracking = () => {
     console.log("🚛 Starting location tracking...");
     setIsTracking(true);
     
     
-    getCurrentLocation();
-    
- 
-    const interval = setInterval(async () => {
-      await getCurrentLocation();
-    }, 5000); 
-    
-    setLocationInterval(interval);
-  };
-
-  const stopLocationTracking = () => {
-    console.log("🛑 Stopping location tracking...");
-    setIsTracking(false);
-    
-    if (locationInterval) {
-      clearInterval(locationInterval);
-      setLocationInterval(null);
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current);
+      locationIntervalRef.current = null;
     }
+    
+   
+    getTrackingLocation();
+    
+    
+    locationIntervalRef.current = setInterval(async () => {
+      await getTrackingLocation();
+    }, 5000);
   };
-
+ 
   const geocodeDestination = async (address) => {
     try {
-      console.log("📍Attempting to geocode:", address);
+      
       
       const results = await Location.geocodeAsync(address);
       
@@ -140,10 +217,9 @@ const DriverRideScreen = () => {
           lat: latitude,
           lng: longitude
         });
-        console.log("✅ Geocoding successful");
+     
       } else {
-        // If no results, use fallback
-        console.log("❌ No results, using fallback");
+      
         useFallbackCoordinates();
       }
     } catch (error) {
@@ -194,55 +270,78 @@ const DriverRideScreen = () => {
         setRideStatus(status);
       }
     } catch (error) {
-      console.log("❌ Error in acceptOrder:", error);
+      console.log("Error in acceptOrder:", error);
     }
   };
 
   const handleStartFilling = () => { 
     handleUpdateStatus("Filling"); 
     setRideStatus("Filling");
-
-    stopLocationTracking();
+    
   };
 
   const handleStartRide = () => {
-    handleUpdateStatus("Enroute");
-    setRideStatus("Enroute");
-  
-    startLocationTracking();
-  };
-
-  const handleArived = () => {
-    handleUpdateStatus("Arrived");
-    setRideStatus("Arrived");
-   
-    stopLocationTracking();
-  };
-
-  const handleCompleteRide = async () => {
     try {
- 
-      stopLocationTracking();
-      
-      await handleUpdateStatus("Completed");
-      setRideStatus("Completed");
-      
-      await updateTankerStatus("Online", null);
-      await AsyncStorage.multiRemove(['tankerStatus', 'currentOrder']);
-      
-      console.log("✅ Ride completed, status reset to Online");
-      router.push("tabTanker/homeScreen");
+      console.log("IDs", Ids.tankerId, Ids.supplierId);
+      registerTanker(Ids.tankerId, Ids.supplierId);
+      handleUpdateStatus("Enroute");
+      setRideStatus("Enroute");
+      startLocationTracking();
     } catch (error) {
-      console.error("❌ Error completing ride:", error);
-      Alert.alert("Error", "Failed to complete ride. Please try again.");
+      console.error("Error starting ride:", error);
     }
   };
 
-  
-  const handleRefreshLocation = async () => {
-    await getCurrentLocation();
-    Alert.alert("Location Updated", "Your current location has been refreshed.");
+  const handleArived = () => {
+    if (!isWithinArrivalDistance()) {
+      return;
+    }
+
+    handleUpdateStatus("Arrived");
+    setRideStatus("Arrived");
+    
   };
+
+ 
+const stopLocationTracking = () => {
+  console.log("🛑 Stopping location tracking...");
+  setIsTracking(false);
+  
+
+  if (Ids.orderId && Ids.userId) {
+    console.log("📡 Sending tracking stopped event");
+    sendTrackingStopped(Ids.orderId, Ids.userId);
+  }
+  
+  if (locationIntervalRef.current) {
+    clearInterval(locationIntervalRef.current);
+    locationIntervalRef.current = null;
+  } else {
+    console.log("❌ No interval to clear");
+  }
+};
+
+const handleCompleteRide = async () => {
+  try {
+    console.log("🏁 Completing ride, stopping tracking...");
+    
+  
+    stopLocationTracking();
+    
+  
+    await handleUpdateStatus("Completed");
+    setRideStatus("Completed");
+    
+    await updateTankerStatus("Online", null);
+    await AsyncStorage.multiRemove(['tankerStatus', 'currentOrder']);
+    
+    console.log("✅ Ride completed, status reset to Online");
+    router.replace("tabTanker/homeScreen");
+  } catch (error) {
+    console.error("❌ Error completing ride:", error);
+    Alert.alert("Error", "Failed to complete ride. Please try again.");
+  }
+};
 
   const renderActionButton = () => {
     if (rideStatus === "Accepted") {
@@ -253,10 +352,36 @@ const DriverRideScreen = () => {
         </TouchableOpacity>
       );
     } else if (rideStatus === "Enroute") {
+      let distanceText = "Arrived";
+      let buttonDisabled = false;
+      
+      if (currentLocation && destinationCoords) {
+        const distance = calculateDistance(
+          currentLocation.lat,
+          currentLocation.lng,
+          destinationCoords.lat,
+          destinationCoords.lng
+        );
+        
+        if (distance > 200) {
+          distanceText = `Too Far (${distance.toFixed(0)}m)`;
+          buttonDisabled = true;
+        } else {
+          distanceText = `Arrived (${distance.toFixed(0)}m)`;
+        }
+      }
+
       return (
-        <TouchableOpacity style={styles.primaryButton} onPress={handleArived}>
+        <TouchableOpacity 
+          style={[
+            styles.primaryButton, 
+            buttonDisabled && styles.disabledButton
+          ]} 
+          onPress={handleArived}
+          disabled={buttonDisabled}
+        >
           <Icon name="check-circle" size={24} color="#FFF" />
-          <Text style={styles.primaryButtonText}>Arrived</Text>
+          <Text style={styles.primaryButtonText}>{distanceText}</Text>
         </TouchableOpacity>
       );
     } else if (rideStatus === "Arrived") {
@@ -278,7 +403,6 @@ const DriverRideScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-   
       <View style={styles.mapContainer}>
         <RouteMap 
           currentLocation={currentLocation}
@@ -287,45 +411,18 @@ const DriverRideScreen = () => {
           tankerPath={tankerLocations}
         />
         
-        {/* Floating Buttons */}
-        {/* <View style={styles.floatingButtonsContainer}>
-          <TouchableOpacity style={styles.navigateFloatingButton} onPress={handleNavigate}>
-            <Icon name="navigation" size={24} color="#FFF" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.refreshLocationButton} onPress={handleRefreshLocation}>
-            <Icon name="refresh" size={20} color="#FFF" />
-          </TouchableOpacity>
-        </View> */}
-
-        {/* Location Status Badge */}
-        {/* <View style={[
-          styles.locationStatusBadge,
-          isTracking ? styles.trackingActive : styles.trackingInactive
-        ]}>
-          <Icon 
-            name={isTracking ? "map-marker-radius" : "map-marker-off"} 
-            size={16} 
-            color={isTracking ? "#4CAF50" : "#F44336"} 
-          />
-          <Text style={styles.locationStatusText}>
-            {isTracking ? "Live Tracking" : "Tracking Off"}
-          </Text>
-        </View> */}
-
-        {/* Location Coordinates (for debugging) */}
-        {/* {currentLocation && (
-          <View style={styles.coordinatesBadge}>
-            <Text style={styles.coordinatesText}>
-              {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
-            </Text>
-          </View>
-        )} */}
+        <TouchableOpacity
+          style={styles.navigationButton}
+          onPress={handleNavigate}
+          activeOpacity={0.7}
+        >
+          <Icon name="navigation" size={20} color="#FFF" />
+        </TouchableOpacity>
       </View>
 
-      {/* Order Details Card */}
+ 
       <View style={styles.detailsCard}>
-        {/* Header Section with Customer Info */}
+      
         <View style={styles.cardHeader}>
           <View style={styles.customerInfo}>
             <View style={styles.avatarContainer}>
@@ -344,9 +441,7 @@ const DriverRideScreen = () => {
           </TouchableOpacity>
         </View>
 
-     
         <View style={styles.orderDetailsSection}>
-       
           <View style={styles.detailRow}>
             <View style={styles.iconWrapper}>
               <Icon name="map-marker" size={20} color="#4FC3F7" />
@@ -356,7 +451,6 @@ const DriverRideScreen = () => {
             </Text>
           </View>
 
-         
           <View style={styles.priceWaterRow}>
             <View style={styles.priceContainer}>
               <Text style={styles.priceLabel}>Amount</Text>
@@ -377,7 +471,6 @@ const DriverRideScreen = () => {
           </View>
         </View>
 
-        
         <View style={styles.trackingInfoContainer}>
           <View style={styles.trackingInfoItem}>
             <Icon name="update" size={16} color="#4FC3F7" />
@@ -393,7 +486,6 @@ const DriverRideScreen = () => {
           </View>
         </View>
 
-      
         {orderDetails?.instruction && (
           <View style={styles.instructionsContainer}>
             <View style={styles.instructionIconWrapper}>
@@ -406,13 +498,12 @@ const DriverRideScreen = () => {
         )}
       </View>
 
- 
       <View style={styles.bottomContainer}>
         {renderActionButton()}
       </View>
     </SafeAreaView>
   );
-};
+}; 
 
 const styles = StyleSheet.create({
   container: { 
@@ -706,6 +797,23 @@ const styles = StyleSheet.create({
   completedButton: { 
     backgroundColor: "#4CAF50",
   },
+  navigationButton: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    backgroundColor: "#4FC3F7",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
 });
 
 export default DriverRideScreen;
+  

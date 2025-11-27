@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import { useUser } from "../context/context";
-import { isLoading } from "expo-font";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AuthWrapper({ children }) {
@@ -10,79 +9,115 @@ export default function AuthWrapper({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const hasRedirected = useRef(false);
+  const [isChecking, setIsChecking] = useState(true);
 
+  useEffect(() => {
+    console.log("🔐 Auth Wrapper State:", {
+      isAuthenticated,
+      userRole: user?.role,
+      userLoading,
+      pathname,
+      hasRedirected: hasRedirected.current
+    });
 
-useEffect(() => {
-  console.log("Auth Wrapper", user, isAuthenticated);
+    const checkAuthAndNavigate = async () => {
+      // Don't proceed if still loading
+      if (userLoading) {
+        console.log("⏳ Still loading user data...");
+        return;
+      }
 
-  const checkAuthAndNavigate = async () => {
-    if (isAuthenticated && user?.role) {
-      console.log("✅ User authenticated:", user.role);
-      console.log("📊 Tanker availability from context:", user.Tanker?.availabilityStatus);
+      // Prevent multiple redirects
+      if (hasRedirected.current) {
+        console.log("🛑 Already redirected, skipping...");
+        return;
+      }
 
-      let targetRoute;
+      setIsChecking(true);
 
-      if (user.role === "Supplier") {
-        targetRoute = "/tabSupplier/homeScreen";
-      } 
-      else if (user.role === "Tanker") {
- 
-        const storedTankerStatus = await AsyncStorage.getItem('tankerStatus');
-        const storedOrder = await AsyncStorage.getItem('currentOrder');
-        
-        console.log("🔍 Stored tankerStatus:", storedTankerStatus);
-        console.log("🔍 Stored order exists:", !!storedOrder);
+      try {
+        // Case 1: User is authenticated
+        if (isAuthenticated && user?.role) {
+          console.log("✅ User authenticated:", user.role);
+          
+          let targetRoute = null;
 
+          if (user.role === "Supplier") {
+            targetRoute = "/tabSupplier/homeScreen";
+            console.log("🏭 Supplier route:", targetRoute);
+          } 
+          else if (user.role === "Tanker") {
+            const [storedTankerStatus, storedOrder] = await Promise.all([
+              AsyncStorage.getItem('tankerStatus'),
+              AsyncStorage.getItem('currentOrder')
+            ]);
+            
+            console.log("🔍 Tanker status:", storedTankerStatus);
+            console.log("🔍 Stored order:", !!storedOrder);
 
-        const effectiveStatus = user.Tanker?.availabilityStatus || storedTankerStatus;
-        
-        if (effectiveStatus === "OnRide" && storedOrder) {
-          console.log("🎯 Tanker is on ride, navigating to accepted order");
-          router.replace({
-            pathname: '/acceptedOrderScreen',
-            params: { order: storedOrder }
-          });
-          return;
-        } else {
-          console.log("🏠 Tanker is available, navigating to home");
-          targetRoute = "/tabTanker/homeScreen";
+            if (storedTankerStatus === "OnRide" && storedOrder) {
+              console.log("🎯 Tanker on ride - navigating to accepted order");
+              hasRedirected.current = true;
+              router.replace({
+                pathname: '/acceptedOrderScreen',
+                params: { order: storedOrder }
+              });
+              return;
+            } else {
+              targetRoute = "/tabTanker/homeScreen";
+            }
+          } 
+          else {
+            targetRoute = "/tabCustomer/home";
+          }
+
+          // Only redirect from auth pages
+          if ((pathname === "/" || pathname === "/login") && targetRoute) {
+            console.log("📍 Redirecting to:", targetRoute);
+            hasRedirected.current = true;
+            router.replace(targetRoute);
+          }
+        } 
+        // Case 2: User is NOT authenticated
+        else if (!isAuthenticated && !userLoading) {
+          const authRoutes = ["/", "/login"];
+          if (!authRoutes.includes(pathname)) {
+            console.log("🚫 No auth - redirecting to login");
+            hasRedirected.current = true;
+            router.replace("/");
+          }
         }
-      } 
-      else {
-        targetRoute = "/tabCustomer/home";
+      } catch (error) {
+        console.error("❌ Auth check error:", error);
+      } finally {
+        setIsChecking(false);
       }
+    };
 
-      if ((pathname === "/" || pathname === "/login") && targetRoute) {
-        console.log("📍 Navigating to:", targetRoute);
-        router.replace(targetRoute);
-      }
-    } 
-    else if (!isAuthenticated && pathname !== "/") {
-      hasRedirected.current = true;
-      router.replace("/");
-    }
-  };
+    // Small delay to ensure state is stable
+    const timer = setTimeout(checkAuthAndNavigate, 100);
+    return () => clearTimeout(timer);
+  }, [userLoading, isAuthenticated, user?.role, pathname]);
 
-  checkAuthAndNavigate();
-}, [userLoading, isAuthenticated, user?.role, pathname]);
-
-if (userLoading) {
-  return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#4FC3F7" />
-      <Text style={styles.loadingText}>Loading...</Text>
-    </View>
-  );
-}
+  // Show loading during initial check
+  if (userLoading || isChecking) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4FC3F7" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return <>{children}</>;
 }
+
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
   },
   loadingText: {
     marginTop: 10,

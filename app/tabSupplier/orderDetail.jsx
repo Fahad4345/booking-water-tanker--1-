@@ -36,10 +36,10 @@ const OrderDetailScreen = () => {
 
 
 
-   useEffect(()=>{console.log("Supplier Order Detail Screen");},[])
+   useEffect(()=>{console.log("Supplier Order Detail Screen", order);},[])
   useEffect(() => {
     try {
-        console.log("Supplier Order Detail Screen");
+        console.log("Supplier Order Detail Screen", order);
       const parsedOrder = typeof order === "string" ? JSON.parse(order) : order;
       setOrderDetails(parsedOrder);
        console.log("parsed order", parsedOrder);
@@ -56,7 +56,7 @@ const OrderDetailScreen = () => {
         setTankers(
           response.map((t) => ({
             _id: t._id,
-            name: t.fullName || t.vehicleNumber,
+            name: t.TankerName || t.vehicleNumber,
             vehicleNumber: t.vehicleNumber || 'N/A',
             capacity: t.capacity.toString(),
           }))
@@ -99,31 +99,37 @@ const OrderDetailScreen = () => {
           onPress: async () => {
             try {
               setLoading(true);
-              const response = await fetch(`http://192.168.100.187:5000/stripe/cancel`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  bookingId: orderId,
-                }),
-              });
+              const response = await fetch(
+                `http://192.168.100.187:5000/booking/cancelBooking`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    bookingId: orderId,
+                  }),
+                }
+              );
 
               const data = await response.json();
 
               if (data.success) {
-                Alert.alert("Success", data.message, [
+                Alert.alert("✅ Success", "Wait For Approval of Refund by Admin", [
                   {
                     text: "OK",
                     onPress: () => {
-                     
-                      router.push("/tabSupplier/homeScreen");
+              
+                  router.replace("/tabSupplier/homeScreen");
                     },
                   },
                 ]);
               } else {
                 setLoading(false);
-                Alert.alert(" Failed", data.message || "Something went wrong");
+                Alert.alert(
+                  "⚠️ Failed",
+                  data.message || "Something went wrong"
+                );
               }
             } catch (error) {
               setLoading(false);
@@ -135,6 +141,7 @@ const OrderDetailScreen = () => {
       ]
     );
   };
+
 
   const handleNavigate = (dropLocation) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -164,7 +171,7 @@ const OrderDetailScreen = () => {
   };
 
   const makeCall = () => {
-    Linking.openURL(`tel:${user?.phone || "03001234567"}`);
+    Linking.openURL(`tel:${orderDetails.user.phone || "03001234567"}`);
   };
 
   return (
@@ -273,12 +280,12 @@ const OrderDetailScreen = () => {
             </View>
             <View style={styles.customerTextBox}>
               <Text style={styles.infoLabel}>Customer</Text>
-              <Text style={styles.customerName}>{user?.name}</Text>
+              <Text style={styles.customerName}>{orderDetails.user.name}</Text>
             </View>
           </View>
           <View style={styles.phoneBox}>
             <Text style={styles.phoneNumber}>
-              {user?.phone || "03001234567"}
+              {orderDetails.user.phone || "03001234567"}
             </Text>
             <TouchableOpacity style={styles.callButton} onPress={makeCall}>
               <Text style={styles.callButtonText}>📞</Text>

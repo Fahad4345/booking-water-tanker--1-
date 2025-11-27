@@ -10,7 +10,7 @@ export const BookTank = async (BookingDetail,PaymentIntentId) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...BookingDetail,              // ✅ Spread booking details directly
+        body: JSON.stringify({ ...BookingDetail,            
           paymentIntentId: PaymentIntentId,}),
       }
     );

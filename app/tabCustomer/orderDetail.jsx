@@ -18,7 +18,8 @@ import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity";
 import { assignOrderToTanker } from "../../api/suppliers/assignOrder";
 import { useUser } from '../../context/context';
 import OpenStreetMapView from './../../components/OpenStreetMap';
-import OpenMapButton from './../../components/NavigatorIcon';
+import ReadOnlyMap from "../../components/readOnlyMap";
+import { onTankerLocation, socket,registerUser, onTrackingStopped } from "../../utils/socket";
 
 const { width, height } = Dimensions.get("window");
 
@@ -31,58 +32,72 @@ const OrderDetailScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [tankers, setTankers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [tankerLocation, setTankerLocation] = useState(null);
+  const [tankerPath, setTankerPath] = useState([]);
+ 
+
+  const [isLiveTracking, setIsLiveTracking] = useState(false); 
 
   useEffect(() => {
     try {
       const parsedOrder = typeof order === "string" ? JSON.parse(order) : order;
+      console.log("Parsed Order", parsedOrder.deliveryTime);
       setOrderDetails(parsedOrder);
-     
     } catch (error) {
       console.log("Error parsing order:", error);
     }
   }, [order]);
 
-  const loadTankers = async (tankSize) => {
-    setLoading(true);
-    try {
-      console.log("Order details tankSize:", tankSize);
-      const response = await getTankerByCapacity(user._id, tankSize);
-      if (response && response.length > 0) {
-        setTankers(
-          response.map((t) => ({
-            _id: t._id,
-            name: t.fullName || t.vehicleNumber,
-            vehicleNumber: t.vehicleNumber || 'N/A',
-            capacity: t.capacity.toString(),
-          }))
-        );
+  useEffect(() => {
+    if (!orderDetails || !user) return;
+  
+    const orderId = orderDetails._id;
+    const userId = user._id;
+  
+    console.log("🔧 Setting up socket listeners for order:", orderId, "user:", userId);
+  
+    registerUser(userId);
+  
+    const handleTankerLocation = (data) => {
+      console.log("📍 Received tanker location:", data);
+      if (data.orderId === orderId) {
+        const newLocation = {
+          lat: data.lat,
+          lng: data.lng,
+          timestamp: data.timestamp
+        };
+        
+        setTankerLocation(newLocation);
+        setTankerPath(prev => [...prev, newLocation].slice(-100)); 
+        setIsLiveTracking(true);
+        console.log("✅ Live tracking ACTIVE");
       }
-    } catch (err) {
-      console.log("Error loading tankers:", err);
-      setTankers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAssignOrder = async (tankerId) => {
-    try {
-      setShowModal(false);
-      console.log("Assigning order:", orderDetails._id, "to tanker:", tankerId);
-      const response = await assignOrderToTanker(orderDetails._id, tankerId, user._id);
-
-      if (response.success) {
-        console.log("Order assigned successfully:", response);
-
-        Alert.alert("Success", "Order assigned successfully!");
-
-      } else {
-        Alert.alert("Failed", response.message || "Could not assign order.");
+    };
+  
+    const handleTrackingStopped = (data) => {
+      console.log("🛑 RECEIVED tracking stopped event:", data);
+      console.log("🔍 Expected orderId:", orderId, "Received orderId:", data.orderId);
+      
+      if (data.orderId === orderId) {
+        setTankerLocation(null);
+       
+        setIsLiveTracking(false); 
+        console.log("✅ SUCCESS: Cleared tanker tracking data - Live tracking INACTIVE");
+        
+        Alert.alert("✅ Order Delivered", " Your Order has been Delivered Sucessfully");
       }
-    } catch (error) {
-      console.error("Error assigning order:", error);
-    }
-  };
+    };
+  
+
+    onTankerLocation(handleTankerLocation);
+    onTrackingStopped(handleTrackingStopped);
+  
+    return () => {
+      console.log("🛑 Cleaning up socket listeners");
+      socket.off('tankerLocation', handleTankerLocation);
+      socket.off('trackingStopped', handleTrackingStopped);
+    };
+  }, [orderDetails, user]);
 
   if (!orderDetails) {
     return (
@@ -91,44 +106,39 @@ const OrderDetailScreen = () => {
       </View>
     );
   }
-
-  const { price, bookingType, dropLocation, deliveryTime, instruction, userId, supplierName } =
-    orderDetails;
-
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const formatTime = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
+  
   const makeCall = () => {
-    Linking.openURL(`tel:${orderDetails?.user?.phone || "03001234567"}`);
+    Linking.openURL(`tel:${orderDetails.supplierPhone || "03001234567"}`);
   };
+
+    const extractDatePart = (deliveryTime) => {
+      if (!deliveryTime) return "Not scheduled";
+      return deliveryTime.split(' ').slice(0, 3).join(' ');
+    };
+  
+    const extractTimePart = (deliveryTime) => {
+      if (!deliveryTime) return "";
+      return deliveryTime.split(' ').slice(3).join(' ');
+    };
+  
+  
+
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
 
-      <View pointerEvents="none" style={styles.mapContainer}>
-        <OpenStreetMapView
-          address={orderDetails.dropLocation}
-          readOnly={true}
-        />
-        {/* <OpenMapButton
-          location={orderDetails.dropLocation}
-          position={{
-            position: "absolute",
-            top: height * -0.10,
-            right: 16,
-          }}
-        /> */}
+      <View  style={styles.mapContainer}>
+       
+
+<ReadOnlyMap
+  tankerLocation={tankerLocation}
+  address={orderDetails.dropLocation}
+  showTankerTracking={true}
+
+  isLiveTracking={isLiveTracking} 
+/>
+     
 
       </View>
 
@@ -138,14 +148,15 @@ const OrderDetailScreen = () => {
           <View style={styles.compactSection}>
             <Text style={styles.miniLabel}>Price</Text>
             <View style={styles.priceTag}>
-              <Text style={styles.priceText}>{price}</Text>
+              {console.log(orderDetails.price)}
+              <Text style={styles.priceText}>{orderDetails.price}</Text>
             </View>
           </View>
           <View style={styles.compactSection}>
             <Text style={styles.miniLabel}>Type</Text>
             <View style={styles.typeTag}>
               <Text style={styles.typeIcon}>🚚</Text>
-              <Text style={styles.typeText}>{bookingType}</Text>
+              <Text style={styles.typeText}>{orderDetails.bookingType}</Text>
             </View>
           </View>
         </View>
@@ -159,7 +170,7 @@ const OrderDetailScreen = () => {
             <View style={styles.infoTextBox}>
               <Text style={styles.infoLabel}>Location</Text>
               <Text style={styles.infoValue} numberOfLines={1}>
-                {dropLocation}
+                {orderDetails.dropLocation}
               </Text>
             </View>
           </View>
@@ -172,23 +183,23 @@ const OrderDetailScreen = () => {
               <Text style={styles.miniEmoji}>🕐</Text>
             </View>
             <View style={styles.infoTextBox}>
-              <Text style={styles.infoLabel}>Scheduled</Text>
+              <Text style={styles.infoLabel}>{orderDetails.bookingType}</Text>
               <Text style={styles.infoValue}>
-                {formatDate(deliveryTime)} • {formatTime(deliveryTime)}
+              {extractDatePart(orderDetails.deliveryTime)} at {extractTimePart(orderDetails.deliveryTime)}
               </Text>
             </View>
           </View>
         </View>
 
     
-        {instruction && (
+        {/* {orderDetails.instruction && (
           <View style={styles.instructionsCompact}>
             <Text style={styles.instructionsIcon}>📝</Text>
             <Text style={styles.instructionsText} numberOfLines={2}>
-              {instruction}
+              {orderDetails?.instruction}
             </Text>
           </View>
-        )}
+        )} */}
 
        
         <View style={styles.customerRow}>
@@ -198,17 +209,14 @@ const OrderDetailScreen = () => {
             </View>
             <View style={styles.customerTextBox}>
               <Text style={styles.infoLabel}>Supplier</Text>
-              <Text style={styles.customerName}>{supplierName}</Text>
+              <Text style={styles.customerName}>{orderDetails.supplierName}</Text>
             </View>
-          </View>
-          <View style={styles.phoneBox}>
-            <Text style={styles.phoneNumber}>
-              {user?.phone || "03001234567"}
-            </Text>
             <TouchableOpacity style={styles.callButton} onPress={makeCall}>
               <Text style={styles.callButtonText}>📞</Text>
             </TouchableOpacity>
           </View>
+        
+         
         </View>
 
     
@@ -461,3 +469,4 @@ const styles = StyleSheet.create({
 });
 
 export default OrderDetailScreen;
+

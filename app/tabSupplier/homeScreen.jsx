@@ -92,7 +92,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
         setFilteredTankers(
           tankers.map((t) => ({
             _id: t._id,
-            name: t.fullName || t.vehicleNumber,
+            name: t.TankerName || t.vehicleNumber,
             vehicleNumber: t.vehicleNumber || 'N/A',
             capacity: t.capacity.toString(),
           }))
@@ -220,7 +220,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
         return orders.filter(
           o =>
             o.bookingType === "Immediate" &&
-            !["Assigned", "Cancelled", "Completed"].includes(o.bookingStatus)
+            !["Assigned", "Cancelled", "Completed","Refund Pending","Cancelled with Refund Rejected"].includes(o.bookingStatus)
         );
   
       case 'Scheduled':
@@ -237,7 +237,11 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
         return orders.filter(o => o.bookingStatus === "Assigned");
   
       case 'Cancelled':
-        return orders.filter(o => o.bookingStatus === "Cancelled");
+        return orders.filter(o => 
+          o.bookingStatus === 'Cancelled' || 
+          o.bookingStatus === 'Cancelled with Refund Rejected' || 
+          o.bookingStatus === 'Refund Pending '
+      );
   
       case 'Completed':
         return orders.filter(o => o.bookingStatus === "Completed");
@@ -247,6 +251,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
     }
   };
   
+  const completedStatuses = ["Assigned", "Cancelled","Refund Pending ","Cancelled with Refund Rejected", "Completed", "Rejected", "Refunded"];
 
   const extractDatePart = (deliveryTime) => {
     if (!deliveryTime) return "Not scheduled";
@@ -274,7 +279,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
 
-      {/* Show pending status banner if user is pending */}
+     
       {/* {user?.status === 'Pending' && (
         <View style={styles.pendingBanner}>
           <AlertCircle size={20} color="#FFF" />
@@ -404,27 +409,23 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
                         style={[
                           styles.actionButton,
                           styles.acceptButton,
-                          ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
+                          ["Assigned", "Cancelled","Refund Pending ","Cancelled with Refund Rejected", "Completed"].includes(order.bookingStatus) && {
                             backgroundColor: "#ccc",
                           },
                         ]}
                       >
-                        <Text
-                          style={[
-                            styles.actionButtonText,
-                            ["Assigned", "Cancelled", "Completed"].includes(order.bookingStatus) && {
-                              color: "#666",
-                            },
-                          ]}
-                        >
-                          {order.bookingStatus === "Assigned"
-                            ? "Assigned"
-                            : order.bookingStatus === "Cancelled"
-                            ? "Cancelled"
-                            : order.bookingStatus === "Completed"
-                            ? "Completed"
-                            : "Assign Order"}
-                        </Text>
+                      <Text
+                        style={[
+                          styles.actionButtonText,
+                          completedStatuses.includes(order.bookingStatus) && {
+                           
+                          },
+                        ]}
+                      >
+                        {completedStatuses.includes(order.bookingStatus)
+                          ? order.bookingStatus
+                          : "Assign Order"}
+                      </Text>
                       </TouchableOpacity>
                       
                     )}

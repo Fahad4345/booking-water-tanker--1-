@@ -31,7 +31,7 @@ export default function ProfileScreen() {
             const result = await logout();
             console.log("Logged out successfully:", result);
             const res =await clearUser();
-            router.push("/");
+            router.replace("/");
             
 
             
@@ -54,15 +54,15 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <SafeAreaView>
-    <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <View>
+    
    
    
 
     <View style={styles.header}>
     
     <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
-      <Ionicons name="arrow-back-outline" size={24} color="#333" />
+      <Ionicons name="arrow-back-outline" size={24} color="#fff" />
     </TouchableOpacity>
     <View style={styles.headerContent}>
       <Text style={styles.title}>My Profile</Text>
@@ -101,7 +101,7 @@ export default function ProfileScreen() {
 
 
     </View>
-   </SafeAreaView>
+   </View>
   );
 }
 
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#1976D2',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
       marginLeft:80
   },
   scrollContent: {},
-  title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
+  title: { fontSize: 20, fontWeight: '700', color: '#fff', marginBottom: 4 },
   subtitle: { fontSize: 14, color: '#666' },
   profileHeader: { alignItems: 'center', marginBottom: 24 },
   avatarContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#4FC3F7', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },

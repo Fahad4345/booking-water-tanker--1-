@@ -36,7 +36,7 @@ const AssignTankerModal = ({
     return (
 
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-            {console.log("Order Details on assign model:", order)}
+            {console.log("Order Details on assign model:", tankers)}
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContainer}>
                     <Text style={styles.modalTitle}>

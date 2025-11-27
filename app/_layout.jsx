@@ -1,3 +1,4 @@
+// app/_layout.js (root layout)
 import { Stack } from "expo-router";
 import { UserProvider } from "../context/provider";
 import { useUser } from "../context/context";
@@ -12,6 +13,11 @@ function LayoutContent() {
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+         <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#000000" 
+        translucent={false}
+      />
         <ActivityIndicator size="large" color="#4FC3F7" />
       </SafeAreaView>
     );
@@ -19,24 +25,28 @@ function LayoutContent() {
 
   return (
     <SafeAreaProvider>
-
- 
-      <SafeAreaView edges={['right', 'left',]} style={{ flex: 1, backgroundColor: '#fff' }}>
-        <Stack  screenOptions={{
-      headerShown: false,
-      tabBarHideOnKeyboard: true,
-      tabBarStyle: {
-        height: 50,
-        paddingBottom: 8,
-        backgroundColor: "#fff",
-        elevation: 0,
-        shadowOpacity: 0,
-      },
-    }}>
-      
-          <Stack.Screen name="index" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="register" />
+      <SafeAreaView edges={['right', 'left','top','bottom']} style={{ flex: 1, }}>
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#000000" 
+        translucent={false}
+      />
+        <Stack screenOptions={{ headerShown: false }}>
+          {!isAuthenticated ? (
+            // Auth screens
+            <>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="login" />
+              <Stack.Screen name="register" />
+            </>
+          ) : (
+           
+            <>
+              <Stack.Screen name="tabCustomer" />
+              <Stack.Screen name="tabSupplier" />
+              <Stack.Screen name="tabTanker" />
+            </>
+          )}
         </Stack>
       </SafeAreaView>
     </SafeAreaProvider>

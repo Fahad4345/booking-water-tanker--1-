@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import Input from '../components/Input';
@@ -16,24 +15,23 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = Auth();
-  const handleGoogleLogin = (user) => {
-
-
-  };
+  
   const handleLogin = async () => {
-
-    const emailRegex=/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
-     Alert.alert("Invalid Email", "Please enter a valid email address.");
-     return;
-   }
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
     
     if (!email || !password) {
       Alert.alert("Error", "All fields are required");
       return;
     }
 
-    const result = await login(email, password);
+    // ✅ Convert email to lowercase for case-insensitive login
+    const normalizedEmail = email.toLowerCase().trim();
+     console.log("normalized email", normalizedEmail);
+    const result = await login(normalizedEmail, password);
 
     if (result.success) {
       const { user, accessToken, refreshToken } = result.data;
@@ -42,16 +40,15 @@ export default function LoginScreen() {
       await AsyncStorage.setItem("refreshToken", refreshToken);
       await updateUser(user);
 
-    
       if (user.role === "Supplier") {
         console.log("📡 Registering supplier on socket:", user._id);
         socket.emit("registerSupplier", user._id);
       }
 
-      console.log("Login complete for:", user.email);
+      console.log("Login complete for:", user);
 
       if (user.role === "customer") {
-        router.replace("/");
+        router.replace("tabCustomer/home");
       } else if (user.role === "Supplier") {
         router.replace("/tabSupplier/homeScreen");
       } else if (user.role === "Tanker") {
@@ -63,16 +60,21 @@ export default function LoginScreen() {
   };
 
   const handleSendOtp = async (email) => {
-     if(!email){
-      Alert.alert("Error","Please Enter Email");
-      return; 
-     }
+    if (!email) {
+      Alert.alert("Error", "Please Enter Email");
+      return;
+    }
+    
     try {
       console.log("forget Password running");
+      
+      // ✅ Also normalize email for forgot password
+      const normalizedEmail = email.toLowerCase().trim();
+      
       const res = await fetch("http://192.168.100.187:5000/auth/forgotPassword", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
 
       const data = await res.json();
@@ -80,7 +82,7 @@ export default function LoginScreen() {
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
 
       Alert.alert("Success", "OTP sent to your email");
-      router.push({ pathname: "/verifyOtp", params: { email } });
+      router.push({ pathname: "/verifyOtp", params: { email: normalizedEmail } });
     } catch (err) {
       Alert.alert("Error", err.message);
     }
@@ -106,6 +108,8 @@ export default function LoginScreen() {
             onChangeText={setEmail}
             placeholder="Productdesignernew@gmail.com"
             keyboardType="email-address"
+            autoCapitalize="none" // ✅ Prevent auto-capitalization
+            autoCorrect={false}   // ✅ Prevent auto-correction
           />
           <Input
             label="Password"
@@ -135,7 +139,6 @@ export default function LoginScreen() {
           {/* <GoogleLoginButton onLoginSuccess={handleGoogleLogin} /> */}
         </View>
       </ScrollView>
-
     </View>
   );
 }

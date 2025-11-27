@@ -28,6 +28,7 @@ export default function BookingsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
+     
     setRefreshing(true);
     await fetchBookings();
     setRefreshing(false);
@@ -60,7 +61,9 @@ export default function BookingsScreen() {
       setLoading(false);
 
       if (result?.success) {
+        
         setBookings(result.data || []);
+       
       } else {
         console.log("❌ Failed:", result?.message);
         setBookings([]); 
@@ -85,7 +88,7 @@ export default function BookingsScreen() {
             try {
               setLoading(true);
               const response = await fetch(
-                `http://192.168.100.187:5000/stripe/cancel`,
+                `http://192.168.100.187:5000/booking/cancelBooking`,
                 {
                   method: "POST",
                   headers: {
@@ -100,7 +103,7 @@ export default function BookingsScreen() {
               const data = await response.json();
 
               if (data.success) {
-                Alert.alert("✅ Success", data.message, [
+                Alert.alert("✅ Success", "Wait For Approval of Refund by Admin", [
                   {
                     text: "OK",
                     onPress: () => {
@@ -153,16 +156,16 @@ export default function BookingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}   edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <View style={styles.container}   >
+      {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
 
 
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={styles.iconButton}
+          
         >
-          <Ionicons name="arrow-back-outline" size={24} color="#333" />
+          <Ionicons name="arrow-back-outline" size={24} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <Text style={styles.title}>My Bookings</Text>
@@ -266,35 +269,29 @@ export default function BookingsScreen() {
           ))}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex:1,backgroundColor: "#f5f5f5" },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: "#fff",
+    backgroundColor: '#1976D2',
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    borderBottomColor: '#e0e0e0',
   },
   headerContent: {
     flex: 1,
-    marginLeft: 60,
+    marginLeft: 80,
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700",
-    color: "#333",
+    color: "#fff",
     marginBottom: 4,
   },
   subtitle: {
@@ -304,8 +301,7 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+   
     justifyContent: "center",
     alignItems: "center",
   },

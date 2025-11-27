@@ -166,7 +166,7 @@ const OrderDetailScreen = () => {
   };
 
   const makeCall = () => {
-    Linking.openURL(`tel:${user?.phone || "03001234567"}`);
+    Linking.openURL(`tel:${orderDetails.user.phone || "03001234567"}`);
   };
 
   return (
@@ -273,12 +273,12 @@ const OrderDetailScreen = () => {
             </View>
             <View style={styles.customerTextBox}>
               <Text style={styles.infoLabel}>Customer</Text>
-              <Text style={styles.customerName}>{user?.name}</Text>
+              <Text style={styles.customerName}>{orderDetails.user.name}</Text>
             </View>
           </View>
           <View style={styles.phoneBox}>
             <Text style={styles.phoneNumber}>
-              {user?.Tanker.phone || "03001234567"}
+              {orderDetails.user.phone || "03001234567"}
             </Text>
             <TouchableOpacity style={styles.callButton} onPress={makeCall}>
               <Text style={styles.callButtonText}>📞</Text>

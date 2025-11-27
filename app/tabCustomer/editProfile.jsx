@@ -83,12 +83,12 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <View style={styles.container}>
+    
       <View style={styles.header}>
        
        <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
-         <Ionicons name="arrow-back-outline" size={24} color="#333" />
+         <Ionicons name="arrow-back-outline" size={24} color="#fff" />
        </TouchableOpacity>
        <View style={styles.headerContent}>
          <Text style={styles.title}>Edit Profile</Text>
@@ -151,7 +151,7 @@ export default function EditProfileScreen() {
           />
         </View>
       </KeyboardAwareScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#1976D2',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     flex: 1,
       marginLeft:80
   },
-  title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
+  title: { fontSize: 20, fontWeight: '700', color: '#fff', marginBottom: 4 },
   scrollView: {
     flex: 1,
   },

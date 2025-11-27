@@ -1,15 +1,16 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { StatusBar } from "react-native";
+import { StatusBar, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CustomerTabs() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["right", "left", "bottom" ]}>
-     <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+  
+  
       <Tabs
         screenOptions={{
           headerShown: false,
+          tabBarHideOnKeyboard: true,
           tabBarStyle: {
             height: 60,
             paddingBottom: 8,
@@ -70,6 +71,6 @@ export default function CustomerTabs() {
           }}
         />
       </Tabs>
-    </SafeAreaView>
+ 
   );
 }

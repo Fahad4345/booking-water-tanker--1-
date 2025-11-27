@@ -17,24 +17,44 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
- const{ handleUpdateStatus }=useUpdateStatus();
+  const { handleUpdateStatus } = useUpdateStatus();
+  const { user, updateTankerStatus } = useUser();
+  const router = useRouter();
+
+  const tankerRecord = user?.Tanker;
+  const tankerStatus = tankerRecord?.status;
+  const tankerIdFromUser = tankerRecord?._id;
+  const effectiveTankerId = tankerIdFromUser || tankerId;
+  const isRestricted = tankerStatus === 'Pending' || tankerStatus === 'Blocked';
+  const isTankerAccount = user?.role === 'Tanker' && !!tankerRecord;
+ 
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchOrders();
     setRefreshing(false);
   };
 
-  const { user, updateTankerStatus } = useUser();
-  const router = useRouter();
-
-
   const checkUserStatus = () => {
-    if (user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked') {
-      const statusMessage = user?.Tanker.status === 'Pending' 
+    if (!isTankerAccount) {
+      Alert.alert(
+        "Unavailable",
+        "This section is only available for tanker drivers.",
+        [{ text: "OK", style: "default" }],
+        { cancelable: true }
+      );
+      return true;
+    }
+
+    if (isRestricted) {
+      const statusMessage = tankerStatus === 'Pending'
         ? "Your account is pending approval by admin. Please wait until your account is approved to access all features."
         : "Your account has been blocked. Please contact support for assistance.";
-      
-     
+      Alert.alert(
+        tankerStatus === 'Pending' ? "Account Pending Approval" : "Account Blocked",
+        statusMessage,
+        [{ text: "OK", style: "default" }],
+        { cancelable: false }
+      );
       return true;
     }
     return false;
@@ -84,18 +104,17 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
   const fetchOrders = async () => {
     try {
       setLoading(true);
-     
       console.log(user);
- 
-      if (user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked') {
+
+      if (!isTankerAccount || !effectiveTankerId || isRestricted) {
         setOrders([]);
         return;
       }
-      
-      console.log("id", user.Tanker._id);
-      const data = await getOrders(user.Tanker._id);
+
+      console.log("id", effectiveTankerId);
+      const data = await getOrders(effectiveTankerId);
       setOrders(data || []);
-      
+
     } catch (error) {
       console.error("Error fetching orders:", error);
       setOrders([]);
@@ -110,14 +129,14 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
       fetchOrders();
       
     
-      if (user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked') {
+      if (isRestricted) {
         setTimeout(() => {
-          const statusMessage = user?.Tanker.status === 'Pending' 
+          const statusMessage = tankerStatus === 'Pending'
             ? "Your account is pending approval by admin. Please wait until your account is approved to access all features."
             : "Your account has been blocked. Please contact support for assistance.";
-          
+
           Alert.alert(
-            user?.Tanker.status === 'Pending' ? "Account Pending Approval" : "Account Blocked",
+            tankerStatus === 'Pending' ? "Account Pending Approval" : "Account Blocked",
             statusMessage,
             [{ text: "OK", style: "default" }],
             { cancelable: false }
@@ -129,7 +148,7 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
 
   const getFilteredOrders = () => {
 
-    if (user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked') {
+    if (isRestricted) {
       return [];
     }
     
@@ -166,39 +185,54 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
   };
 
   const getRestrictedTitle = () => {
-    if (user?.Tanker.status === 'Pending') {
+    if (tankerStatus === 'Pending') {
       return "Account Pending Approval";
-    } else if (user?.Tanker.status === 'Blocked') {
+    } else if (tankerStatus === 'Blocked') {
       return "Account Blocked";
     }
     return "My Orders";
   };
 
   const getRestrictedMessage = () => {
-    if (user?.Tanker.status === 'Pending') {
+    if (tankerStatus === 'Pending') {
       return "Your account is currently under review by our admin team. You'll be able to view and accept orders once your account is approved.";
-    } else if (user?.Tanker.status === 'Blocked') {
+    } else if (tankerStatus === 'Blocked') {
       return "Your account has been temporarily suspended. Please contact our support team to resolve this issue.";
     }
     return "";
   };
 
   const getBannerColor = () => {
-    if (user?.Tanker.status === 'Pending') return '#FFA726';
-    if (user?.Tanker.status === 'Blocked') return '#FF6B6B';
+    if (tankerStatus === 'Pending') return '#FFA726';
+    if (tankerStatus === 'Blocked') return '#FF6B6B';
     return '#FFA726';
   };
+
+  if (!isTankerAccount) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <StatusBar style="dark" />
+        <View style={styles.restrictedContainer}>
+          <AlertCircle size={60} color="#FF6B6B" />
+          <Text style={styles.restrictedTitle}>Driver Area Only</Text>
+          <Text style={styles.restrictedMessage}>
+            This section is only available for tanker drivers. Please switch to a tanker account to continue.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}> 
       <StatusBar style="dark" />
 
   
-      {/* {(user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked') && (
+      {/* {isRestricted && (
         <View style={[styles.restrictedBanner, { backgroundColor: getBannerColor() }]}>
           <AlertCircle size={20} color="#FFF" />
           <Text style={styles.restrictedText}>
-            {user?.Tanker.status === 'Pending' ? 'Account Pending Approval - Limited Access' : 'Account Blocked - Restricted Access'}
+            {tankerStatus === 'Pending' ? 'Account Pending Approval - Limited Access' : 'Account Blocked - Restricted Access'}
           </Text>
         </View>
       )} */}
@@ -224,14 +258,14 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
                 isActive && { ...styles.activeTab, borderBottomColor: getStatusColor(tab.id) },
               ]}
               onPress={() => handleTabPress(tab.id)}
-              disabled={user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked'}
+              disabled={isRestricted}
             >
               <Icon size={18} color={isActive ? getStatusColor(tab.id) : '#999'} />
               <Text
                 style={[
                   styles.tabText,
                   isActive && { ...styles.activeTabText, color: getStatusColor(tab.id) },
-                  (user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked') && styles.disabledTabText,
+                  isRestricted && styles.disabledTabText,
                 ]}
               >
                 {tab.label}
@@ -242,7 +276,7 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
       </ScrollView>
 
       <View style={styles.ordersWrapper}>
-        {(user?.Tanker.status === 'Pending' || user?.Tanker.status === 'Blocked') ? (
+        {isRestricted ? (
           <View style={styles.restrictedContainer}>
             <AlertCircle size={60} color={getBannerColor()} />
             <Text style={styles.restrictedTitle}>{getRestrictedTitle()}</Text>
@@ -250,7 +284,7 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
               {getRestrictedMessage()}
             </Text>
             <Text style={styles.restrictedNote}>
-              {user?.Tanker.status === 'Pending' 
+              {tankerStatus === 'Pending' 
                 ? "Please check back later or contact support if this takes longer than expected."
                 : "Reach out to our support team at support@h2o.com for assistance."
               }

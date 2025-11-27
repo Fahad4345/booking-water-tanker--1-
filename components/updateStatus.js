@@ -18,7 +18,7 @@ const handleUpdateStatus = async (order) => {
         await AsyncStorage.setItem('tankerStatus', 'OnRide');
         await AsyncStorage.setItem('currentOrder', JSON.stringify(order));
         
-        router.push({
+        router.replace({
           pathname: '/acceptedOrderScreen',
           params: { order: JSON.stringify(order) },
         });

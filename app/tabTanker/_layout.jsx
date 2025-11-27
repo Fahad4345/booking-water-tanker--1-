@@ -10,6 +10,7 @@ export default function SupplierTabs() {
       <Tabs
         screenOptions={{
           headerShown: false,
+          tabBarHideOnKeyboard: true,
           tabBarStyle: {
             height: 60,
             paddingBottom: 8,
