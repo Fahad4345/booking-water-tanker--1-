@@ -13,19 +13,15 @@ function LayoutContent() {
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-         <StatusBar 
-        barStyle="light-content" 
-        backgroundColor="#000000" 
-        translucent={false}
-      />
+      
         <ActivityIndicator size="large" color="#4FC3F7" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView edges={['right', 'left','top','bottom']} style={{ flex: 1, }}>
+ 
+      <SafeAreaView edges={['right', 'left','top','bottom']} style={{ flex: 1, backgroundColor:"#000000"}}>
       <StatusBar 
         barStyle="light-content" 
         backgroundColor="#000000" 
@@ -33,7 +29,7 @@ function LayoutContent() {
       />
         <Stack screenOptions={{ headerShown: false }}>
           {!isAuthenticated ? (
-            // Auth screens
+       
             <>
               <Stack.Screen name="index" />
               <Stack.Screen name="login" />
@@ -49,7 +45,7 @@ function LayoutContent() {
           )}
         </Stack>
       </SafeAreaView>
-    </SafeAreaProvider>
+ 
   );
 }
 

@@ -44,9 +44,9 @@ const DriverRideScreen = () => {
     supplierId:null,
     tankerId:null,
   });
-// useEffect(()=>{
-// AsyncStorage.clear();
-// },{})
+useEffect(()=>{
+AsyncStorage.clear();
+},{})
   useEffect(() => {
     const initializeLocations = async () => {
       try {
@@ -402,7 +402,7 @@ const handleCompleteRide = async () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.mapContainer}>
         <RouteMap 
           currentLocation={currentLocation}
@@ -471,20 +471,7 @@ const handleCompleteRide = async () => {
           </View>
         </View>
 
-        <View style={styles.trackingInfoContainer}>
-          <View style={styles.trackingInfoItem}>
-            <Icon name="update" size={16} color="#4FC3F7" />
-            <Text style={styles.trackingInfoText}>
-              Updates: Every 5 seconds
-            </Text>
-          </View>
-          <View style={styles.trackingInfoItem}>
-            <Icon name="history" size={16} color="#4FC3F7" />
-            <Text style={styles.trackingInfoText}>
-              Points: {tankerLocations.length}
-            </Text>
-          </View>
-        </View>
+       
 
         {orderDetails?.instruction && (
           <View style={styles.instructionsContainer}>
@@ -501,7 +488,7 @@ const handleCompleteRide = async () => {
       <View style={styles.bottomContainer}>
         {renderActionButton()}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }; 
 

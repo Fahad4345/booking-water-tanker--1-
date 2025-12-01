@@ -483,7 +483,7 @@ export default function PaymentScreen() {
             } else if (paymentIntent) {
                 const result = await BookTank(bookingDetails, paymentIntent.id);
                 if (result.success) {
-                    // Keep processing state to prevent flickering
+                    setIsProcessing(false);
                     Alert.alert(
                         'Payment Successful! 🎉',
                         'Your booking has been confirmed.',

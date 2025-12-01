@@ -126,7 +126,7 @@ const OrderDetailScreen = () => {
 
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container} >
 
       <View  style={styles.mapContainer}>
        
@@ -135,6 +135,8 @@ const OrderDetailScreen = () => {
   tankerLocation={tankerLocation}
   address={orderDetails.dropLocation}
   showTankerTracking={true}
+  lat={orderDetails.Latitude}
+  lng={orderDetails.Longitude}
 
   isLiveTracking={isLiveTracking} 
 />
@@ -224,7 +226,7 @@ const OrderDetailScreen = () => {
       </View>
 
       
-    </SafeAreaView>
+    </View>
   );
 };
 

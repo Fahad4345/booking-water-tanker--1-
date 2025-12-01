@@ -35,13 +35,14 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
  Module Integration :
 
-- Adjusted the Disturbtion that is coming on rendering in customer app
-- Integrated Google place Api to show sujestion of location
+- Fixed Status Bar issue on entire  app  that is coming on rendering
 - Hide order booking container on map drag
-- Make Order Container use full heigth on clicking arrow button
+- Fixed slide model animation
+- Added slide up and slide down effect in order booking container
+- Fixed Payment screen button issue on rendering     
 
 
-Loom : (https://www.loom.com/share/1186d14e49b440878d304b33629b1489)
+Loom : (https://www.loom.com/share/df9f0a20cbaf489d80dc82c6f4447922)
 
 
  Completed features

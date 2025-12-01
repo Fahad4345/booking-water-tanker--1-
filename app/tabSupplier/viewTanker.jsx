@@ -16,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {  getSupplierTankers} from '../../api/suppliers/getTankerBySupplier'; 
 import { deleteTankerUser } from '../../api/suppliers/deleteTanker'; 
 import { useUser } from '../../context/context';
+import { Ionicons } from '@expo/vector-icons';
+import { router, usePathname } from 'expo-router';
 
 const TankerManagement = () => {
   const [tankers, setTankers] = useState([]);
@@ -169,14 +171,20 @@ const TankerManagement = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container,]} edges={['top', 'left', 'right']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View style={[styles.container,]} >
+    
       
  
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Tankers</Text>
-        
-      </View>
+    <View style={styles.header}>
+    
+    <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+      <Ionicons name="arrow-back-outline" size={24} color="#fff" />
+    </TouchableOpacity>
+    <View style={styles.headerContent}>
+      <Text style={styles.title}>My Tankers</Text>
+
+    </View>
+  </View>
 
      
       <View style={styles.tabContainer}>
@@ -277,7 +285,7 @@ const TankerManagement = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -287,20 +295,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: '#1976D2',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderBottomColor: '#e0e0e0',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F1F1F',
+ 
+  headerContent: {
+    flex: 1,
+      marginLeft:80
   },
+  scrollContent: {},
+  title: { fontSize: 20, fontWeight: '700', color: '#fff', marginBottom: 4 },
   refreshButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,

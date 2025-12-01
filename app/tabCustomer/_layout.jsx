@@ -10,7 +10,7 @@ export default function CustomerTabs() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarHideOnKeyboard: true,
+          tabBarHideOnKeyboard: true  ,
           tabBarStyle: {
             height: 60,
             paddingBottom: 8,

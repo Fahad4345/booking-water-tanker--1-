@@ -224,8 +224,8 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}> 
-      <StatusBar style="dark" />
+    <View style={styles.container} > 
+     
 
   
       {/* {isRestricted && (
@@ -387,7 +387,7 @@ export default function TankerDriverOrders({ tankerId = "69008b09a317121a840c02a
           </ScrollView>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -5,8 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SupplierTabs() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["right", "left", "bottom"]}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" />
+    
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -56,6 +55,6 @@ export default function SupplierTabs() {
           }}
         />
       </Tabs>
-    </SafeAreaView>
+   
   );
 }

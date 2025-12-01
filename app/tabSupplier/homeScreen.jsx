@@ -276,8 +276,8 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+    <View style={styles.container} >
+      
 
      
       {/* {user?.status === 'Pending' && (
@@ -448,7 +448,7 @@ export default function SupplierOrders({ tankerId = "69008b09a317121a840c02ae" }
         loading={fetchingTankers}
         onAssign={handleAssignOrder}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

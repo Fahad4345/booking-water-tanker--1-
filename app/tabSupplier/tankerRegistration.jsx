@@ -15,6 +15,7 @@ import {
   ActivityIndicator
   
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { registerTankerProvider } from "../../api/tankerProvider/register";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -473,14 +474,20 @@ const TankerProviderRegistration = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}   edges={['top', 'left', 'right']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <View style={styles.container} >
+    
       
  
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tanker Registration</Text>
-        {/* <Text style={styles.stepIndicator}>Step {step} of 2</Text> */}
-      </View>
+    <View style={styles.header}>
+    
+    <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+      <Ionicons name="arrow-back-outline" size={24} color="#fff" />
+    </TouchableOpacity>
+    <View style={styles.headerContent}>
+      <Text style={styles.title}>Tanker Registeration</Text>
+
+    </View>
+  </View>
 
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingView}
@@ -531,7 +538,7 @@ const TankerProviderRegistration = () => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -541,23 +548,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: '#1976D2',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+ 
+  headerContent: {
+    flex: 1,
+      marginLeft:50
   },
+  scrollContent: {},
+  title: { fontSize: 20, fontWeight: '700', color: '#fff', marginBottom: 4 },
   stepIndicator: {
     fontSize: 14,
     color: '#666',

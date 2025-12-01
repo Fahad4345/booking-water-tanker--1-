@@ -20,7 +20,7 @@ export default function WelcomeScreen() {
   return (
     <AuthWrapper>
       <View style={styles.container} >
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent/>
+        
         <ImageBackground
           source={{ uri: 'https://d64gsuwffb70l.cloudfront.net/68f0f60b9252847ebae1d642_1760622237534_fb64fefd.png' }}
           style={styles.background}

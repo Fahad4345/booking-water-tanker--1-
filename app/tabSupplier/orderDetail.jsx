@@ -176,7 +176,7 @@ const OrderDetailScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+     
 
   
       <View style={styles.mapContainer}>

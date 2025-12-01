@@ -83,8 +83,8 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <View style={styles.container}>
+      
       <View style={styles.header}>
        
        <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
@@ -155,7 +155,7 @@ export default function EditProfileScreen() {
           />
         </View>
       </KeyboardAwareScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

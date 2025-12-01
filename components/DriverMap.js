@@ -553,7 +553,50 @@ const RouteMap = ({ currentLocation, destination, tankerLocation }) => {
         var endMarker = null;
         var tankerMarker = null;
         var isFirstRoute = true;
-
+ function createTankerIcon() {
+          var svgIcon = \`
+            <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <!-- Shadow -->
+              <ellipse cx="24" cy="44" rx="16" ry="3" fill="rgba(0,0,0,0.2)"/>
+              
+              <!-- Tanker body (cylinder) -->
+              <rect x="8" y="18" width="28" height="14" rx="7" fill="#1976D2"/>
+              <rect x="8" y="18" width="28" height="7" rx="3" fill="#2196F3"/>
+              
+              <!-- Tanker highlights -->
+              <rect x="10" y="20" width="24" height="2" rx="1" fill="#64B5F6" opacity="0.6"/>
+              
+              <!-- Cab -->
+              <rect x="32" y="16" width="10" height="16" rx="2" fill="#FF5722"/>
+              <rect x="34" y="18" width="6" height="5" rx="1" fill="#87CEEB"/>
+              
+              <!-- Wheels -->
+              <circle cx="14" cy="34" r="4" fill="#333"/>
+              <circle cx="14" cy="34" r="2" fill="#666"/>
+              <circle cx="28" cy="34" r="4" fill="#333"/>
+              <circle cx="28" cy="34" r="2" fill="#666"/>
+              <circle cx="38" cy="34" r="4" fill="#333"/>
+              <circle cx="38" cy="34" r="2" fill="#666"/>
+              
+              <!-- Water drop icon on tanker -->
+              <path d="M20 22 Q20 26 22 28 Q24 30 24 26 Q24 22 22 20 Q20 18 20 22" fill="#E3F2FD"/>
+              
+              <!-- Pulsing indicator -->
+              <circle cx="24" cy="10" r="6" fill="#FF5722">
+                <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="1;0.6;1" dur="1s" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="24" cy="10" r="3" fill="white"/>
+            </svg>
+          \`;
+          
+          return L.divIcon({
+            className: 'tanker-marker',
+            html: svgIcon,
+            iconSize: [48, 48],
+            iconAnchor: [24, 34]
+          });
+        }
         function showRoute(startLat, startLng, endLat, endLng, tankerLat, tankerLng) {
           console.log("🗺️ Showing route in WebView");
           
@@ -561,13 +604,9 @@ const RouteMap = ({ currentLocation, destination, tankerLocation }) => {
           if (startMarker) map.removeLayer(startMarker);
           if (endMarker) map.removeLayer(endMarker);
           if (tankerMarker) map.removeLayer(tankerMarker);
-
+        var icon = createTankerIcon(); 
           startMarker = L.marker([startLat, startLng], {
-            icon: L.divIcon({
-              className: 'start-marker',
-              iconSize: [16, 16],
-              iconAnchor: [8, 8]
-            })
+            icon:icon
           }).bindPopup("📍 Your Location").addTo(map);
 
           endMarker = L.marker([endLat, endLng], {
@@ -578,15 +617,7 @@ const RouteMap = ({ currentLocation, destination, tankerLocation }) => {
             })
           }).bindPopup("🎯 Delivery Location").addTo(map);
 
-          tankerMarker = L.marker([tankerLat, tankerLng], {
-            icon: L.divIcon({
-              html: '<div style="background: #34A853; border: 3px solid white; border-radius: 50%; width: 24px; height: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; background: white; border-radius: 50%;"></div></div>',
-              className: '',
-              iconSize: [24, 24],
-              iconAnchor: [12, 12]
-            }),
-            zIndexOffset: 1000
-          }).bindPopup("🚛 Tanker Location").addTo(map);
+         
 
           routingControl = L.Routing.control({
             waypoints: [

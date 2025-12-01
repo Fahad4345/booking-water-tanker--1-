@@ -45,11 +45,20 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <View style={styles.container}>
+    
+<>
+<View style={styles.header}>
+    
+    <TouchableOpacity  onPress={()=> router.back()} style={styles.iconButton}>
+      <Ionicons name="arrow-back-outline" size={24} color="#fff" />
+    </TouchableOpacity>
+    <View style={styles.headerContent}>
+      <Text style={styles.title}>My Profile</Text>
 
+    </View>
+  </View>
 
-
-
+<View style={styles.container}>
 
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}><Text style={styles.avatar}>👤</Text></View>
@@ -78,25 +87,27 @@ export default function ProfileScreen() {
 
 
 
-      <DrawerMenu
-        isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        currentScreen="profile"
-      />
+     
     </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5', marginTop: 60, padding: 20 },
-  header: {
+  container: { flex: 1, backgroundColor: '#f5f5f5', padding: 20 },
+ header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#1976D2',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+  },
+ 
+  headerContent: {
+    flex: 1,
+      marginLeft:80
   },
   menuButton: {
     width: 40,
@@ -107,11 +118,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  headerContent: {
-    flex: 1,
-  },
+
   scrollContent: {},
-  title: { fontSize: 24, fontWeight: '700', color: '#333', marginBottom: 4 },
+  title: { fontSize: 20, fontWeight: '700', color: '#fff', marginBottom: 4 },
   subtitle: { fontSize: 14, color: '#666' },
   profileHeader: { alignItems: 'center', marginBottom: 24 },
   avatarContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#4FC3F7', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },

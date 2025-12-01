@@ -91,7 +91,7 @@ import { Ionicons } from '@expo/vector-icons';
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>

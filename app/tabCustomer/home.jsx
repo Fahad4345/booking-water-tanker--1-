@@ -57,6 +57,38 @@ export default function HomeScreen() {
   const isPlacesAutocompleteEnabled = Boolean(GOOGLE_PLACES_API_KEY);
   const orderSheetAnim = useRef(new Animated.Value(0.5)).current;
   const [orderSheetState, setOrderSheetState] = useState("split");
+  const scrollViewRef = useRef(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [scrollDirection, setScrollDirection] = useState(null);
+   const[lat, setLat]= useState(null);
+   const[lng, setLng]= useState(null);
+
+  const handleScrollBegin = () => {
+    if (orderSheetState === "split") {
+      console.log("📜 Scroll started - animating to order state");
+      animateOrderSheet("order");
+    }
+  };
+  
+
+
+
+  const handleScrollEndDrag = (event) => {
+   
+    if (orderSheetState !== "order") return;
+    
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const velocityY = event.nativeEvent.velocity?.y || 0;
+    
+    console.log(`📜 Scroll end - Y: ${currentScrollY}, Velocity: ${velocityY}`);
+    
+    
+    if (velocityY > 0.3 && currentScrollY <= 60) {
+      console.log("🔽 Downward drag at top - animating to split state");
+      animateOrderSheet("split");
+    }
+  };
   const animateOrderSheet = (targetState) => {
     let targetValue = 0.5;
     if (targetState === "map") {
@@ -68,7 +100,7 @@ export default function HomeScreen() {
     setOrderSheetState(targetState);
     Animated.timing(orderSheetAnim, {
       toValue: targetValue,
-      duration: 350,
+      duration: 400,
       useNativeDriver: false,
     }).start();
   };
@@ -79,6 +111,7 @@ export default function HomeScreen() {
   const handleMapDragStart = () => {
     if (orderSheetState !== "map") {
        console.log("drag start");
+       Keyboard.dismiss()
       showMapFull();
     }
   };
@@ -282,7 +315,7 @@ useEffect(() => {
     (isFetchingPlaces || placeSuggestions.length > 0);
   const sheetTranslateY = orderSheetAnim.interpolate({
     inputRange: [0, 0.5, 1],
-    outputRange: [height, height * 0.4, 0],
+    outputRange: [height -80, height * 0.4, 0],
   });
   const handleBooking = async () => {
     if (!selectedSupplier) {
@@ -322,6 +355,8 @@ useEffect(() => {
       tankSize: selectedTankerData.capacity,
       bookingType,
       dropLocation: destination,
+      Latitude:lat,
+      Longitude:lng,
       instruction: specialInstructions,
       price: `PKR ${finalPrice.toLocaleString()}`,
       priceNumeric: finalPrice,
@@ -395,11 +430,15 @@ useEffect(() => {
       <View style={styles.mapWrapper}>
         <OpenStreetMapView
           onLocationSelect={(data) => {
+             console.log("Data", data);
             setSelectedLocation(data);
             setDestination(data.address);
             setPlaceSuggestions([]);
             setIsFetchingPlaces(false);
             setSuppressNextAutocomplete(true);
+            setLat(data.lat);
+            setLng(data.lng);
+            
           }}
           onMapDragStart={handleMapDragStart}
           onMapDragEnd={handleMapDragEnd}
@@ -436,16 +475,24 @@ useEffect(() => {
               <Text style={styles.sheetMapButtonText}>Map View</Text>
             </TouchableOpacity>
           </View><KeyboardAwareScrollView
+  ref={scrollViewRef}
   style={styles.scrollView}
-  contentContainerStyle={styles.scrollContent}
+  contentContainerStyle={[
+    styles.scrollContent,
+   
+  ]}
   keyboardShouldPersistTaps="handled"
   showsVerticalScrollIndicator={false}
   enableOnAndroid={true}
-  extraScrollHeight={Platform.OS === 'ios' ? 0 : 20}
-  enableAutomaticScroll={true}
-  extraHeight={Platform.OS === 'ios' ? 90 : 0}
+  
+  extraScrollHeight={0} // No extra scroll
+   // Disable automatic behavior
+  extraHeight={0}
+ 
+  onScrollBeginDrag={handleScrollBegin}
+  onScrollEndDrag={handleScrollEndDrag}
+  scrollEventThrottle={40}
 >
-       
         
         
         <View style={styles.bookingTypeSection}>
@@ -758,18 +805,7 @@ useEffect(() => {
 )}
 
 
-<DatePickerModal
-  visible={showDatePicker}
-  onClose={() => {
-    console.log("🔴 CLOSING DATE PICKER - setting showDatePicker to false");
-    setShowDatePicker(false);
-  }}
-  onSelectedDate={(date) => {
-    console.log("🟡 DATE SELECTED:", date);
-    setSelectedDate(date);
-  }}
-  selectedDate={selectedDate}
-/>
+
                <DatePickerModal
         visible={showDatePicker}
         onClose={() => setShowDatePicker(false)}
@@ -862,7 +898,7 @@ useEffect(() => {
       <Modal
   visible={showSupplierModal}
   transparent
-  animationType="slide"
+  animationType="fade"
   onRequestClose={() => setShowSupplierModal(false)}
 >
   <View style={styles.modalOverlay}>
@@ -940,7 +976,7 @@ useEffect(() => {
       <Modal
         visible={showTimePicker}
         transparent
-        animationType="slide"
+         animationType="fade"
         onRequestClose={() => setShowTimePicker(false)}
       >
         <View style={styles.modalOverlay}>
@@ -1006,6 +1042,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    height:675
   },
   orderSheet: {
     position: "absolute",
@@ -1016,7 +1053,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    
+   
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
@@ -1065,9 +1102,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   scrollContent: {
-     flexGrow:1,
-     paddingBottom: 10,
+    flexGrow: 1,
+    paddingBottom: 120, // Base padding
   },
+ 
   bookingTypeSection: {
     backgroundColor: "#fff",
     paddingHorizontal: 16,
