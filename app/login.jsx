@@ -34,6 +34,7 @@ export default function LoginScreen() {
     const result = await login(normalizedEmail, password);
 
     if (result.success) {
+       console.log("resuly", result.data);
       const { user, accessToken, refreshToken } = result.data;
 
       await AsyncStorage.setItem("accessToken", accessToken);

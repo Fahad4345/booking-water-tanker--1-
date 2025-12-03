@@ -78,7 +78,7 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{user?.email}</Text>
       </View>
       <View style={styles.statsContainer}>
-        <View style={styles.statBox}><Text style={styles.statNumber}>12</Text><Text style={styles.statLabel}>Orders</Text></View>
+        <View style={styles.statBox}><Text style={styles.statNumber}>{user?.noOfOrder}</Text><Text style={styles.statLabel}>Orders</Text></View>
         <View style={styles.statBox}><Text style={styles.statNumber}>3</Text><Text style={styles.statLabel}>Active</Text></View>
         <View style={styles.statBox}><Text style={styles.statNumber}>$890</Text><Text style={styles.statLabel}>Spent</Text></View>
       </View>

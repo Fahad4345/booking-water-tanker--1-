@@ -13,14 +13,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-
+import { updateOrderRating } from "../../api/bookings/UpdateRating";
 import { getTankerByCapacity } from "../../api/suppliers/getTankerByCapacity";
 import { assignOrderToTanker } from "../../api/suppliers/assignOrder";
 import { useUser } from '../../context/context';
 import OpenStreetMapView from './../../components/OpenStreetMap';
 import ReadOnlyMap from "../../components/readOnlyMap";
 import { onTankerLocation, socket,registerUser, onTrackingStopped } from "../../utils/socket";
-
+import RatingModal from "../../components/RatingModel";
 const { width, height } = Dimensions.get("window");
 
 const OrderDetailScreen = () => {
@@ -34,6 +34,7 @@ const OrderDetailScreen = () => {
   const [loading, setLoading] = useState(false);
   const [tankerLocation, setTankerLocation] = useState(null);
   const [tankerPath, setTankerPath] = useState([]);
+  const [showRatingModal, setShowRatingModal] = useState(false);
  
 
   const [isLiveTracking, setIsLiveTracking] = useState(false); 
@@ -85,12 +86,15 @@ const OrderDetailScreen = () => {
         console.log("✅ SUCCESS: Cleared tanker tracking data - Live tracking INACTIVE");
         
         Alert.alert("✅ Order Delivered", " Your Order has been Delivered Sucessfully");
+        setShowRatingModal(true);
       }
+    
     };
   
 
     onTankerLocation(handleTankerLocation);
     onTrackingStopped(handleTrackingStopped);
+   
   
     return () => {
       console.log("🛑 Cleaning up socket listeners");
@@ -120,7 +124,43 @@ const OrderDetailScreen = () => {
       if (!deliveryTime) return "";
       return deliveryTime.split(' ').slice(3).join(' ');
     };
-  
+    const handleRatingSubmit = async (ratingData) => {
+      console.log("Customer rating submitted:", ratingData);
+      
+      try {
+        // API call with raterType as 'customer'
+        const response = await updateOrderRating({
+          rating: ratingData.rating,
+          orderId:orderDetails._id,
+          raterType: 'customer', 
+          userId: user._id,
+        });
+        
+        // Update local order details - customer rating fields
+        setOrderDetails(prev => ({
+          ...prev,
+          customerRating: ratingData.rating,
+          
+        
+        }));
+        
+       
+        
+        Alert.alert(
+          "⭐ Thank You!",
+          "You have rated the supplier successfully!"
+        );
+        
+        setShowRatingModal(false);
+        
+      } catch (error) {
+        console.error("Error submitting rating:", error);
+        Alert.alert(
+          "❌ Error",
+          error.response?.data?.message || "Failed to submit rating."
+        );
+      }
+    };
   
 
 
@@ -224,7 +264,15 @@ const OrderDetailScreen = () => {
     
 
       </View>
-
+      <RatingModal
+        visible={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        type="supplier"
+        targetName={orderDetails.supplierName}
+        bookingId={orderDetails._id}
+        existingRating={orderDetails.rating}
+        onSubmit={handleRatingSubmit}
+      />
       
     </View>
   );

@@ -17,7 +17,7 @@ import { RefreshControl } from "react-native";
 
 import { GetBookings } from "../../api/bookings/GetBooking";
 import { useUser } from "../../context/context";
-import EventBus from "../../utils/EventBus";
+import eventBus from "../../utils/EventBus";
 
 export default function BookingsScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -26,7 +26,24 @@ export default function BookingsScreen() {
 
   const { user, clearUser } = useUser();
   const [refreshing, setRefreshing] = useState(false);
+  useEffect(() => {
+    const subscriptions = [];
 
+    subscriptions.push(
+      eventBus.addListener("NewBookingCreated", () => {
+    
+       console.log("New booking");
+        
+        
+     
+          fetchBookings();
+    
+      })
+    );
+    return () => {
+      subscriptions.forEach(subscription => subscription.remove());
+    };
+  }, []);
   const onRefresh = async () => {
      
     setRefreshing(true);

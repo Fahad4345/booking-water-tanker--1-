@@ -436,7 +436,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BookTank } from '../../api/bookings/BookTank';
-import EventBus from '../../utils/EventBus';
+
+import eventBus from '../../utils/EventBus';
 
 export default function PaymentScreen() {
     const router = useRouter();
@@ -453,7 +454,7 @@ export default function PaymentScreen() {
             return;
         }
 
-        // Dismiss keyboard before processing
+    
         Keyboard.dismiss();
         setIsProcessing(true);
 
@@ -492,6 +493,7 @@ export default function PaymentScreen() {
                                 text: 'OK',
                                 onPress: () => {
                                     console.log("Booking detail", result);
+                                    eventBus.emit("NewBookingCreated");
                                     router.push({
                                         pathname: "/tabCustomer/orderDetail",
                                         params: { order: JSON.stringify(result.booking) },

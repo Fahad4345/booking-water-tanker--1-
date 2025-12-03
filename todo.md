@@ -35,14 +35,19 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
  Module Integration :
 
-- Fixed Status Bar issue on entire  app  that is coming on rendering
-- Hide order booking container on map drag
-- Fixed slide model animation
-- Added slide up and slide down effect in order booking container
-- Fixed Payment screen button issue on rendering     
+- Integrated EventBus for refresh of bookings on rebook section and booking list page after booking creation
+- Created Rating Model for rating customer and supplier
+- Each booking is saved with customer and supplier rating
+- Also calculated an average rating of customer and supplier and stored it in db
+- Also added  no of order of each user in db
+- Displayed rating and amount of deliveries in  customer screen supplier picker model
+ 
 
 
-Loom : (https://www.loom.com/share/df9f0a20cbaf489d80dc82c6f4447922)
+Customer App : (https://www.loom.com/share/4c8a772d46b245049a666fc1c35b81f3)
+
+
+Tanker and Supplier App : (https://www.loom.com/share/adc9f9d699aa40e086b3aa172beb3335)
 
 
  Completed features

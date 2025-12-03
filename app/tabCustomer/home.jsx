@@ -26,6 +26,7 @@ import { getSuppliers } from "../../api/suppliers/getAllSupplier";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useRouter } from "expo-router";
 import DatePickerModal from "./../../components/DatePicker";
+import eventBus from "../../utils/EventBus";
 import { KeyboardAvoidingView, Platform, Dimensions, Keyboard } from "react-native";
 const { width, height } = Dimensions.get("window");
 const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY || "AIzaSyAaIMtkwwSufhZRRci_Y5qCBKhxipOrYi4";
@@ -120,23 +121,41 @@ export default function HomeScreen() {
       animateOrderSheet("split");
     }
   };
-
+  const Getbookings = async () => {
+    const UserId = user._id || "";
+     console.log("_id",user._id);
+    const result = await GetBookings(UserId);
+    const defaultCapacity = tankerOptions[0].capacity;
+    const supplierList = await getSuppliers(defaultCapacity);
+    if (result.success === true) {
+      setBookings(result.data);
+      setSuppliers(supplierList);
+    } else {
+      console.log("Failed:", result.message);
+    }
+  };
   useEffect(() => {
      console.log("In Home");
-    const Getbookings = async () => {
-      const UserId = user._id || "";
-       console.log("_id",user._id);
-      const result = await GetBookings(UserId);
-      const defaultCapacity = tankerOptions[0].capacity;
-      const supplierList = await getSuppliers(defaultCapacity);
-      if (result.success === true) {
-        setBookings(result.data);
-        setSuppliers(supplierList);
-      } else {
-        console.log("Failed:", result.message);
-      }
-    };
+   
     Getbookings();
+  }, []);
+  useEffect(() => {
+    const subscriptions = [];
+
+    subscriptions.push(
+      eventBus.addListener("NewBookingCreated", () => {
+    
+       console.log("New booking");
+        
+        
+     
+          Getbookings();
+    
+      })
+    );
+    return () => {
+      subscriptions.forEach(subscription => subscription.remove());
+    };
   }, []);
   const resetForm = () => {
     console.log("🔄 Resetting HomeScreen form...");
@@ -895,7 +914,7 @@ useEffect(() => {
 
      
     
-      <Modal
+      {/* <Modal
   visible={showSupplierModal}
   transparent
   animationType="fade"
@@ -958,6 +977,116 @@ useEffect(() => {
                   </Text>
                 </View>
               </View>
+              {selectedSupplier?._id === supplier._id && (
+                <Ionicons
+                  name="checkmark-circle"
+                  size={24}
+                  color="#1976D2"
+                />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  </View>
+  
+</Modal> */}
+
+<Modal
+  visible={showSupplierModal}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setShowSupplierModal(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <View style={styles.modalHeader}>
+        <Text style={styles.modalTitle}>
+          Select Water Supplier ({tankerOptions[selectedTanker].capacity}L)
+        </Text>
+        <TouchableOpacity onPress={() => setShowSupplierModal(false)}>
+          <Ionicons name="close" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+      
+      {suppliers.length === 0 ? (
+        <View style={styles.noSuppliersContainer}>
+          <Ionicons name="warning-outline" size={48} color="#999" />
+          <Text style={styles.noSuppliersText}>
+            No suppliers available for {tankerOptions[selectedTanker].capacity}L tankers
+          </Text>
+          <Text style={styles.noSuppliersSubtext}>
+            Try selecting a different tanker size
+          </Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.supplierList}>
+          {suppliers.map((supplier, index) => (
+            <TouchableOpacity
+              key={supplier._id}
+              style={[
+                styles.supplierItem,
+                selectedSupplier?._id === supplier._id && styles.supplierItemActive,
+              ]}
+              onPress={() => {
+                console.log("Selected Supplier:", supplier);
+                setSelectedSupplier(supplier);
+                setShowSupplierModal(false);
+              }}
+            >
+              <View
+                style={[
+                  styles.supplierIconLarge,
+                  { backgroundColor: "#2196F3" },
+                ]}
+              >
+                <Text style={styles.supplierEmojiLarge}>💧</Text>
+              </View>
+              
+              <View style={styles.supplierDetails}>
+                <Text style={styles.supplierName}>{supplier.name}</Text>
+                
+                {/* Rating and Delivery Stats */}
+                <View style={styles.supplierStatsRow}>
+                  {/* Rating */}
+                  <View style={styles.statContainer}>
+                    <Ionicons name="star" size={14} color="#FFD700" />
+                    <Text style={styles.statText}>
+                      {supplier.rating?.toFixed(1) || "N/A"}
+                      <Text style={styles.statSubText}>/5</Text>
+                    </Text>
+                  </View>
+                  
+                  <Text style={styles.statDivider}>•</Text>
+                  
+                  {/* Deliveries */}
+                  <View style={styles.statContainer}>
+                    <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
+                    <Text style={styles.statText}>
+                      {supplier.noOfOrder|| 0}
+                      <Text style={styles.statSubText}> deliveries</Text>
+                    </Text>
+                  </View>
+                  
+                  <Text style={styles.statDivider}>•</Text>
+                  
+                
+                </View>
+                
+                {/* Availability and Capacity */}
+                <View style={styles.supplierMeta}>
+                  <View style={styles.availabilityBadge}>
+                    <Ionicons name="checkmark-circle" size={12} color="#4CAF50" />
+                    <Text style={styles.availabilityText}>Online</Text>
+                  </View>
+                  <Text style={styles.supplierDot}>•</Text>
+                  <Text style={styles.supplierCapacity}>
+                    {tankerOptions[selectedTanker].capacity}L Available
+                  </Text>
+                </View>
+              </View>
+              
               {selectedSupplier?._id === supplier._id && (
                 <Ionicons
                   name="checkmark-circle"
@@ -1248,38 +1377,114 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   supplierItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 10,
-    borderWidth: 2,
-    borderColor: "transparent",
+    borderWidth: 1,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
+  
   supplierItemActive: {
-    backgroundColor: "#E3F2FD",
-    borderColor: "#1976D2",
+    backgroundColor: '#F0F8FF',
+    borderColor: '#1976D2',
+    borderWidth: 2,
   },
+  
   supplierIconLarge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 14,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
+  
   supplierEmojiLarge: {
-    fontSize: 28,
+    fontSize: 24,
   },
+  
   supplierDetails: {
     flex: 1,
   },
+  
   supplierName: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#333",
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 6,
+  },
+  supplierStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    flexWrap: 'wrap',
+  },
+  
+  statContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 4,
+  },
+  
+  statText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 4,
+  },
+  
+  statSubText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#666',
+  },
+  
+  statDivider: {
+    fontSize: 12,
+    color: '#ccc',
+    marginHorizontal: 6,
+  },
+  
+  supplierMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  
+  availabilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginRight: 6,
+  },
+  
+  availabilityText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#2E7D32',
+    marginLeft: 4,
+  },
+  
+  supplierDot: {
+    fontSize: 12,
+    color: '#999',
+    marginHorizontal: 4,
+  },
+  
+  supplierCapacity: {
+    fontSize: 12,
+    color: '#666',
   },
   supplierMeta: {
     flexDirection: "row",
