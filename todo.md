@@ -35,19 +35,19 @@ Loom : (https://www.loom.com/share/f0fcbe015f8d4adf8b07389b928205d4)
 
  Module Integration :
 
-- Integrated EventBus for refresh of bookings on rebook section and booking list page after booking creation
-- Created Rating Model for rating customer and supplier
-- Each booking is saved with customer and supplier rating
-- Also calculated an average rating of customer and supplier and stored it in db
-- Also added  no of order of each user in db
-- Displayed rating and amount of deliveries in  customer screen supplier picker model
- 
+- Working On push Notification
+- Now receiving notification when app is in background state
+- Send Notification on booking assigning, accepted , start, arived,filling,and complete state
+- Send Notification to supplier on new order
+- Send Notification to tanker on reciving order
+- Send Notification on cancelling order and refund
+- There is issue while triggering received notification listenner in app layout due to which it do not notify in forground
 
 
-Customer App : (https://www.loom.com/share/4c8a772d46b245049a666fc1c35b81f3)
+Customer App : (https://www.loom.com/share/c16869eaa3334b68a40ea5cfa0519585)
 
 
-Tanker and Supplier App : (https://www.loom.com/share/adc9f9d699aa40e086b3aa172beb3335)
+
 
 
  Completed features

@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from '../context/context';
 import GoogleLoginButton from '../components/GoogleButton';
 import { socket } from '../utils/socket';
+import  usePushNotifications from"../hook/usePushNotification"
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -15,6 +16,9 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = Auth();
+  const { expoPushToken } = usePushNotifications();
+
+  console.log('[+] expoPushToken : ', expoPushToken);
   
   const handleLogin = async () => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -28,10 +32,10 @@ export default function LoginScreen() {
       return;
     }
 
-    // ✅ Convert email to lowercase for case-insensitive login
+   
     const normalizedEmail = email.toLowerCase().trim();
-     console.log("normalized email", normalizedEmail);
-    const result = await login(normalizedEmail, password);
+     console.log("normalized email", normalizedEmail, expoPushToken);
+    const result = await login(normalizedEmail, password, expoPushToken);
 
     if (result.success) {
        console.log("resuly", result.data);

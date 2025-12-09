@@ -29,14 +29,14 @@ export function Auth() {
       return { success: false, message: "Network error. Please try again." };
     }
   };
-  const login = async (email, password) => {
+  const login = async (email, password, pushToken) => {
     try {
       console.log("Login running", email, password);
 
       const res = await fetch("http://192.168.100.187:5000/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password ,pushToken}),
       });
 
       const data = await res.json();

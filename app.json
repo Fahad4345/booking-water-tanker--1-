@@ -4,9 +4,23 @@
     "slug": "booking-water-tanker",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "",
+    "icon": "./assets/icon.png",
     "scheme": "booking-water-tanker",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#4FC3F7",
+      "androidMode": "default",
+      "androidCollapsedTitle": "H2O Water Suppliers"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fahadrehan.bookingwatertanker",
@@ -15,44 +29,45 @@
       }
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
       "package": "com.fahadrehan.bookingwatertanker",
-      // "edgeToEdgeEnabled": true,
-      //  "backgroundColor": "#000000"
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": ""
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
+      "expo-web-browser",
       [
-        "expo-splash-screen",
+        "expo-notifications",
         {
-          "image": "",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-      ],
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps.161923102465-0jtrsbdkkmki11st6r0mh9i8pjpjqf3o"
+          "icon": "./assets/adaptive-icon.png",
+          "color": "#4FC3F7",
+          "mode": "production"
         }
       ]
     ],
-    "experiments": {
+    "experiments": {    
       "typedRoutes": true
-    },
-    "runtimeVersion": {
-      "policy": "sdkVersion"
     },
     "extra": {
       "router": {},
       "eas": {
         "projectId": "21a0feb0-f743-4950-a6df-0c5c5d2da9fd"
       }
-    }
+    },
+    "owner": "fahadrehan"
   }
 }

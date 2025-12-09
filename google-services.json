@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "842958578936",
+    "project_id": "h2o-water-922f5",
+    "storage_bucket": "h2o-water-922f5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842958578936:android:194aff854fedbcef8a070d",
+        "android_client_info": {
+          "package_name": "com.fahadrehan.bookingwatertanker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTGesp0V2o2QG_nZo0BzSWXS8oOfyIBMk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

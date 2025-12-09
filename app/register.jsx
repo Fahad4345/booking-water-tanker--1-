@@ -9,6 +9,7 @@ import Button from '../components/Button';
 import { Auth } from '../api/Auth';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from '../context/context';
+import usePushNotifications from '../hook/usePushNotification';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function RegisterScreen() {
   const { signup, login } = Auth();
   const { updateUser } = useUser();
   const normalizedEmail = email.toLowerCase().trim();
+  const { expoPushToken, notification } = usePushNotifications();
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "All fields are required");
@@ -49,7 +51,7 @@ export default function RegisterScreen() {
 
     if (result.success) {
       await new Promise((r) => setTimeout(r, 500));
-      const result = await login(email, password);
+      const result = await login(email, password, expoPushToken.data);
       console.log("Login after signup result:", result);
 
       if (result.success) {
